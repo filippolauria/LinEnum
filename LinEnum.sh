@@ -9,6 +9,7 @@ _red="\e[00;31m"
 _yellow="\e[00;33m"
 _purple="\e[00;35m"
 _gray="\e[0;37m"
+_color_flag="--color"
 
 #help function
 usage () 
@@ -274,14 +275,14 @@ if [ "$whohasbeensudo" ]; then
 fi
 
 #checks to see if roots home directory is accessible
-rthmdir=`ls -ahl /root/ 2>/dev/null`
+rthmdir=`ls ${_color_flag} -ahl /root/ 2>/dev/null`
 if [ "$rthmdir" ]; then
   echo -e "${_yellow}[+] We can read root's home directory!${_reset}\n$rthmdir" 
   echo -e "\n"
 fi
 
 #displays /home directory permissions - check if any are lax
-homedirperms=`ls -ahl /home/ 2>/dev/null`
+homedirperms=`ls ${_color_flag} -ahl /home/ 2>/dev/null`
 if [ "$homedirperms" ]; then
   echo -e "${_red}[-] Are permissions on /home directories lax:${_reset}\n$homedirperms" 
   echo -e "\n"
@@ -332,7 +333,7 @@ fi
 
 #lists current user's home directory contents
 if [ "$thorough" = "1" ]; then
-homedircontents=`ls -ahl ~ 2>/dev/null`
+homedircontents=`ls ${_color_flag} -ahl ~ 2>/dev/null`
 	if [ "$homedircontents" ] ; then
 		echo -e "${_red}[-] Home directory contents:${_reset}\n$homedircontents" 
 		echo -e "\n" 
@@ -406,14 +407,14 @@ if [ "$umaskvalue" ]; then
 fi
 
 #umask value as in /etc/login.defs
-umaskdef=`grep -i "^UMASK" /etc/login.defs 2>/dev/null`
+umaskdef=`grep ${_color_flag} -i "^UMASK" /etc/login.defs 2>/dev/null`
 if [ "$umaskdef" ]; then
   echo -e "${_red}[-] umask value as specified in /etc/login.defs:${_reset}\n$umaskdef" 
   echo -e "\n"
 fi
 
 #password policy information as stored in /etc/login.defs
-logindefs=`grep "^PASS_MAX_DAYS\|^PASS_MIN_DAYS\|^PASS_WARN_AGE\|^ENCRYPT_METHOD" /etc/login.defs 2>/dev/null`
+logindefs=`grep ${_color_flag} "^PASS_MAX_DAYS\|^PASS_MIN_DAYS\|^PASS_WARN_AGE\|^ENCRYPT_METHOD" /etc/login.defs 2>/dev/null`
 if [ "$logindefs" ]; then
   echo -e "${_red}[-] Password and storage information:${_reset}\n$logindefs" 
   echo -e "\n"
@@ -430,7 +431,7 @@ job_info()
 echo -e "${_yellow}### JOBS/TASKS ##########################################${_reset}" 
 
 #are there any cron jobs configured
-cronjobs=`ls -la /etc/cron* 2>/dev/null`
+cronjobs=`ls ${_color_flag} -la /etc/cron* 2>/dev/null`
 if [ "$cronjobs" ]; then
   echo -e "${_red}[-] Cron jobs:${_reset}\n$cronjobs" 
   echo -e "\n"
@@ -450,19 +451,19 @@ if [ "$crontabvalue" ]; then
   echo -e "\n"
 fi
 
-crontabvar=`ls -la /var/spool/cron/crontabs 2>/dev/null`
+crontabvar=`ls ${_color_flag} -la /var/spool/cron/crontabs 2>/dev/null`
 if [ "$crontabvar" ]; then
   echo -e "${_red}[-] Anything interesting in /var/spool/cron/crontabs:${_reset}\n$crontabvar" 
   echo -e "\n"
 fi
 
-anacronjobs=`ls -la /etc/anacrontab 2>/dev/null; cat /etc/anacrontab 2>/dev/null`
+anacronjobs=`ls ${_color_flag} -la /etc/anacrontab 2>/dev/null; cat /etc/anacrontab 2>/dev/null`
 if [ "$anacronjobs" ]; then
   echo -e "${_red}[-] Anacron jobs and associated file permissions:${_reset}\n$anacronjobs" 
   echo -e "\n"
 fi
 
-anacrontab=`ls -la /var/spool/anacron 2>/dev/null`
+anacrontab=`ls ${_color_flag} -la /var/spool/anacron 2>/dev/null`
 if [ "$anacrontab" ]; then
   echo -e "${_red}[-] When were jobs last executed (/var/spool/anacron contents):${_reset}\n$anacrontab" 
   echo -e "\n"
@@ -523,7 +524,7 @@ if [ ! "$arpinfo" ] && [ "$arpinfoip" ]; then
 fi
 
 #dns settings
-nsinfo=`grep "nameserver" /etc/resolv.conf 2>/dev/null`
+nsinfo=`grep ${_color_flag} "nameserver" /etc/resolv.conf 2>/dev/null`
 if [ "$nsinfo" ]; then
   echo -e "${_red}[-] Nameserver(s):${_reset}\n$nsinfo" 
   echo -e "\n"
@@ -643,7 +644,7 @@ if [ "$xinetdbinperms" ]; then
   echo -e "\n"
 fi
 
-initdread=`ls -la /etc/init.d 2>/dev/null`
+initdread=`ls ${_color_flag} -la /etc/init.d 2>/dev/null`
 if [ "$initdread" ]; then
   echo -e "${_red}[-] /etc/init.d/ binary permissions:${_reset}\n$initdread" 
   echo -e "\n"
@@ -656,7 +657,7 @@ if [ "$initdperms" ]; then
   echo -e "\n"
 fi
 
-rcdread=`ls -la /etc/rc.d/init.d 2>/dev/null`
+rcdread=`ls ${_color_flag} -la /etc/rc.d/init.d 2>/dev/null`
 if [ "$rcdread" ]; then
   echo -e "${_red}[-] /etc/rc.d/init.d binary permissions:${_reset}\n$rcdread" 
   echo -e "\n"
@@ -669,7 +670,7 @@ if [ "$rcdperms" ]; then
   echo -e "\n"
 fi
 
-usrrcdread=`ls -la /usr/local/etc/rc.d 2>/dev/null`
+usrrcdread=`ls ${_color_flag} -la /usr/local/etc/rc.d 2>/dev/null`
 if [ "$usrrcdread" ]; then
   echo -e "${_red}[-] /usr/local/etc/rc.d binary permissions:${_reset}\n$usrrcdread" 
   echo -e "\n"
@@ -682,7 +683,7 @@ if [ "$usrrcdperms" ]; then
   echo -e "\n"
 fi
 
-initread=`ls -la /etc/init/ 2>/dev/null`
+initread=`ls ${_color_flag} -la /etc/init/ 2>/dev/null`
 if [ "$initread" ]; then
   echo -e "${_red}[-] /etc/init/ config file permissions:${_reset}\n$initread"
   echo -e "\n"
@@ -695,7 +696,7 @@ if [ "$initperms" ]; then
    echo -e "\n"
 fi
 
-systemdread=`ls -lthR /lib/systemd/ 2>/dev/null`
+systemdread=`ls ${_color_flag} -lthR /lib/systemd/ 2>/dev/null`
 if [ "$systemdread" ]; then
   echo -e "${_red}[-] /lib/systemd/* config file permissions:${_reset}\n$systemdread"
   echo -e "\n"
@@ -808,10 +809,14 @@ fi
 
 #anything in the default http home dirs (a thorough only check as output can be large)
 if [ "$thorough" = "1" ]; then
-  apachehomedirs=`ls -alhR /var/www/ 2>/dev/null; ls -alhR /srv/www/htdocs/ 2>/dev/null; ls -alhR /usr/local/www/apache2/data/ 2>/dev/null; ls -alhR /opt/lampp/htdocs/ 2>/dev/null`
+  apache_dirs="/var/www/ /srv/www/htdocs/ /usr/local/www/apache2/data/ /opt/lampp/htdocs/"
+  apachehomedirs=""
+  for d in $apache_dirs; do
+    apachehomedirs="$apachehomedirs`ls -alhR $d 2>/dev/null`"
+  done
+  
   if [ "$apachehomedirs" ]; then
-    echo -e "${_red}[-] www home dir contents:${_reset}\n$apachehomedirs" 
-    echo -e "\n"
+    echo -e "${_red}[-] www home dir contents:${_reset}\n$apachehomedirs\n"
   fi
 fi
 
@@ -956,7 +961,7 @@ fi
 
 #look for private keys - thanks djhohnstein
 if [ "$thorough" = "1" ]; then
-privatekeyfiles=`grep -rl "PRIVATE KEY-----" /home 2>/dev/null`
+privatekeyfiles=`grep ${_color_flag} -rl "PRIVATE KEY-----" /home 2>/dev/null`
 	if [ "$privatekeyfiles" ]; then
   		echo -e "${_yellow}[+] Private SSH keys found!:${_reset}\n$privatekeyfiles"
   		echo -e "\n"
@@ -965,7 +970,7 @@ fi
 
 #look for AWS keys - thanks djhohnstein
 if [ "$thorough" = "1" ]; then
-awskeyfiles=`grep -rli "aws_secret_access_key" /home 2>/dev/null`
+awskeyfiles=`grep ${_color_flag} -rli "aws_secret_access_key" /home 2>/dev/null`
 	if [ "$awskeyfiles" ]; then
   		echo -e "${_yellow}[+] AWS secret keys found!:${_reset}\n$awskeyfiles"
   		echo -e "\n"
@@ -1055,7 +1060,7 @@ if [ "$export" ] && [ "$rhostssys" ]; then
 fi
 
 #list nfs shares/permisisons etc.
-nfsexports=`ls -la /etc/exports 2>/dev/null; cat /etc/exports 2>/dev/null`
+nfsexports=`ls ${_color_flag} -la /etc/exports 2>/dev/null; cat /etc/exports 2>/dev/null`
 if [ "$nfsexports" ]; then
   echo -e "${_red}[-] NFS config details: ${_reset}\n$nfsexports" 
   echo -e "\n"
@@ -1217,7 +1222,7 @@ fi
 for entry in $(grep "sh$" /etc/passwd); do
     user=`echo $entry | cut -d":" -f1`
     home=`echo $entry | cut -d":" -f6`
-    usrhist=`ls -la $home/.*_history $home/.*-hsts $home/.*hst 2>/dev/null`
+    usrhist=`ls ${_color_flag} -la $home/.*_history $home/.*-hsts $home/.*hst 2>/dev/null`
     echo -en "${_red}[-] ${_yellow}${user}${_red}'s history files:${_reset}"
     if [ "$usrhist" ]; then
         echo -e "\n$usrhist\n"
@@ -1250,7 +1255,7 @@ if [ "$bakfiles" ]; then
 fi
 
 #is there any mail accessible
-readmail=`ls -la /var/mail 2>/dev/null`
+readmail=`ls ${_color_flag} -la /var/mail 2>/dev/null`
 if [ "$readmail" ]; then
   echo -e "${_red}[-] Any interesting mail in /var/mail:${_reset}\n$readmail" 
   echo -e "\n"
@@ -1273,7 +1278,7 @@ docker_checks()
 {
 
 #specific checks - check to see if we're in a docker container
-dockercontainer=` grep -i docker /proc/self/cgroup  2>/dev/null; find / -name "*dockerenv*" -exec ls -la {} \; 2>/dev/null`
+dockercontainer=` grep ${_color_flag} -i docker /proc/self/cgroup  2>/dev/null; find / -name "*dockerenv*" -exec ls -la {} \; 2>/dev/null`
 if [ "$dockercontainer" ]; then
   echo -e "${_yellow}[+] Looks like we're in a Docker container:${_reset}\n$dockercontainer" 
   echo -e "\n"
@@ -1287,7 +1292,7 @@ if [ "$dockerhost" ]; then
 fi
 
 #specific checks - are we a member of the docker group
-dockergrp=`id | grep -i docker 2>/dev/null`
+dockergrp=`id | grep ${_color_flag} -i docker 2>/dev/null`
 if [ "$dockergrp" ]; then
   echo -e "${_yellow}[+] We're a member of the (docker) group - could possibly misuse these rights!${_reset}\n$dockergrp" 
   echo -e "\n"
@@ -1312,14 +1317,14 @@ lxc_container_checks()
 {
 
 #specific checks - are we in an lxd/lxc container
-lxccontainer=`grep -qa container=lxc /proc/1/environ 2>/dev/null`
+lxccontainer=`grep ${_color_flag} -qa container=lxc /proc/1/environ 2>/dev/null`
 if [ "$lxccontainer" ]; then
   echo -e "${_yellow}[+] Looks like we're in a lxc container:${_reset}\n$lxccontainer"
   echo -e "\n"
 fi
 
 #specific checks - are we a member of the lxd group
-lxdgroup=`id | grep -i lxd 2>/dev/null`
+lxdgroup=`id | grep ${_color_flag} -i lxd 2>/dev/null`
 if [ "$lxdgroup" ]; then
   echo -e "${_yellow}[+] We're a member of the (lxd) group - could possibly misuse these rights!${_reset}\n$lxdgroup"
   echo -e "\n"
@@ -1355,7 +1360,7 @@ while getopts "k:r:e:stCh" option; do
     e) export=${OPTARG};;
     s) sudopass=1;;
     t) thorough=1;;
-    C) _reset=""; _red=""; _yellow=""; _purple="";;
+    C) _reset=""; _red=""; _yellow=""; _purple=""; _color_flag="";;
     h) usage; exit;;
     *) usage; exit;;
   esac
