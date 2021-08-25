@@ -1209,29 +1209,27 @@ if [ "$export" ] && [ "$allconf" ]; then
   for i in $allconf; do cp --parents $i $format/conf-files/; done 2>/dev/null
 fi
 
-#extract any user history files that are accessible
-usrhist=`ls -la ~/.*_history 2>/dev/null`
-if [ "$usrhist" ]; then
-  echo -e "${_red}[-] Current user's history files:${_reset}\n$usrhist" 
-  echo -e "\n"
-fi
-
-if [ "$export" ] && [ "$usrhist" ]; then
-  mkdir $format/history_files/ 2>/dev/null
-  for i in $usrhist; do cp --parents $i $format/history_files/; done 2>/dev/null
-fi
-
-#can we read roots *_history files - could be passwords stored etc.
-roothist=`ls -la /root/.*_history 2>/dev/null`
-if [ "$roothist" ]; then
-  echo -e "${_yellow}[+] Root's history files are accessible!${_reset}\n$roothist" 
-  echo -e "\n"
-fi
-
-if [ "$export" ] && [ "$roothist" ]; then
-  mkdir $format/history_files/ 2>/dev/null
-  cp $roothist $format/history_files/ 2>/dev/null
-fi
+# retrieves accessible history file paths (e.g. ~/.bash_history, ~/.wget-hsts, ~/.lesshst, ecc.)
+# from users with valid home directories and shells
+for entry in $(grep "sh$" /etc/passwd); do
+    user=`echo $entry | cut -d":" -f1`
+    home=`echo $entry | cut -d":" -f6`
+    usrhist=`ls -la $home/.*_history $home/.*-hsts $home/.*hst 2>/dev/null`
+    echo -en "${_red}[-] ${_yellow}${user}${_red}'s history files:${_reset}"
+    if [ "$usrhist" ]; then
+        echo -e "\n$usrhist\n"
+        
+        # if requested we export history files
+        if [ "$export" ] && [ "$usrhist" ]; then
+            # create dir only if it does not exist
+            mkdir -p $format/history_files/ 2>/dev/null
+            for f in $usrhist; do cp --parents $f $format/history_files/; done 2>/dev/null
+        fi
+        
+    else
+        echo -e " ${_yellow}Not found.${_reset}\n"
+    fi
+done
 
 #all accessible .bash_history files in /home
 checkbashhist=`find /home -name .bash_history -print -exec cat {} 2>/dev/null \;`
