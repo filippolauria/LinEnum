@@ -147,7 +147,7 @@ if [ "$loggedonusrs" ]; then
 fi
 
 # save all users in the users variable
-users=`cut -d":" -f1 /etc/passwd 2>/dev/null`
+users=`grep -v '^#' /etc/passwd 2> /dev/null | cut -d":" -f1 2> /dev/null`
 
 #lists all id's and respective group(s)
 grpinfo=`for u in $users; do echo -e "${_purple}$u${_reset}:\n\t$(id $u)"; done 2>/dev/null`
@@ -208,14 +208,14 @@ if [ "$export" ] && [ "$readmasterpasswd" ]; then
 fi
 
 #all root accounts (uid 0)
-superman=`grep -v -E "^#" /etc/passwd 2>/dev/null| awk -F: '$3 == 0 { print $1}' 2>/dev/null`
+superman=`grep -v '^#' /etc/passwd 2> /dev/null | awk -F':' '$3 == 0 { print $1}' 2> /dev/null`
 if [ "$superman" ]; then
   echo -e "${_red}[-] Super user account(s):${_reset}\n$superman"
   echo -e "\n"
 fi
 
 #pull out vital sudoers info
-sudoers=`grep -v -e '^$' /etc/sudoers 2>/dev/null |grep -v "#" 2>/dev/null`
+sudoers=`grep -v '^#' /etc/sudoers 2> /dev/null | grep -v '^$' 2> /dev/null`
 if [ "$sudoers" ]; then
   echo -e "${_red}[-] Sudoers configuration (condensed):${_reset}$sudoers"
   echo -e "\n"
@@ -356,10 +356,9 @@ if [ "$thorough" = "1" ]; then
 fi
 
 #is root permitted to login via ssh
-sshrootlogin=`grep "PermitRootLogin " /etc/ssh/sshd_config 2>/dev/null | grep -v "#" | awk '{print  $2}'`
+sshrootlogin=`grep '^\s*PermitRootLogin\s\+' /etc/ssh/sshd_config 2> /dev/null | cut -d' ' -f2`
 if [ "$sshrootlogin" = "yes" ]; then
-  echo -e "${_red}[-] Root is allowed to login via SSH:${_reset}" ; grep "PermitRootLogin " /etc/ssh/sshd_config 2>/dev/null | grep -v "#" 
-  echo -e "\n"
+  echo -e "${_red}[-] Root is allowed to login via SSH: ${_reset}${sshrootlogin}${_red}!${_reset}\n"
 fi
 }
 
@@ -823,8 +822,12 @@ interesting_files()
 echo -e "${_yellow}### INTERESTING FILES ####################################${_reset}" 
 
 #checks to see if various files are installed
-echo -e "${_red}[-] Useful file locations:${_reset}" ; which nc 2>/dev/null ; which netcat 2>/dev/null ; which wget 2>/dev/null ; which nmap 2>/dev/null ; which gcc 2>/dev/null; which curl 2>/dev/null 
-echo -e "\n" 
+bin_of_interest="nc netcat socat wget nmap gcc curl"
+echo -e "${_red}[-] Useful file locations:${_reset}"
+for b in $bin_of_interest; do
+  which $b 2> /dev/null
+done
+echo -e "\n"
 
 #limited search for installed compilers
 compiler=`dpkg --list 2>/dev/null| grep compiler |grep -v decompiler 2>/dev/null && yum list installed 'gcc*' 2>/dev/null| grep gcc 2>/dev/null`
