@@ -146,8 +146,11 @@ if [ "$loggedonusrs" ]; then
   echo -e "\n"
 fi
 
+# save all users in the users variable
+users=`cut -d":" -f1 /etc/passwd 2>/dev/null`
+
 #lists all id's and respective group(s)
-grpinfo=`for i in $(cut -d":" -f1 /etc/passwd 2>/dev/null);do id $i;done 2>/dev/null`
+grpinfo=`for u in $users; do echo -e "${_purple}$u${_reset}:\n\t$(id $u)"; done 2>/dev/null`
 if [ "$grpinfo" ]; then
   echo -e "${_red}[-] Group memberships:${_reset}\n$grpinfo"
   echo -e "\n"
@@ -467,7 +470,7 @@ if [ "$anacrontab" ]; then
 fi
 
 #pull out account names from /etc/passwd and see if any users have associated cronjobs (priv command)
-cronother=`cut -d ":" -f 1 /etc/passwd | xargs -n1 crontab -l -u 2>/dev/null`
+cronother=`echo $users | xargs -n1 crontab -l -u 2>/dev/null`
 if [ "$cronother" ]; then
   echo -e "${_red}[-] Jobs held by all users:${_reset}\n$cronother" 
   echo -e "\n"
