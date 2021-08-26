@@ -589,16 +589,31 @@ if [ "$psaux" ]; then
 fi
 
 #lookup process binary path and permissisons
-procperm=`ps aux 2>/dev/null | awk '{print $11}'|xargs -r ls -la 2>/dev/null |awk '!x[$0]++' 2>/dev/null`
-if [ "$procperm" ]; then
-  echo -e "${_red}[-] Process binaries and associated permissions (from above list):${_reset}\n$procperm" 
-  echo -e "\n"
-fi
+proclist=`ps -eo command | grep -v "^\(\[\|COMMAND\|(\)" | awk '{print $1}' | awk '!x[$0]++' 2> /dev/null`
+if [ "$proclist" ]; then
+  echo -e "${_red}[-] Process binaries and associated permissions (from above list):${_reset}\n"
+  
+  proclistbin=""
+  for proc in $proclist; do
+    procbin=`which -- $proc 2> /dev/null`
+    # if which command failed, we skip this binary
+    if [ -z "$procbin" ]; then continue; fi
 
-if [ "$export" ] && [ "$procperm" ]; then
-procpermbase=`ps aux 2>/dev/null | awk '{print $11}' | xargs -r ls 2>/dev/null | awk '!x[$0]++' 2>/dev/null`
-  mkdir $format/ps-export/ 2>/dev/null
-  for i in $procpermbase; do cp --parents $i $format/ps-export/; done 2>/dev/null
+    # we concatenate or init the list of processes
+    if [ "$proclistbin" ]; then proclistbin="$proclistbin"$'\n'"$procbin"; else proclistbin="$procbin"; fi
+  done
+
+  # we then present the output 
+  for procbin in $proclistbin; do
+    ls ${_color_flag} -la $procbin 2> /dev/null
+  done
+
+  echo -e "\n"
+  
+  if [ "$export" ]; then
+    mkdir $format/ps-export/ 2>/dev/null
+    for binary in $proclistbin; do cp --parents $binary $format/ps-export/; done 2> /dev/null
+  fi
 fi
 
 #anything 'useful' in inetd.conf
@@ -631,7 +646,7 @@ if [ "$export" ] && [ "$xinetdread" ]; then
   cp /etc/xinetd.conf $format/etc-export/xinetd.conf 2>/dev/null
 fi
 
-xinetdincd=`grep "/etc/xinetd.d" /etc/xinetd.conf 2>/dev/null`
+xinetdincd=`grep ${_color_flag} "/etc/xinetd.d" /etc/xinetd.conf 2>/dev/null`
 if [ "$xinetdincd" ]; then
   echo -e "${_red}[-] /etc/xinetd.d is included in /etc/xinetd.conf - associated binary permissions are listed below:${_reset}"; ls -la /etc/xinetd.d 2>/dev/null 
   echo -e "\n"
