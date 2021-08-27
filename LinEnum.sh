@@ -286,78 +286,62 @@ if [ "$homedirperms" ]; then
   echo -e "\n"
 fi
 
-#looks for files we can write to that don't belong to us
+#is root permitted to login via ssh
+sshrootlogin=`grep '^\s*PermitRootLogin\s\+' /etc/ssh/sshd_config 2> /dev/null | cut -d' ' -f2`
+if [ "$sshrootlogin" = "yes" ]; then
+  echo -e "${_red}[-] Root is allowed to login via SSH: ${_reset}${sshrootlogin}${_red}!${_reset}\n"
+fi
+
 if [ "$thorough" = "1" ]; then
+
+  #looks for files we can write to that don't belong to us
   grfilesall=`find / -writable ! -user \`whoami\` -type f ! -path "/proc/*" ! -path "/sys/*" -exec ls -al {} \; 2>/dev/null`
   if [ "$grfilesall" ]; then
     echo -e "${_red}[-] Files not owned by user but writable by group:${_reset}\n$grfilesall" 
     echo -e "\n"
   fi
-fi
 
-#looks for files that belong to us
-if [ "$thorough" = "1" ]; then
+  #looks for files that belong to us
   ourfilesall=`find / -user \`whoami\` -type f ! -path "/proc/*" ! -path "/sys/*" -exec ls -al {} \; 2>/dev/null`
   if [ "$ourfilesall" ]; then
     echo -e "${_red}[-] Files owned by our user:${_reset}\n$ourfilesall"
     echo -e "\n"
   fi
-fi
 
-#looks for hidden files
-if [ "$thorough" = "1" ]; then
+  #looks for hidden files
   hiddenfiles=`find / -name ".*" -type f ! -path "/proc/*" ! -path "/sys/*" -exec ls -al {} \; 2>/dev/null`
   if [ "$hiddenfiles" ]; then
     echo -e "${_red}[-] Hidden files:${_reset}\n$hiddenfiles"
     echo -e "\n"
   fi
-fi
+  
+  #looks for world-reabable files within /home - depending on number of /home dirs & files, this can take some time so is only 'activated' with thorough scanning switch
+  wrfileshm=`find /home/ -perm -4 -type f -exec ls -al {} \; 2>/dev/null`
+  if [ "$wrfileshm" ]; then
+    echo -e "${_red}[-] World-readable files within /home:${_reset}\n$wrfileshm\n"
 
-#looks for world-reabable files within /home - depending on number of /home dirs & files, this can take some time so is only 'activated' with thorough scanning switch
-if [ "$thorough" = "1" ]; then
-wrfileshm=`find /home/ -perm -4 -type f -exec ls -al {} \; 2>/dev/null`
-	if [ "$wrfileshm" ]; then
-		echo -e "${_red}[-] World-readable files within /home:${_reset}\n$wrfileshm" 
-		echo -e "\n"
-	fi
-fi
+    if [ "$export" ]; then
+      mkdir $format/wr-files/ 2> /dev/null
+      for i in $wrfileshm; do cp --parents $i $format/wr-files/ ; done 2> /dev/null
+    fi
+  fi
 
-if [ "$thorough" = "1" ]; then
-	if [ "$export" ] && [ "$wrfileshm" ]; then
-		mkdir $format/wr-files/ 2>/dev/null
-		for i in $wrfileshm; do cp --parents $i $format/wr-files/ ; done 2>/dev/null
-	fi
-fi
+  #lists current user's home directory contents
+  homedircontents=`ls ${_color_flag} -ahl ~ 2>/dev/null`
+  if [ "$homedircontents" ] ; then
+    echo -e "${_red}[-] Home directory contents:${_reset}\n$homedircontents\n"
+  fi
 
-#lists current user's home directory contents
-if [ "$thorough" = "1" ]; then
-homedircontents=`ls ${_color_flag} -ahl ~ 2>/dev/null`
-	if [ "$homedircontents" ] ; then
-		echo -e "${_red}[-] Home directory contents:${_reset}\n$homedircontents" 
-		echo -e "\n" 
-	fi
-fi
-
-#checks for if various ssh files are accessible - this can take some time so is only 'activated' with thorough scanning switch
-if [ "$thorough" = "1" ]; then
-sshfiles=`find / \( -name "id_dsa*" -o -name "id_rsa*" -o -name "known_hosts" -o -name "authorized_hosts" -o -name "authorized_keys" \) -exec ls -la {} 2>/dev/null \;`
-	if [ "$sshfiles" ]; then
-		echo -e "${_red}[-] SSH keys/host information found in the following locations:${_reset}\n$sshfiles" 
-		echo -e "\n"
-	fi
-fi
-
-if [ "$thorough" = "1" ]; then
-	if [ "$export" ] && [ "$sshfiles" ]; then
-		mkdir $format/ssh-files/ 2>/dev/null
-		for i in $sshfiles; do cp --parents $i $format/ssh-files/; done 2>/dev/null
-	fi
-fi
-
-#is root permitted to login via ssh
-sshrootlogin=`grep '^\s*PermitRootLogin\s\+' /etc/ssh/sshd_config 2> /dev/null | cut -d' ' -f2`
-if [ "$sshrootlogin" = "yes" ]; then
-  echo -e "${_red}[-] Root is allowed to login via SSH: ${_reset}${sshrootlogin}${_red}!${_reset}\n"
+  #checks for if various ssh files are accessible - this can take some time so is only 'activated' with thorough scanning switch
+  sshfiles=`find / \( -name "id_dsa*" -o -name "id_rsa*" -o -name "known_hosts" -o -name "authorized_hosts" -o -name "authorized_keys" \) -exec ls -la {} 2>/dev/null \;`
+  if [ "$sshfiles" ]; then
+    echo -e "${_red}[-] SSH keys/host information found in the following locations:${_reset}\n$sshfiles\n"
+    
+    if [ "$export" ]; then
+      mkdir $format/ssh-files/ 2>/dev/null
+      for i in $sshfiles; do cp --parents $i $format/ssh-files/; done 2>/dev/null
+    fi
+  fi
 fi
 }
 
