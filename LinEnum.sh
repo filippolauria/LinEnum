@@ -86,30 +86,26 @@ system_info()
 echo -e "${_yellow}### SYSTEM ##############################################${_reset}" 
 
 #basic kernel info
-unameinfo=`uname -a 2>/dev/null`
+unameinfo=`uname -a 2> /dev/null`
 if [ "$unameinfo" ]; then
-  echo -e "${_red}[-] Kernel information:${_reset}\n$unameinfo" 
-  echo -e "\n" 
+  echo -e "${_red}[-] Kernel information:${_reset}\n$unameinfo\n"
 fi
 
-procver=`cat /proc/version 2>/dev/null`
+procver=`cat /proc/version 2> /dev/null`
 if [ "$procver" ]; then
-  echo -e "${_red}[-] Kernel information (continued):${_reset}\n$procver" 
-  echo -e "\n" 
+  echo -e "${_red}[-] Kernel information (continued):${_reset}\n$procver\n"
 fi
 
 #search all *-release files for version info
-release=`cat /etc/*-release 2>/dev/null`
+release=`cat /etc/*-release 2> /dev/null`
 if [ "$release" ]; then
-  echo -e "${_red}[-] Specific release information:${_reset}\n$release" 
-  echo -e "\n" 
+  echo -e "${_red}[-] Specific release information:${_reset}\n$release\n"
 fi
 
 #target hostname info
-hostnamed=`hostname 2>/dev/null`
+hostnamed=`hostname 2> /dev/null`
 if [ "$hostnamed" ]; then
-  echo -e "${_red}[-] Hostname:${_reset}\n$hostnamed" 
-  echo -e "\n" 
+  echo -e "${_red}[-] Hostname:${_reset}\n$hostnamed\n"
 fi
 }
 
