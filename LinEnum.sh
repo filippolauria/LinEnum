@@ -49,42 +49,36 @@ debug_info()
 echo "[-] Debug Info" 
 
 if [ "$keyword" ]; then 
-	echo "[+] Searching for the keyword $keyword in conf, php, ini and log files" 
+	echo -e "${_yellow}[+] Searching for the keyword ${_red}$keyword ${_yellow}in conf, php, ini and log files${_reset}\n"
 fi
 
 if [ "$report" ]; then 
-	echo "[+] Report name = $report" 
+	echo -e "${_yellow}[+] Report name = ${_reset}$report\n" 
 fi
 
 if [ "$export" ]; then 
-	echo "[+] Export location = $export" 
+	echo -e "${_yellow}[+] Export location = ${_reset}$export\n" 
 fi
 
-if [ "$thorough" ]; then 
-	echo "[+] Thorough tests = Enabled" 
-else 
-	echo -e "${_yellow}[+] Thorough tests = Disabled${_reset}" 
-fi
+echo -e -n "${_yellow}[+] Thorough tests = ${_reset}"
+if [ "$thorough" ]; then echo "Enabled"; else echo "Disabled"; fi
+echo
 
 sleep 2
 
 if [ "$export" ]; then
-  mkdir $export 2>/dev/null
+  mkdir "$export" 2> /dev/null
   format=$export/LinEnum-export-`date +"%d-%m-%y"`
-  mkdir $format 2>/dev/null
+  mkdir "$format" 2> /dev/null
 fi
 
 if [ "$sudopass" ]; then 
   echo -e "${_purple}[+] Please enter password - INSECURE - really only for CTF use!${_reset}"
-  read -s userpassword
+  read -s -r userpassword
   echo 
 fi
 
-who=`whoami` 2>/dev/null 
-echo -e "\n" 
-
-echo -e "${_yellow}Scan started at:"; date 
-echo -e "${_reset}\n" 
+echo -e "${_yellow}[+] Scan started at: ${_red}`date`${_reset}\n"
 }
 
 # useful binaries (thanks to https://gtfobins.github.io/)
@@ -292,6 +286,7 @@ if [ "$sshrootlogin" = "yes" ]; then
   echo -e "${_red}[-] Root is allowed to login via SSH: ${_reset}${sshrootlogin}${_red}!${_reset}\n"
 fi
 
+#thorough checks
 if [ "$thorough" = "1" ]; then
 
   #looks for files we can write to that don't belong to us
