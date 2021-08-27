@@ -6,11 +6,28 @@ version="version 0.982"
 # colored output vars
 _reset="\e[00m"
 _red="\e[00;31m"
+_green="\e[00;32m"
 _yellow="\e[00;33m"
 _purple="\e[00;35m"
+_cyan="\e[00;36m"
 _gray="\e[0;37m"
 _color_flag="--color"
 
+
+# util functions
+
+# usage: render_text("keyword", "value", "category")
+render_text()
+{
+  case "$3" in
+    "info") bullet="[-]"; keyword_color="${_cyan}"; value_color="";;
+    "danger") bullet="[!]"; keyword_color="${_red}"; value_color="${_yellow}";;
+    "warning") bullet="[!]"; keyword_color="${_yellow}"; value_color="";;
+    "success") bullet="[+]"; keyword_color=""; value_color="${_green}";;
+  esac
+  
+  echo -e "${_gray}$bullet${_reset} ${keyword_color}$1${_reset}${_gray}:${_reset}\n${value_color}$2${_reset}\n"
+}
 
 header()
 {
@@ -88,24 +105,24 @@ echo -e "${_yellow}### SYSTEM ##############################################${_r
 #basic kernel info
 unameinfo=`uname -a 2> /dev/null`
 if [ "$unameinfo" ]; then
-  echo -e "${_red}[-] Kernel information:${_reset}\n$unameinfo\n"
+  render_text "Kernel information" "$unameinfo" "info"
 fi
 
 procver=`cat /proc/version 2> /dev/null`
 if [ "$procver" ]; then
-  echo -e "${_red}[-] Kernel information (continued):${_reset}\n$procver\n"
+  render_text "Kernel information (continued)" "$procver" "info"
 fi
 
 #search all *-release files for version info
 release=`cat /etc/*-release 2> /dev/null`
 if [ "$release" ]; then
-  echo -e "${_red}[-] Specific release information:${_reset}\n$release\n"
+  render_text "Specific release information" "$release" "info"
 fi
 
 #target hostname info
 hostnamed=`hostname 2> /dev/null`
 if [ "$hostnamed" ]; then
-  echo -e "${_red}[-] Hostname:${_reset}\n$hostnamed\n"
+  render_text "Hostname" "$hostnamed" "info"
 fi
 }
 
