@@ -11,37 +11,34 @@ _purple="\e[00;35m"
 _gray="\e[0;37m"
 _color_flag="--color"
 
-#help function
-usage () 
-{ 
-echo -e "\n${_red}#########################################################${_reset}" 
-echo -e "${_red}#${_reset}" "${_yellow}Local Linux Enumeration & Privilege Escalation Script${_reset}" "${_red}#${_reset}"
-echo -e "${_red}#########################################################${_reset}"
-echo -e "${_yellow}# www.rebootuser.com | @rebootuser ${_reset}"
-echo -e "${_yellow}# $version${_reset}\n"
-echo -e "${_yellow}# Example: ./LinEnum.sh -k keyword -r report -e /tmp/ -t ${_reset}\n"
 
-		echo "OPTIONS:"
-		echo "-k	Enter keyword"
-		echo "-e	Enter export location"
-		echo "-s 	Supply user password for sudo checks (INSECURE)"
-		echo "-t	Include thorough (lengthy) tests"
-		echo "-r	Enter report name" 
-        echo "-C	Disable colored output"
-		echo "-h	Displays this help text"
-		echo -e "\n"
-		echo "Running with no options = limited scans/no output file"
-		
-echo -e "${_red}#########################################################${_reset}"		
-}
 header()
 {
-echo -e "\n${_red}#########################################################${_reset}" 
-echo -e "${_red}#${_reset}" "${_yellow}Local Linux Enumeration & Privilege Escalation Script${_reset}" "${_red}#${_reset}" 
-echo -e "${_red}#########################################################${_reset}" 
-echo -e "${_yellow}# www.rebootuser.com${_reset}" 
-echo -e "${_yellow}# $version${_reset}\n" 
+echo -e "${_red}
+#########################################################
+# ${_yellow}Local Linux Enumeration & Privilege Escalation Script ${_red}#
+#########################################################
+# ${_yellow}www.rebootuser.com${_red}
+# ${_yellow}$version${_reset}\n"
+}
 
+#help function
+usage ()
+{ 
+header
+echo -e "${_yellow}# Example: ./LinEnum.sh -k keyword -r report -e /tmp/ -t ${_reset}\n
+OPTIONS:
+-k	Enter keyword
+-e	Enter export location
+-s 	Supply user password for sudo checks (INSECURE)
+-t	Include thorough (lengthy) tests
+-r	Enter report name
+-C	Disable colored output
+-h	Displays this help text
+
+${_yellow}Running with no options = limited scans/no output file${_red}
+		
+#########################################################${_reset}\n"
 }
 
 debug_info()
