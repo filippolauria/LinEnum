@@ -209,69 +209,67 @@ if [ "$export" ] && [ "$readmasterpasswd" ]; then
 fi
 
 #all root accounts (uid 0)
-superman=`grep -v '^#' /etc/passwd 2> /dev/null | awk -F':' '$3 == 0 { print $1}' 2> /dev/null`
+superman=`grep -v '^#' /etc/passwd 2> /dev/null | awk -F':' '$3 == 0 {print $1}' 2> /dev/null`
 if [ "$superman" ]; then
   echo -e "${_red}[-] Super user account(s):${_reset}\n$superman"
   echo -e "\n"
 fi
 
-#pull out vital sudoers info
-sudoers=`grep -v '^#' /etc/sudoers 2> /dev/null | grep -v '^$' 2> /dev/null`
-if [ "$sudoers" ]; then
-  echo -e "${_red}[-] Sudoers configuration (condensed):${_reset}$sudoers"
-  echo -e "\n"
-fi
+# we proceed with sudo checks, only if we can get the sudo binary path
+sudobin=`which sudo`
+if [ "$sudobin" ]; then
 
-if [ "$export" ] && [ "$sudoers" ]; then
-  mkdir $format/etc-export/ 2>/dev/null
-  cp /etc/sudoers $format/etc-export/sudoers 2>/dev/null
-fi
+  #pull out vital sudoers info
+  sudoers=`grep -v '^#' /etc/sudoers 2> /dev/null | grep -v '^$' 2> /dev/null`
+  if [ "$sudoers" ]; then
+    echo -e "${_red}[-] Sudoers configuration (condensed):${_reset}$sudoers\n"
 
-#can we sudo without supplying a password
-sudoperms=`echo '' | sudo -S -l -k 2>/dev/null`
-if [ "$sudoperms" ]; then
-  echo -e "${_yellow}[+] We can sudo without supplying a password!${_reset}\n$sudoperms" 
-  echo -e "\n"
-fi
+    if [ "$export" ]; then
+      mkdir $format/etc-export/ 2> /dev/null
+      cp /etc/sudoers $format/etc-export/sudoers 2> /dev/null
+    fi
+  fi
 
-#check sudo perms - authenticated
-if [ "$sudopass" ]; then
-    if [ "$sudoperms" ]; then
-      :
-    else
-      sudoauth=`echo $userpassword | sudo -S -l -k 2>/dev/null`
+  #can we sudo without supplying a password?
+  sudoperms=`echo '' | sudo -S -l -k 2> /dev/null`
+  if [ "$sudoperms" ]; then
+    echo -e "${_yellow}[+] We can sudo without supplying a password!${_reset}\n$sudoperms\n"
+
+    #known 'good' breakout binaries (cleaned to parse /etc/sudoers for comma separated values)
+    sudopwnage=`echo "$sudoperms" | xargs -n 1 2> /dev/null | sed 's/,*$//g' 2> /dev/null | grep -w $binarylist 2> /dev/null`
+    if [ "$sudopwnage" ]; then
+      echo -e "${_yellow}[+] Possible sudo pwnage!${_reset}\n$sudopwnage\n"
+    fi
+
+  else
+    
+    if [ "$sudopass" ]; then
+      #can we sudo when supplying a password?
+      sudoauth=`echo $userpassword | sudo -S -l -k 2> /dev/null`
       if [ "$sudoauth" ]; then
-        echo -e "${_yellow}[+] We can sudo when supplying a password!${_reset}\n$sudoauth" 
-        echo -e "\n"
+        echo -e "${_yellow}[+] We can sudo when supplying a password!${_reset}\n$sudoauth\n"
+
+        #known 'good' breakout binaries (cleaned to parse /etc/sudoers for comma separated values) - authenticated
+        sudopermscheck=`echo "$sudoauth" | xargs -n 1 2> /dev/null | sed 's/,*$//g' 2> /dev/null | grep -w $binarylist 2> /dev/null`
+        if [ "$sudopermscheck" ]; then
+          echo -e "${_yellow}[-] Possible sudo pwnage!${_reset}\n$sudopermscheck\n"
+        fi
+
       fi
+      
     fi
-fi
+  fi
 
-##known 'good' breakout binaries (cleaned to parse /etc/sudoers for comma separated values) - authenticated
-if [ "$sudopass" ]; then
-    if [ "$sudoperms" ]; then
-      :
-    else
-      sudopermscheck=`echo $userpassword | sudo -S -l -k 2>/dev/null | xargs -n 1 2>/dev/null|sed 's/,*$//g' 2>/dev/null | grep -w $binarylist 2>/dev/null`
-      if [ "$sudopermscheck" ]; then
-        echo -e "${_yellow}[-] Possible sudo pwnage!${_reset}\n$sudopermscheck" 
-        echo -e "\n"
-      fi
-    fi
-fi
+  #who has sudoed in the past
+  sudoerhomelist=`find /home -name .sudo_as_admin_successful -exec dirname {} \; 2> /dev/null | sort -u`
+  if [ "$sudoerhomelist" ]; then
+    echo -e "${_red}[-] Users that have recently used ${_yellow}sudo${_red}:${_reset}\n"
+    for h in $sudoerhomelist; do
+      ls -dl "$h" 2> /dev/null | awk 'NR==1 {print $3}' 2> /dev/null
+    done
+    echo -e "\n"
+  fi
 
-#known 'good' breakout binaries (cleaned to parse /etc/sudoers for comma separated values)
-sudopwnage=`echo '' | sudo -S -l -k 2>/dev/null | xargs -n 1 2>/dev/null | sed 's/,*$//g' 2>/dev/null | grep -w $binarylist 2>/dev/null`
-if [ "$sudopwnage" ]; then
-  echo -e "${_yellow}[+] Possible sudo pwnage!${_reset}\n$sudopwnage" 
-  echo -e "\n"
-fi
-
-#who has sudoed in the past
-whohasbeensudo=`find /home -name .sudo_as_admin_successful 2>/dev/null`
-if [ "$whohasbeensudo" ]; then
-  echo -e "${_red}[-] Accounts that have recently used sudo:${_reset}\n$whohasbeensudo" 
-  echo -e "\n"
 fi
 
 #checks to see if roots home directory is accessible
