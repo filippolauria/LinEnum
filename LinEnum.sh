@@ -1,7 +1,14 @@
 #!/bin/bash
-#A script to enumerate local information from a Linux host
-version="version 0.982"
-#@rebootuser
+#
+#  LinEnum.sh - Local Linux Enumeration & Privilege Escalation Script:
+#  a script to enumerate local information from a Linux host
+#
+#  Author: @rebootuser (up to version 0.982)
+#          @filippolauria (from version 1.0)
+#
+
+# version number
+version="1.0"
 
 # colored output vars
 _reset="\e[00m"
@@ -11,7 +18,7 @@ _yellow="\e[00;33m"
 _purple="\e[00;35m"
 _cyan="\e[00;36m"
 _gray="\e[0;37m"
-_color_flag="--color"
+_color_flag="--color=always"
 
 
 # util functions
@@ -33,32 +40,46 @@ render_text()
   else echo -e "\n"; fi
 }
 
-header()
+banner()
 {
-echo -e "${_red}
+ echo -e "${_red}
 #########################################################
-# ${_yellow}Local Linux Enumeration & Privilege Escalation Script ${_red}#
-#########################################################
-# ${_yellow}www.rebootuser.com${_red}
-# ${_yellow}$version${_reset}\n"
+${_reset}"
+
+if [ -z "$quiet" ]; then
+  echo -e "${_yellow}      _      _       ______                       
+     | |    (_)     |  ____|                      
+     | |     _ _ __ | |__   _ __  _   _ _ __ ___  
+     | |    | | '_ \\|  __| | '_ \\| | | | '_ \` _ \\ 
+     | |____| | | | | |____| | | | |_| | | | | | |
+     |______|_|_| |_|______|_| |_|\\__,_|_| |_| |_| v${_yellow}$version${_reset}
+${_reset}
+  Local Linux Enumeration & Privilege Escalation Script
+
+${_red}#########################################################${_reset}
+"
+fi
 }
 
 #help function
 usage ()
 { 
-header
-echo -e "${_yellow}# Example: ./LinEnum.sh -k keyword -r report -e /tmp/ -t ${_reset}\n
-OPTIONS:
+banner
+echo -e "OPTIONS:
 -k	Enter keyword
 -e	Enter export location
 -s 	Supply user password for sudo checks (INSECURE)
 -t	Include thorough (lengthy) tests
 -r	Enter report name
 -C	Disable colored output
+-q	Hide banner
 -h	Displays this help text
 
-${_yellow}Running with no options = limited scans/no output file${_red}
-		
+${_yellow}Running with no options = limited scans/no output file${_reset}
+
+EXAMPLE:
+    ./LinEnum.sh -k keyword -r report -e /tmp/ -t
+${_red}
 #########################################################${_reset}\n"
 }
 
@@ -227,13 +248,25 @@ if [ "$sudobin" ]; then
   sudoers=`grep -v '^#\|^$' /etc/sudoers 2> /dev/null`
   if [ "$sudoers" ]; then
     render_text "warning" "Sudoers configuration (condensed)" "$sudoers"
+    
+    # is LD_PRELOAD explicitly defined in /etc/sudoers?
+    ldpreloadsudoers=`echo "$sudoers" | grep ${_color_flag} LD_PRELOAD`
+    if [ "$ldpreloadsudoers" ]; then
+      render_text "danger" "LD_PRELOAD is explicitly defined in /etc/sudoers" "$ldpreloadsudoers"
+    fi
+    
+    # check for NOPASSWD in /etc/sudoers
+    nopasswdsudoers=`echo "$sudoers" | grep ${_color_flag} NOPASSWD`
+    if [ "$nopasswdsudoers" ]; then
+      render_text "danger" "NOPASSWD flag(s) found in /etc/sudoers" "$nopasswdsudoers"
+    fi
 
     if [ "$export" ]; then
       mkdir $format/etc-export/ 2> /dev/null
       cp /etc/sudoers $format/etc-export/sudoers 2> /dev/null
     fi
   fi
-
+  
   #can we sudo without supplying a password?
   sudoperms=`echo '' | sudo -S -l -k 2> /dev/null`
   if [ "$sudoperms" ]; then
@@ -380,12 +413,12 @@ fi
 #current path configuration
 pathinfo=`echo $PATH 2> /dev/null`
 if [ "$pathinfo" ]; then
-  pathswriteable=`ls ${_color_flag} -dl $(echo $PATH | tr ":" " ")`
+  pathswriteable=`ls ${_color_flag} -dlah $(echo $PATH | tr ":" " ")`
   render_text "info" "Path information" "$pathinfo\n\n$pathswriteable"
 fi
 
 #lists available shells
-shellinfo=`ls ${_color_flag} -dl $(grep -v '^#\|^$' /etc/shells 2> /dev/null) 2> /dev/null`
+shellinfo=`ls ${_color_flag} -dlah $(grep -v '^#\|^$' /etc/shells 2> /dev/null) 2> /dev/null`
 if [ "$shellinfo" ]; then
   render_text "info" "Available shells as specified in /etc/shells" "$shellinfo"
 fi
@@ -411,6 +444,12 @@ if [ "$logindefs" ]; then
     mkdir $format/etc-export/ 2> /dev/null
     cp /etc/login.defs $format/etc-export/login.defs 2> /dev/null
   fi
+fi
+
+#In-memory passwords
+inmemorypassword=`strings /dev/mem -n10 2> /dev/null | grep ${_color_flag} -i PASS`
+if [ "$inmemorypassword" ]; then
+  render_text "danger" "In-memory passwords" "$inmemorypassword"
 fi
 }
 
@@ -778,8 +817,14 @@ if [ "$compiler" ]; then
 fi
 
 #manual check - lists out sensitive files, can we read/modify etc.
-sensitive_files="/etc/passwd /etc/group /etc/profile /etc/shadow /etc/master.passwd"
+sensitive_files="/etc/passwd /etc/group /etc/profile /etc/shadow /etc/master.passwd /etc/security/opasswd"
 render_text "warning" "Can we read/write sensitive files" "`ls ${_color_flag} -lah $sensitive_files 2> /dev/null`"
+
+#files that have changed in the last 10 minutes
+changedfiles=`find / -mmin 10 2> /dev/null | grep -v "^/proc" | xargs -r ls ${_color_flag} -dlah 2> /dev/null`
+if [ "$changedfiles"]; then
+  render_text "warning" "Files that have changed in the last 10 minutes" "$changedfiles"
+fi
 
 #search for suid files
 allsuid=`find / -perm -4000 -type f 2> /dev/null`
@@ -956,6 +1001,12 @@ nfsexports=`ls ${_color_flag} -lah /etc/exports 2> /dev/null; cat /etc/exports 2
 if [ "$nfsexports" ]; then
   render_text "warning" "NFS config details" "$nfsexports"
 
+  # check for no_root_squash in /etc/exports
+  no_root_squash=`echo "$nfsexports" | grep ${_color_flag} no_root_squash`
+  if [ "$no_root_squash" ]; then
+    render_text "danger" "no_root_squash found in /etc/exports" "$no_root_squash"
+  fi
+
   if [ "$export" ]; then
     mkdir $format/etc-export/ 2> /dev/null
     cp /etc/exports $format/etc-export/exports 2> /dev/null
@@ -996,6 +1047,12 @@ if [ "$fstabcred" ]; then
   fi
 fi
 
+#can we read some log?
+readablelogs=`find /etc/log /var/log -type f -name *log* -readable 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+if [ "$readablelogs" ]; then
+  render_text "warning" "We can read these log files content" "$readablelogs"
+fi
+
 if [ "$keyword" ]; then
   #use supplied keyword and cat *.conf files for potential matches - output will show line number within relevant file path where a match has been located
   confkeyfiles=`find / -maxdepth 4 \( -name *.conf* -o -name *.cnf* -a \! -name *example \) -type f 2> /dev/null`
@@ -1031,7 +1088,7 @@ if [ "$keyword" ]; then
     logkey=`echo "$logkeyfiles" | xargs grep -Hn $keyword 2> /dev/null`
     if [ "$logkey" ]; then
       render_text "warning" "Find keyword ($keyword) in .log files (recursive 4 levels - output format filepath:identified line number where keyword appears)" "$logkey"
-      
+
       if [ "$export" ]; then
         mkdir --parents $format/keyword_file_matches/log_files/ 2> /dev/null
         for f in $logkeyfiles; do cp --parents $f $format/keyword_file_matches/log_files/; done 2> /dev/null
@@ -1085,9 +1142,20 @@ for entry in $(grep "^.*sh$" /etc/passwd 2> /dev/null); do
 done
 
 #all accessible .bash_history files in /home
-checkbashhist=`find /home -name .bash_history -print -exec cat {} 2> /dev/null \;`
+checkbashhist=`find /home -name .bash_history -exec ls -lah {} 2> /dev/null \; -exec tail -n 30 {} 2> /dev/null \;  2> /dev/null`
 if [ "$checkbashhist" ]; then
-  render_text "info" "Location and contents (if accessible) of .bash_history file(s)" "$checkbashhist"
+  render_text "info" "Location and contents (last 30 rows, if accessible) of .bash_history file(s)" "$checkbashhist"
+fi
+
+#hijack tmux session
+tmux_installed=`which -- tmux 2> /dev/null`
+if [ "$tmux_installed" ]; then
+  # look for readable access to the tmux socket
+  tmux_sessions=`find /var/tmp/tmux-*/default /tmp/tmux-*/default -type f -readable 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+  if [ "$tmux_sessions" ]; then
+    render_text "danger" "Possible tmux session hijacking" "$tmux_sessions"
+  fi
+  
 fi
 
 #any bakup file that may be of interest
@@ -1173,7 +1241,7 @@ echo -e "${_yellow}### SCAN COMPLETE ####################################${_rese
 
 call_each()
 {
-  header
+  banner
   debug_info
   system_info
   user_info
@@ -1188,14 +1256,15 @@ call_each()
   footer
 }
 
-while getopts "k:r:e:stCh" option; do
+while getopts "k:r:e:stCqh" option; do
   case "${option}" in
     k) keyword=${OPTARG};;
     r) report=${OPTARG}"-"`date +"%d-%m-%y"`;;
     e) export=${OPTARG};;
     s) sudopass=1;;
     t) thorough=1;;
-    C) _reset=""; _red=""; _yellow=""; _purple=""; _color_flag="";;
+    C) _reset=""; _red=""; _green=""; _yellow=""; _cyan=""; _purple=""; _gray=""; _color_flag="";;
+    q) quiet=1;;
     h) usage; exit;;
     *) usage; exit;;
   esac
