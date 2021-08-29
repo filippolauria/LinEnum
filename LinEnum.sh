@@ -24,6 +24,7 @@ render_text()
     "danger") bullet="[!]"; keyword_color="${_red}"; value_color="${_yellow}";;
     "warning") bullet="[!]"; keyword_color="${_yellow}"; value_color="";;
     "success") bullet="[+]"; keyword_color="${_green}"; value_color="";;
+    "hint") bullet="[*]"; keyword_color="${_purlple}"; value_color="";;
     *) bullet="[.]"; keyword_color=""; value_color="";;
   esac
   
@@ -551,43 +552,14 @@ if [ "$psaux" ]; then
 fi
 
 #lookup process binary path and permissisons
-proclist=`ps -eo command | grep -v "^\(\[\|COMMAND\|(\)" | awk '{print $1}' | awk '!x[$0]++' | grep -v '^$' | \
-          xargs -r which -- 2> /dev/null`
+proclist=`ps -eo command | grep -v "^\(\[\|COMMAND\|(\)" | awk '{print $1}' | awk '!x[$0]++' | xargs -r which -- 2> /dev/null`
 if [ "$proclist" ]; then
-  proclistoutput=`echo "$proclist" | xargs ls ${_color_flag} -la 2> /dev/null`
+  proclistoutput=`echo "$proclist" | xargs -r ls ${_color_flag} -lah 2> /dev/null`
   render_text "info" "Process binaries and associated permissions (from the above list)" "$proclistoutput"
 
   if [ "$export" ]; then
     mkdir $format/ps-export/ 2> /dev/null
     for binary in $proclist; do cp --parents $binary $format/ps-export/; done 2> /dev/null
-  fi
-fi
-
-#lookup process binary path and permissisons
-proclist=`ps -eo command | grep -v "^\(\[\|COMMAND\|(\)" | awk '{print $1}' | awk '!x[$0]++' 2> /dev/null`
-if [ "$proclist" ]; then
-  
-  proclistbin=""
-  for proc in $proclist; do
-    procbin="`which -- $proc 2> /dev/null`"
-    # if which command failed, we skip this binary
-    if [ "$procbin" ]; then
-      # we concatenate or init the list of processes
-      if [ "$proclistbin" ]; then proclistbin="$proclistbin"$'\n'"$procbin"; else proclistbin="$procbin"; fi
-    fi
-  done
-
-  # then we create the output list
-  proclistoutput=`IFS=$'\n'; ls ${_color_flag} -la $proclistbin 2> /dev/null`
-  
-  # and we print it
-  if [ "$proclistoutput" ]; then
-    render_text "info" "Process binaries and associated permissions (from the above list)" "$proclistoutput"
-  fi
-  
-  if [ "$export" ]; then
-    mkdir $format/ps-export/ 2> /dev/null
-    for binary in $proclistbin; do cp --parents $binary $format/ps-export/; done 2> /dev/null
   fi
 fi
 
@@ -674,13 +646,13 @@ if [ "$initperms" ]; then
 fi
 
 if [ "$thorough" = "1" ]; then systemdread=`ls ${_color_flag} -lthR /lib/systemd/ /etc/systemd/ 2> /dev/null`;
-else systemdread="`find /lib/systemd/ /etc/systemd/ -name *.service -type f 2> /dev/null | xargs -r ls -la 2> /dev/null`"; fi
+else systemdread="`find /lib/systemd/ /etc/systemd/ -name *.service -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`"; fi
 if [ "$systemdread" ]; then
   render_text "info" "systemd config file permissions" "$systemdread"
 fi
 
 # systemd files not belonging to root
-systemdperms=`find /lib/systemd/ /etc/systemd/ \! -uid 0 -type f 2> /dev/null | xargs -r ls -la 2> /dev/null`
+systemdperms=`find /lib/systemd/ /etc/systemd/ \! -uid 0 -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
 if [ "$systemdperms" ]; then
    render_text "danger" "systemd config files not belonging to root" "$systemdperms"
 fi
