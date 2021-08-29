@@ -5,7 +5,7 @@ Note: Export functionality is currently in the experimental stage.
 
 General usage:
 
-version 0.982
+version 1.0
 
 * Example: ./LinEnum.sh -s -k keyword -r report -e /tmp/ -t 
 
@@ -15,6 +15,8 @@ OPTIONS:
 * -t	Include thorough (lengthy) tests
 * -s	Supply current user password to check sudo perms (INSECURE)
 * -r	Enter report name
+* -C	Disable colored output
+* -q	Hide banner
 * -h	Displays this help text
 
 
@@ -52,7 +54,7 @@ High-level summary of the checks/tasks performed by LinEnum:
   * Basic SSH checks
 * Privileged access:
   * Which users have recently used sudo
-  * Determine if /etc/sudoers is accessible
+  * Determine if /etc/sudoers is accessible (and check for LD_PRELOAD)
   * Determine if the current user has Sudo access without a password
   * Are known ‘good’ breakout binaries available via Sudo (i.e. nmap, vim etc.)
   * Is root’s home directory accessible
@@ -60,6 +62,7 @@ High-level summary of the checks/tasks performed by LinEnum:
 * Environmental:
   * Display current $PATH
   * Displays env information
+  * Check for in-memory passwords
 * Jobs/Tasks:
   * List all cron jobs
   * Locate all world-writable cron jobs
@@ -92,10 +95,10 @@ High-level summary of the checks/tasks performed by LinEnum:
   * List all world-writable files
   * Find/list all accessible *.plan files and display contents
   * Find/list all accessible *.rhosts files and display contents
-  * Show NFS server details
-  * Locate *.conf and *.log files containing keyword supplied at script runtime
+  * Show NFS server details (check for no_root_squash)
+  * Locate *.conf*, *.cnf* and *.log* files containing keyword supplied at script runtime
   * List all *.conf files located in /etc
-  * .bak file search
+  * bakup (*.bak, *.old, *.tmp, *.temp, *.001, *~) files search
   * Locate mail
 * Platform/software specific tests:
   * Checks to determine if we're in a Docker container
