@@ -1090,8 +1090,6 @@ if [ "$checkbashhist" ]; then
   render_text "info" "Location and contents (if accessible) of .bash_history file(s)" "$checkbashhist"
 fi
 
-'.tmp','.old','.bak','~','.temp','.001'
-
 #any bakup file that may be of interest
 bakfiles="`find / \( -name *.bak -o -name *.tmp -o -name *.temp -o -name *.old -o -name *.001 -o -name *\~ \) -type f 2> /dev/null | \
            xargs -r ls ${_color_flag} -lah 2> /dev/null`"
@@ -1140,7 +1138,7 @@ if [ "$dockergrp" ]; then
 fi
 
 #specific checks - are there any docker files present
-dockerfiles=`find / -name Dockerfile* | xargs -r ls -lah 2> /dev/null`
+dockerfiles=`find / -name Dockerfile* 2> /dev/null | xargs -r ls -lah 2> /dev/null`
 if [ "$dockerfiles" ]; then
   render_text "warning" "Anything juicy in the Dockerfile" "$dockerfiles"
 fi
