@@ -588,26 +588,24 @@ fi
 
 #default route configuration
 defroute=`(route -n || /usr/sbin/route -n) 2> /dev/null | grep '^\(0.\?\)\{4\}'`
+if [ -z "$defroute" ]; then
+  #default route configuration (using ip)
+  defroute=`(ip r || /sbin/ip r) 2> /dev/null | grep default`
+fi
+  
 if [ "$defroute" ]; then
   render_text "info" "Default route" "$defroute"
-else
-  #default route configuration (using ip)
-  defrouteip=`(ip r || /sbin/ip r) 2> /dev/null | grep default`
-  if [ "$defrouteip" ]; then
-    render_text "info" "Default route" "$defrouteip"
-  fi
 fi
 
 #listening TCP
-tcpservs=`(netstat -lntp | sed "s,127.0.0.1:[0-9]\+,${_sed_yellow},") 2> /dev/null`
-if [ "$tcpservs" ]; then
-  render_text "info" "Listening TCP" "$tcpservs"
-else
+tcpserv=`(netstat -lntp | sed "s,127.0.0.1:[0-9]\+,${_sed_yellow},") 2> /dev/null`
+if [ -z "$tcpserv" ]; then
   #listening TCP (using ss)
-  tcpservsip=`(ss -lntp | sed "s,127.0.0.1:[0-9]\+,${_sed_yellow},") 2> /dev/null`
-  if [ "$tcpservsip" ]; then
-    render_text "info" "Listening TCP" "$tcpservsip"
-  fi
+  tcpserv=`(ss -lntp | sed "s,127.0.0.1:[0-9]\+,${_sed_yellow},") 2> /dev/null`
+fi
+
+if [ "$tcpserv" ]; then
+  render_text "info" "Listening TCP" "$tcpserv"
 fi
 
 #listening UDP
@@ -1334,7 +1332,9 @@ while getopts "k:r:e:stCqh" option; do
     e) export=${OPTARG};;
     s) sudopass=1;;
     t) thorough=1;;
-    C) _reset=""; _red=""; _green=""; _yellow=""; _cyan=""; _purple=""; _gray=""; _color_flag="";;
+    C) _reset=""; _red=""; _green=""; _yellow=""; _cyan=""; _purple=""; _gray=""; _color_flag=""
+       _sed_red="\o033[4m&\o033[0m"; _sed_yellow="\o033[4m&\o033[0m"
+    ;;
     q) quiet=1;;
     h) usage; exit;;
     *) usage; exit;;
