@@ -11,16 +11,25 @@
 version="1.0"
 
 # colored output vars
-_cols="`tput cols 2> /dev/null || echo "120"`"
-_reset="\e[0m"
-_red="\e[1;31m"
-_green="\e[1;32m"
-_yellow="\e[1;33m"
-_purple="\e[1;35m"
-_cyan="\e[1;36m"
-_gray="\e[1;37m"
+_reset="\033[0m"
+_red="\033[1;31m"
+_green="\033[1;32m"
+_yellow="\033[1;33m"
+_purple="\033[1;35m"
+_cyan="\033[1;36m"
+_gray="\033[1;37m"
 _color_flag="--color=always"
 
+# set the number of columns
+_cols="`tput cols 2> /dev/null || echo -n "120"`"
+if [ "$_cols" -lt "120" ]; then _cols="120"; fi
+
+# we use sed to colorize some output
+_sed_red="\o033[1;33m&\o033[0m"
+_sed_yellow="\o033[1;31m&\o033[0m"
+
+# useful binaries (thanks to https://gtfobins.github.io/)
+binarylist='ansible-playbook\|apt-get\|apt\|ar\|aria2c\|arj\|arp\|ash\|at\|atobm\|awk\|base32\|base64\|basenc\|bash\|bpftrace\|bridge\|bundler\|busctl\|busybox\|byebug\|c89\|c99\|cancel\|capsh\|cat\|certbot\|check_by_ssh\|check_cups\|check_log\|check_memory\|check_raid\|check_ssl_cert\|check_statusfile\|chmod\|chown\|chroot\|cmp\|cobc\|column\|comm\|composer\|cowsay\|cowthink\|cp\|cpan\|cpio\|cpulimit\|crash\|crontab\|csh\|csplit\|csvtool\|cupsfilter\|curl\|cut\|dash\|date\|dd\|dialog\|diff\|dig\|dmesg\|dmidecode\|dmsetup\|dnf\|docker\|dpkg\|dvips\|easy_install\|eb\|ed\|emacs\|env\|eqn\|ex\|exiftool\|expand\|expect\|facter\|file\|find\|finger\|flock\|fmt\|fold\|ftp\|gawk\|gcc\|gdb\|gem\|genisoimage\|ghc\|ghci\|gimp\|git\|grep\|gtester\|gzip\|hd\|head\|hexdump\|highlight\|hping3\|iconv\|iftop\|install\|ionice\|ip\|irb\|jjs\|join\|journalctl\|jq\|jrunscript\|knife\|ksh\|ksshell\|latex\|ld.so\|ldconfig\|less\|ln\|loginctl\|logsave\|look\|ltrace\|lua\|lualatex\|luatex\|lwp-download\|lwp-request\|mail\|make\|man\|mawk\|more\|mount\|msgattrib\|msgcat\|msgconv\|msgfilter\|msgmerge\|msguniq\|mtr\|mv\|mysql\|nano\|nawk\|nc\|nice\|nl\|nmap\|node\|nohup\|npm\|nroff\|nsenter\|octave\|od\|openssl\|openvpn\|openvt\|paste\|pdb\|pdflatex\|pdftex\|perl\|pg\|php\|pic\|pico\|pip\|pkexec\|pkg\|pr\|pry\|psql\|puppet\|python\|rake\|readelf\|red\|redcarpet\|restic\|rev\|rlogin\|rlwrap\|rpm\|rpmquery\|rsync\|ruby\|run-mailcap\|run-parts\|rview\|rvim\|scp\|screen\|script\|sed\|service\|setarch\|sftp\|sg\|shuf\|slsh\|smbclient\|snap\|socat\|soelim\|sort\|split\|sqlite3\|ss\|ssh-keygen\|ssh-keyscan\|ssh\|start-stop-daemon\|stdbuf\|strace\|strings\|su\|sysctl\|systemctl\|systemd-resolve\|tac\|tail\|tar\|taskset\|tbl\|tclsh\|tcpdump\|tee\|telnet\|tex\|tftp\|tic\|time\|timedatectl\|timeout\|tmux\|top\|troff\|tshark\|ul\|unexpand\|uniq\|unshare\|update-alternatives\|uudecode\|uuencode\|valgrind\|vi\|view\|vigr\|vim\|vimdiff\|vipw\|virsh\|watch\|wc\|wget\|whois\|wish\|xargs\|xelatex\|xetex\|xmodmap\|xmore\|xxd\|xz\|yarn\|yelp\|yum\|zip\|zsh\|zsoelim\|zypper'
 
 # util functions
 
@@ -120,36 +129,30 @@ if [ "$keyword" ]; then
   render_text "info" "Searching for the following keyword in conf, php, ini and log files" "$keyword"
 fi
 
-if [ "$report" ]; then 
-  render_text "info" "Report name" "$report"
-fi
+if [ "$report" ]; then render_text "info" "Report name" "$report"; fi
 
-if [ "$export" ]; then
-  render_text "info" "Export location" "$export"
-fi
+if [ "$export" ]; then render_text "info" "Export location" "$export"; fi
 
 render_text "info" "Thorough tests" "`if [ "$thorough" ]; then echo -n "Enabled"; else echo -n "Disabled"; fi`"
 echo
 
 sleep 2
 
+# prepare to export findings
 if [ "$export" ]; then
   mkdir "$export" 2> /dev/null
   format=$export/LinEnum-export-`date +"%d-%m-%y"`
   mkdir "$format" 2> /dev/null
 fi
 
+# prepare password
 if [ "$sudopass" ]; then 
   render_text "warning" "Please enter password - INSECURE - really only for CTF use!"
   read -s -r userpassword
   echo 
 fi
 
-render_text "success" "Scan started at" "`date`"
 }
-
-# useful binaries (thanks to https://gtfobins.github.io/)
-binarylist='ansible-playbook\|apt-get\|apt\|ar\|aria2c\|arj\|arp\|ash\|at\|atobm\|awk\|base32\|base64\|basenc\|bash\|bpftrace\|bridge\|bundler\|busctl\|busybox\|byebug\|c89\|c99\|cancel\|capsh\|cat\|certbot\|check_by_ssh\|check_cups\|check_log\|check_memory\|check_raid\|check_ssl_cert\|check_statusfile\|chmod\|chown\|chroot\|cmp\|cobc\|column\|comm\|composer\|cowsay\|cowthink\|cp\|cpan\|cpio\|cpulimit\|crash\|crontab\|csh\|csplit\|csvtool\|cupsfilter\|curl\|cut\|dash\|date\|dd\|dialog\|diff\|dig\|dmesg\|dmidecode\|dmsetup\|dnf\|docker\|dpkg\|dvips\|easy_install\|eb\|ed\|emacs\|env\|eqn\|ex\|exiftool\|expand\|expect\|facter\|file\|find\|finger\|flock\|fmt\|fold\|ftp\|gawk\|gcc\|gdb\|gem\|genisoimage\|ghc\|ghci\|gimp\|git\|grep\|gtester\|gzip\|hd\|head\|hexdump\|highlight\|hping3\|iconv\|iftop\|install\|ionice\|ip\|irb\|jjs\|join\|journalctl\|jq\|jrunscript\|knife\|ksh\|ksshell\|latex\|ld.so\|ldconfig\|less\|ln\|loginctl\|logsave\|look\|ltrace\|lua\|lualatex\|luatex\|lwp-download\|lwp-request\|mail\|make\|man\|mawk\|more\|mount\|msgattrib\|msgcat\|msgconv\|msgfilter\|msgmerge\|msguniq\|mtr\|mv\|mysql\|nano\|nawk\|nc\|nice\|nl\|nmap\|node\|nohup\|npm\|nroff\|nsenter\|octave\|od\|openssl\|openvpn\|openvt\|paste\|pdb\|pdflatex\|pdftex\|perl\|pg\|php\|pic\|pico\|pip\|pkexec\|pkg\|pr\|pry\|psql\|puppet\|python\|rake\|readelf\|red\|redcarpet\|restic\|rev\|rlogin\|rlwrap\|rpm\|rpmquery\|rsync\|ruby\|run-mailcap\|run-parts\|rview\|rvim\|scp\|screen\|script\|sed\|service\|setarch\|sftp\|sg\|shuf\|slsh\|smbclient\|snap\|socat\|soelim\|sort\|split\|sqlite3\|ss\|ssh-keygen\|ssh-keyscan\|ssh\|start-stop-daemon\|stdbuf\|strace\|strings\|su\|sysctl\|systemctl\|systemd-resolve\|tac\|tail\|tar\|taskset\|tbl\|tclsh\|tcpdump\|tee\|telnet\|tex\|tftp\|tic\|time\|timedatectl\|timeout\|tmux\|top\|troff\|tshark\|ul\|unexpand\|uniq\|unshare\|update-alternatives\|uudecode\|uuencode\|valgrind\|vi\|view\|vigr\|vim\|vimdiff\|vipw\|virsh\|watch\|wc\|wget\|whois\|wish\|xargs\|xelatex\|xetex\|xmodmap\|xmore\|xxd\|xz\|yarn\|yelp\|yum\|zip\|zsh\|zsoelim\|zypper'
 
 system_info()
 {
@@ -158,15 +161,15 @@ print_title "yellow" "SYSTEM"
 #basic kernel info
 unameinfo=`uname -a 2> /dev/null`
 if [ "$unameinfo" ]; then
-  render_text "info" "Kernel information" "$unameinfo"
-  render_text "hint" "Use searchsploit `uname -s` `uname -r | cut -d'.' -f1-2` to look for kernel exploits"
-  
+  render_text "info" "Kernel information" "$unameinfo"  
 fi
 
 procver=`cat /proc/version 2> /dev/null`
 if [ "$procver" ]; then
   render_text "info" "Kernel information (continued)" "$procver"
 fi
+
+render_text "hint" "Use 'searchsploit `uname -s` Kernel `uname -r | cut -d'.' -f1-2`' to look for kernel exploits"
 
 #search all *-release files for version info
 release=`cat /etc/*-release 2> /dev/null`
@@ -192,14 +195,14 @@ if [ "$currusr" ]; then
 fi
 
 #last logged on user information
-lastlogedonusrs=`lastlog 2> /dev/null | grep -v "Never" 2> /dev/null`
+lastlogedonusrs=`(lastlog | grep -v "Never") 2> /dev/null`
 if [ "$lastlogedonusrs" ]; then
   render_text "info" "Users that have previously logged onto the system" "$lastlogedonusrs"
 fi
 
 #who else is logged on
 loggedonusrs=`w 2> /dev/null`
-if [ "$loggedonusrs" ]; then
+if [ "`echo "$loggedonusrs" | wc -l`" -gt "1" ]; then
   render_text "info" "Who else is logged on" "$loggedonusrs"
 fi
 
@@ -233,7 +236,7 @@ if [ "$hashesinpasswd" ]; then
 fi
 
 #contents of /etc/passwd
-readpasswd=`cat /etc/passwd 2> /dev/null`
+readpasswd=`(cat /etc/passwd | sed "s/.*sh$/${_sed_red}/") 2> /dev/null`
 if [ "$readpasswd" ]; then
   render_text "info" "Contents of /etc/passwd" "$readpasswd"
 
@@ -460,20 +463,22 @@ if [ "$umaskvalue" ]; then
   render_text "info" "Current umask value" "$umaskvalue"
 fi
 
-#umask value as in /etc/login.defs
-umaskdef=`grep ${_color_flag} -i "^UMASK" /etc/login.defs 2> /dev/null`
-if [ "$umaskdef" ]; then
-  render_text "info" "umask value as specified in /etc/login.defs" "$umaskdef"
-fi
+if [[ -f "/etc/login.defs" ]]; then
+  #umask value as in /etc/login.defs
+  umaskdef=`(grep -i "^UMASK" /etc/login.defs | sed -E 's/\s+/ /') 2> /dev/null`
+  if [ "$umaskdef" ]; then
+    render_text "info" "umask value as specified in /etc/login.defs" "$umaskdef"
+  fi
 
-#password policy information as stored in /etc/login.defs
-logindefs=`grep ${_color_flag} "^PASS_MAX_DAYS\|^PASS_MIN_DAYS\|^PASS_WARN_AGE\|^ENCRYPT_METHOD" /etc/login.defs 2> /dev/null`
-if [ "$logindefs" ]; then
-  render_text "info" "Password and storage information" "$logindefs"
+  #password policy information as stored in /etc/login.defs
+  logindefs=`grep ${_color_flag} "^PASS_MAX_DAYS\|^PASS_MIN_DAYS\|^PASS_WARN_AGE\|^ENCRYPT_METHOD" /etc/login.defs 2> /dev/null`
+  if [ "$logindefs" ]; then
+    render_text "info" "Password and storage information" "$logindefs"
 
-  if [ "$export" ]; then
-    mkdir $format/etc-export/ 2> /dev/null
-    cp /etc/login.defs $format/etc-export/login.defs 2> /dev/null
+    if [ "$export" ]; then
+      mkdir $format/etc-export/ 2> /dev/null
+      cp /etc/login.defs $format/etc-export/login.defs 2> /dev/null
+    fi
   fi
 fi
 
@@ -550,24 +555,24 @@ networking_info()
 print_title "yellow" "NETWORKING" 
 
 #nic information
-nicinfo=`/sbin/ifconfig -a 2> /dev/null`
+nicinfo=`(ifconfig -a || /sbin/ifconfig -a) 2> /dev/null`
 if [ "$nicinfo" ]; then
   render_text "info" "Network and IP info" "$nicinfo"
 else
   #nic information (using ip)
-  nicinfoip=`/sbin/ip a 2> /dev/null`
+  nicinfoip=`(ip addr || /sbin/ip addr) 2> /dev/null`
   if [ "$nicinfoip" ]; then
     render_text "info" "Network and IP info" "$nicinfoip"
   fi
 fi
 
 #arp information
-arpinfo=`arp -a 2> /dev/null`
+arpinfo=`(arp -a || /usr/sbin/arp -a) 2> /dev/null`
 if [ "$arpinfo" ]; then
   render_text "info" "ARP history" "$arpinfo"
 else
   #arp information (using ip)
-  arpinfoip=`ip n 2> /dev/null`
+  arpinfoip=`(ip neigh || /sbin/ip neigh) 2> /dev/null`
   if [ "$arpinfoip" ]; then
     render_text "info" "ARP history" "$arpinfoip"
   fi
@@ -585,12 +590,12 @@ if [ "$nsinfosysd" ]; then
 fi
 
 #default route configuration
-defroute=`route -n 2> /dev/null | grep ${_color_flag} '^\(0.\?\)\{4\}'`
+defroute=`(route -n || /usr/sbin/route -n) 2> /dev/null | grep '^\(0.\?\)\{4\}'`
 if [ "$defroute" ]; then
   render_text "info" "Default route" "$defroute"
 else
   #default route configuration (using ip)
-  defrouteip=`ip r 2> /dev/null | grep ${_color_flag} default`
+  defrouteip=`(ip r || /sbin/ip r) 2> /dev/null | grep default`
   if [ "$defrouteip" ]; then
     render_text "info" "Default route" "$defrouteip"
   fi
@@ -745,88 +750,104 @@ software_configs()
 print_title "yellow" "SOFTWARE"
 
 #sudo version - check to see if there are any known vulnerabilities with this
-sudover=`sudo -V 2> /dev/null | grep "Sudo version" | cut -d" " -f3`
+sudover=`(sudo -V | head -n1 | cut -d' ' -f3) 2> /dev/null`
 if [ "$sudover" ]; then
   render_text "info" "Sudo version" "$sudover"
+fi
+
+#exim4 details - if installed
+exim4ver=`(exim4 --version | head -n1 | cut -d' ' -f3) 2> /dev/null`
+if [ "$exim4ver" ]; then
+  render_text "info" "Exim4 version" "$exim4ver"
 fi
 
 #mysql details - if installed
 mysqlver=`mysql --version 2> /dev/null`
 if [ "$mysqlver" ]; then
   render_text "info" "MYSQL version" "$mysqlver"
-fi
+  
+  #checks to see if we can get very low MYSQL hanging fruits
+  mysql_usernames="root `whoami`"
+  mysql_passwords="root toor `whoami`"
+  for u in $mysql_usernames; do
+    for p in $mysql_passwords; do
+      mysqlcon=`mysqladmin -u$u -p$p version 2> /dev/null`
 
-#checks to see if root/root will get us a connection
-mysqlconnect=`mysqladmin -uroot -proot version 2> /dev/null`
-if [ "$mysqlconnect" ]; then
-  render_text "danger" "We can connect to the local MYSQL service with default root/root credentials" "$mysqlconnect"
-fi
-
-#mysql version details
-mysqlconnectnopass=`mysqladmin -uroot version 2> /dev/null`
-if [ "$mysqlconnectnopass" ]; then
-  render_text "danger" "We can connect to the local MYSQL service as 'root' and without a password" "$mysqlconnectnopass"
+      if [ "$mysqlcon" ]; then
+        render_text "danger" "We can connect to MYSQL service as $u with password $p" "$mysqlcon"
+      fi
+      
+    done
+    
+    # test connection without password 
+    mysqlcon=`mysqladmin -u$u version 2> /dev/null`
+    if [ "$mysqlcon" ]; then
+      render_text "danger" "We can connect to the MYSQL service as $u with no password" "$mysqlcon"
+    fi
+  done
 fi
 
 #postgres details - if installed
 postgver=`psql -V 2> /dev/null`
 if [ "$postgver" ]; then
   render_text "info" "Postgres version" "$postgver"
-fi
 
-#checks to see if any postgres password exists and connects to DB 'template'
-psql_default_users="postgres pgsql"
-for u in $psql_default_users; do
-  for i in {0..9}; do
-    w="template$i"
-    postcon=`psql -U $u -w $w -c 'select version()' 2> /dev/null | grep ${_color_flag} version`
+  #checks to see if any postgres password exists and connects to DB 'template'
+  psql_default_users="postgres pgsql"
+  for u in $psql_default_users; do
+    for i in {0..9}; do
+      w="template$i"
+      postcon=`psql -U $u -w $w -c 'select version()' 2> /dev/null | grep ${_color_flag} version`
 
-    if [ "$postcon" ]; then
-      render_text "danger" "We can connect to Postgres DB $w as user $u with no password" "$postcon"
-    fi
-    
+      if [ "$postcon" ]; then
+        render_text "danger" "We can connect to Postgres DB $w as user $u with no password" "$postcon"
+      fi
+      
+    done
   done
-done
+fi
 
 #apache details - if installed
-apachever=`apache2 -v 2> /dev/null; httpd -v 2> /dev/null`
+apachever=`((apache2 -v || httpd -v) | head -n1 | awk -F': ' '{ print $2 }') 2> /dev/null`
 if [ "$apachever" ]; then
   render_text "info" "Apache version" "$apachever"
-  echo -e "\n"
-fi
 
-#what account is apache running under
-apacheusr=`grep -i 'user\|group' /etc/apache2/envvars 2> /dev/null | awk '{sub(/.*\export /,"")}1' 2> /dev/null`
-if [ "$apacheusr" ]; then
-  render_text "info" "Apache user configuration:${_reset}" "$apacheusr"
+  #what user:group is running apache daemon?
+  if [[ -f "/etc/apache2/envvars" ]]; then
+    apacheusr=`(grep -i 'user' /etc/apache2/envvars | cut -d'=' -f2) 2> /dev/null`
+    apachegrp=`(grep -i 'group' /etc/apache2/envvars | cut -d'=' -f2) 2> /dev/null`
+    
+    if [ "$apacheusr" ] && [ "$apachegrp" ]; then
+      render_text "info" "Apache is running as (user:group)" "$apacheusr:$apachegrp"
 
-  if [ "$export" ]; then
-    mkdir --parents $format/etc-export/apache2/ 2> /dev/null
-    cp /etc/apache2/envvars $format/etc-export/apache2/envvars 2> /dev/null
+      if [ "$export" ]; then
+        mkdir --parents $format/etc-export/apache2/ 2> /dev/null
+        cp /etc/apache2/envvars $format/etc-export/apache2/envvars 2> /dev/null
+      fi
+    fi
   fi
-fi
 
-#installed apache modules
-apachemodules=`apache2ctl -M 2> /dev/null; httpd -M 2> /dev/null`
-if [ "$apachemodules" ]; then
-  render_text "info" "Installed Apache modules" "$apachemodules"
-fi
+  #installed apache modules
+  apachemodules=`(apache2ctl -M || httpd -M) 2> /dev/null`
+  if [ "$apachemodules" ]; then
+    render_text "info" "Installed Apache modules" "$apachemodules"
+  fi
 
-#htpasswd check
-htpasswd=`find / -name .htpasswd* -print -exec cat {} \; 2> /dev/null`
-if [ "$htpasswd" ]; then
+  #htpasswd check
+  htpasswd=`find / -name .htpasswd* -print -exec cat {} \; 2> /dev/null`
+  if [ "$htpasswd" ]; then
     render_text "danger" ".htpasswd found - could contain passwords" "$htpasswd"
-fi
+  fi
 
-#anything in the default http home dirs (a thorough only check as output can be large)
-if [ "$thorough" = "1" ]; then
-  apache_dirs="/var/www/ /srv/www/htdocs/ /usr/local/www/apache2/data/ /opt/lampp/htdocs/"
-  apachehomedirs=`ls ${_color_flag} -Rlah $d 2> /dev/null`
-  if [ "$apachehomedirs" ]; then
-    render_text "info" "Apache2 home dir contents" "$apachehomedirs"
+  #anything in the default http home dirs (a thorough only check as output can be large)
+  if [ "$thorough" = "1" ]; then
+    apache_dirs="/var/www/ /srv/www/htdocs/ /usr/local/www/apache2/data/ /opt/lampp/htdocs/"
+    apachehomedirs=`ls ${_color_flag} -Rlah $d 2> /dev/null`
+    if [ "$apachehomedirs" ]; then
+      render_text "info" "Apache2 home dir contents" "$apachehomedirs"
+    fi
   fi
 fi
-
 }
 
 interesting_files()
@@ -1251,7 +1272,7 @@ fi
 
 lxc_container_checks()
 {
-
+print_title "yellow" "LXC/LXD CHECKS"
 #specific checks - are we in an lxd/lxc container
 lxccontainer=`grep ${_color_flag} -qa container=lxc /proc/1/environ 2> /dev/null`
 if [ "$lxccontainer" ]; then
@@ -1265,15 +1286,33 @@ if [ "$lxdgroup" ]; then
 fi
 }
 
-footer()
-{
-print_title "green" "SCAN COMPLETED"
-}
-
 call_each()
 {
   banner
   debug_info
+  
+  # head
+  start_epoch=`date +%s`
+  print_title "green" "Scan started at `date +%R`"
+  
+  #PATH manipulation, in debian some directory (e.g. /sbin or /usr/sbin) is not added to the path
+  # this manipulation adds some known dir to the path, if it exists on the system
+  OLD_PATH=$PATH
+  known_good_path_dirs="/usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin /usr/games /usr/local/games /snap/bin"
+  path_manipulated=0
+  for d in $known_good_path_dirs; do
+  
+    if [[ -d "$d" ]] && [[ ! "$PATH" =~ "$d" ]]; then
+      PATH="$PATH:$d"
+      path_manipulated=1
+    fi
+  done
+
+  if [ "$path_manipulated" = "1" ]; then
+    render_text "warning" "Path changed to: $PATH"
+  fi
+  
+  # call checks
   system_info
   user_info
   environmental_info
@@ -1284,7 +1323,11 @@ call_each()
   interesting_files
   docker_checks
   lxc_container_checks
-  footer
+  
+  # foot
+  end_epoch=`date +%s`
+  seconds=`expr $end_epoch - $start_epoch`
+  print_title "green" "Scan ended at `date +%R` (completed in $seconds secs)"
 }
 
 while getopts "k:r:e:stCqh" option; do
