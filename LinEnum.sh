@@ -25,11 +25,14 @@ _cols="`tput cols 2> /dev/null || echo -n "120"`"
 if [ "$_cols" -lt "120" ]; then _cols="120"; fi
 
 # we use sed to colorize some output
-_sed_red="\o033[1;33m&\o033[0m"
-_sed_yellow="\o033[1;31m&\o033[0m"
+_sed_red="\o033[1;31m&\o033[0m"
+_sed_yellow="\o033[1;33m&\o033[0m"
 
 # useful binaries (thanks to https://gtfobins.github.io/)
 binarylist='ansible-playbook\|apt-get\|apt\|ar\|aria2c\|arj\|arp\|ash\|at\|atobm\|awk\|base32\|base64\|basenc\|bash\|bpftrace\|bridge\|bundler\|busctl\|busybox\|byebug\|c89\|c99\|cancel\|capsh\|cat\|certbot\|check_by_ssh\|check_cups\|check_log\|check_memory\|check_raid\|check_ssl_cert\|check_statusfile\|chmod\|chown\|chroot\|cmp\|cobc\|column\|comm\|composer\|cowsay\|cowthink\|cp\|cpan\|cpio\|cpulimit\|crash\|crontab\|csh\|csplit\|csvtool\|cupsfilter\|curl\|cut\|dash\|date\|dd\|dialog\|diff\|dig\|dmesg\|dmidecode\|dmsetup\|dnf\|docker\|dpkg\|dvips\|easy_install\|eb\|ed\|emacs\|env\|eqn\|ex\|exiftool\|expand\|expect\|facter\|file\|find\|finger\|flock\|fmt\|fold\|ftp\|gawk\|gcc\|gdb\|gem\|genisoimage\|ghc\|ghci\|gimp\|git\|grep\|gtester\|gzip\|hd\|head\|hexdump\|highlight\|hping3\|iconv\|iftop\|install\|ionice\|ip\|irb\|jjs\|join\|journalctl\|jq\|jrunscript\|knife\|ksh\|ksshell\|latex\|ld.so\|ldconfig\|less\|ln\|loginctl\|logsave\|look\|ltrace\|lua\|lualatex\|luatex\|lwp-download\|lwp-request\|mail\|make\|man\|mawk\|more\|mount\|msgattrib\|msgcat\|msgconv\|msgfilter\|msgmerge\|msguniq\|mtr\|mv\|mysql\|nano\|nawk\|nc\|nice\|nl\|nmap\|node\|nohup\|npm\|nroff\|nsenter\|octave\|od\|openssl\|openvpn\|openvt\|paste\|pdb\|pdflatex\|pdftex\|perl\|pg\|php\|pic\|pico\|pip\|pkexec\|pkg\|pr\|pry\|psql\|puppet\|python\|rake\|readelf\|red\|redcarpet\|restic\|rev\|rlogin\|rlwrap\|rpm\|rpmquery\|rsync\|ruby\|run-mailcap\|run-parts\|rview\|rvim\|scp\|screen\|script\|sed\|service\|setarch\|sftp\|sg\|shuf\|slsh\|smbclient\|snap\|socat\|soelim\|sort\|split\|sqlite3\|ss\|ssh-keygen\|ssh-keyscan\|ssh\|start-stop-daemon\|stdbuf\|strace\|strings\|su\|sysctl\|systemctl\|systemd-resolve\|tac\|tail\|tar\|taskset\|tbl\|tclsh\|tcpdump\|tee\|telnet\|tex\|tftp\|tic\|time\|timedatectl\|timeout\|tmux\|top\|troff\|tshark\|ul\|unexpand\|uniq\|unshare\|update-alternatives\|uudecode\|uuencode\|valgrind\|vi\|view\|vigr\|vim\|vimdiff\|vipw\|virsh\|watch\|wc\|wget\|whois\|wish\|xargs\|xelatex\|xetex\|xmodmap\|xmore\|xxd\|xz\|yarn\|yelp\|yum\|zip\|zsh\|zsoelim\|zypper'
+
+# interesting groups
+interesting_groups="root\|sudo\|shadow\|adm\|wheel\|staff\|lxd\|lxc"
 
 # util functions
 
@@ -189,7 +192,7 @@ user_info()
 print_title "yellow" "USER/GROUP" 
 
 #current user details
-currusr=`id 2> /dev/null`
+currusr=`(id | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`
 if [ "$currusr" ]; then
   render_text "info" "Current user/group info" "$currusr"
 fi
@@ -207,19 +210,13 @@ if [ "`echo "$loggedonusrs" | wc -l`" -gt "1" ]; then
 fi
 
 # save all users in the users variable
-users=`grep -v '^#\|^$' /etc/passwd 2> /dev/null | cut -d":" -f1 2> /dev/null`
+users=`(grep -v '^#\|^$' /etc/passwd | cut -d":" -f1) 2> /dev/null`
 
 #lists all id's and respective group(s)
 grpinfo=""
 for u in $users; do
-  idoutput=`id $u`
-  entry="${_cyan}$u${_reset}"
-  
-  #added by phackt - look for adm group (adapted)
-  isadmin=`echo $idoutput | grep "(adm)"`
-  if [ "$isadmin" ]; then entry="$entry ${_yellow}(member of adm group!)${_reset}"; fi
-
-  entry="$entry:\n\t$idoutput"
+  idoutput=`((id $u || (groups $u | cut -d':' -f2)) | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`
+  entry="${_cyan}$u${_reset} : $idoutput"
   
   # we concatenate or init the list of processes
   if [ "$grpinfo" ]; then grpinfo="$grpinfo"$'\n'"$entry"; else grpinfo="$entry"; fi
@@ -275,7 +272,7 @@ if [ "$superman" ]; then
 fi
 
 # we proceed with sudo checks, only if we can get the sudo binary path
-sudobin=`which sudo`
+sudobin=`command -v sudo`
 if [ "$sudobin" ]; then
 
   #pull out vital sudoers info
@@ -602,12 +599,12 @@ else
 fi
 
 #listening TCP
-tcpservs=`netstat -lntp 2> /dev/null`
+tcpservs=`(netstat -lntp | sed "s,127.0.0.1:[0-9]\+,${_sed_yellow},") 2> /dev/null`
 if [ "$tcpservs" ]; then
   render_text "info" "Listening TCP" "$tcpservs"
 else
   #listening TCP (using ss)
-  tcpservsip=`ss -lntp 2> /dev/null`
+  tcpservsip=`(ss -lntp | sed "s,127.0.0.1:[0-9]\+,${_sed_yellow},") 2> /dev/null`
   if [ "$tcpservsip" ]; then
     render_text "info" "Listening TCP" "$tcpservsip"
   fi
