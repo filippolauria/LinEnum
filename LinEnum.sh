@@ -632,14 +632,21 @@ if [ "$psaux" ]; then
 fi
 
 #lookup process binary path and permissisons
-proclist=`ps -eo command | grep -v "^\(\[\|COMMAND\|(\)" | awk '{print $1}' | awk '!x[$0]++' | xargs -r which -- 2> /dev/null`
-if [ "$proclist" ]; then
-  proclistoutput=`echo "$proclist" | xargs -r ls ${_color_flag} -lah 2> /dev/null`
-  render_text "info" "Process binaries and associated permissions (from the above list)" "$proclistoutput"
-
-  if [ "$export" ]; then
-    mkdir $format/ps-export/ 2> /dev/null
-    for binary in $proclist; do cp --parents $binary $format/ps-export/; done 2> /dev/null
+psoutput=`(ps -eo command | grep -v "^\(\[\|COMMAND\|(\)" | awk '{print $1}' | awk '!x[$0]++') 2> /dev/null`
+if [ "$psoutput" ]; then
+  proclist=""
+  for proc in $psoutput; do
+    procpath="`command -v -- $proc 2> /dev/null`"
+    if [ "$proclist" ]; then proclist="$proclist"$'\n'"$procpath"; else proclist="$procpath"; fi
+  done
+  
+  if [ "$proclist" ]; then
+    render_text "info" "Process binaries and associated permissions (from the above list)" "`ls ${_color_flag} -lah $proclist 2> /dev/null`"
+  
+    if [ "$export" ]; then
+      mkdir $format/ps-export/ 2> /dev/null
+      for binary in $proclist; do cp --parents $binary $format/ps-export/; done 2> /dev/null
+    fi
   fi
 fi
 
