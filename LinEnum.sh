@@ -11,40 +11,70 @@
 version="1.0"
 
 # colored output vars
-_reset="\e[00m"
-_red="\e[00;31m"
-_green="\e[00;32m"
-_yellow="\e[00;33m"
-_purple="\e[00;35m"
-_cyan="\e[00;36m"
-_gray="\e[0;37m"
+_cols="`tput cols 2> /dev/null || echo "120"`"
+_reset="\e[0m"
+_red="\e[1;31m"
+_green="\e[1;32m"
+_yellow="\e[1;33m"
+_purple="\e[1;35m"
+_cyan="\e[1;36m"
+_gray="\e[1;37m"
 _color_flag="--color=always"
 
 
 # util functions
 
+# usage: print_title "color" "title"
+print_title()
+{
+  color_var="_$1"
+  if [ "${!color_var}" ]; then _color="${!color_var}"; else _color="${_yellow}"; fi
+  
+  if [ "$2" ]; then title="### $2 "; else title="#####"; fi
+  title_len=`echo -n "$title" | wc -c`
+  
+  q=`expr \`expr $_cols / 2\` - $title_len`
+  echo -n -e "${_color}$title"
+  printf '#%.0s' `seq 1 $q`
+  echo -e "${_reset}\n"
+}
+
 # usage: render_text "category" "keyword" "value"
 render_text()
 {
   case "$1" in
-    "info") bullet="[-]"; keyword_color="${_cyan}"; value_color="";;
-    "danger") bullet="[!]"; keyword_color="${_red}"; value_color="${_yellow}";;
-    "warning") bullet="[!]"; keyword_color="${_yellow}"; value_color="";;
-    "success") bullet="[+]"; keyword_color="${_green}"; value_color="";;
-    "hint") bullet="[*]"; keyword_color="${_purlple}"; value_color="";;
+    "info") bullet="[${_cyan}-${_reset}]"; keyword_color="${_cyan}"; value_color="";;
+    "danger") bullet="[${_red}!${_reset}]"; keyword_color="${_red}"; value_color="${_yellow}";;
+    "warning") bullet="[${_yellow}!${_reset}]"; keyword_color="${_yellow}"; value_color="";;
+    "success") bullet="[${_green}+${_reset}]"; keyword_color="${_green}"; value_color="";;
+    "hint") bullet="[${_green}*${_reset}]"; keyword_color="${_green}"; value_color="";;
     *) bullet="[.]"; keyword_color=""; value_color="";;
   esac
   
   echo -e -n "${_gray}$bullet${_reset} ${keyword_color}$2${_reset}"
-  if [ "$3" ]; then echo -e "${_gray}:${_reset}\n${value_color}$3${_reset}\n"
+  if [ "$3" ]; then
+    lines=`echo "$3" | wc -l`
+    
+    echo -e -n "${_gray}:${_reset}"
+    if [ "$lines" -le "1" ]; then
+      output="`echo $3 | sed 's,\n,,'`"
+      total_chars=`echo "[.] $2: $output" | wc -c`
+      if [ "$total_chars" -le "$_cols" ]; then
+        first_char=" "
+      else
+        first_char="\n    "
+      fi
+    else
+      first_char="\n"
+    fi
+    echo -e "$first_char${value_color}$3${_reset}\n"
+
   else echo -e "\n"; fi
 }
 
 banner()
 {
- echo -e "${_red}
-#########################################################
-${_reset}"
+  print_title "red"
 
 if [ -z "$quiet" ]; then
   echo -e "${_yellow}      _      _       ______                       
@@ -55,9 +85,8 @@ if [ -z "$quiet" ]; then
      |______|_|_| |_|______|_| |_|\\__,_|_| |_| |_| v${_yellow}$version${_reset}
 ${_reset}
   Local Linux Enumeration & Privilege Escalation Script
-
-${_red}#########################################################${_reset}
 "
+print_title "red"
 fi
 }
 
@@ -79,13 +108,13 @@ ${_yellow}Running with no options = limited scans/no output file${_reset}
 
 EXAMPLE:
     ./LinEnum.sh -k keyword -r report -e /tmp/ -t
-${_red}
-#########################################################${_reset}\n"
+"
+print_title "red"
 }
 
 debug_info()
 {
-echo "[-] Debug Info" 
+print_title "yellow" "INFO"
 
 if [ "$keyword" ]; then 
   render_text "info" "Searching for the following keyword in conf, php, ini and log files" "$keyword"
@@ -124,12 +153,14 @@ binarylist='ansible-playbook\|apt-get\|apt\|ar\|aria2c\|arj\|arp\|ash\|at\|atobm
 
 system_info()
 {
-echo -e "${_yellow}### SYSTEM ##############################################${_reset}" 
+print_title "yellow" "SYSTEM"
 
 #basic kernel info
 unameinfo=`uname -a 2> /dev/null`
 if [ "$unameinfo" ]; then
   render_text "info" "Kernel information" "$unameinfo"
+  render_text "hint" "Use searchsploit `uname -s` `uname -r | cut -d'.' -f1-2` to look for kernel exploits"
+  
 fi
 
 procver=`cat /proc/version 2> /dev/null`
@@ -152,7 +183,7 @@ fi
 
 user_info()
 {
-echo -e "${_yellow}### USER/GROUP ##########################################${_reset}" 
+print_title "yellow" "USER/GROUP" 
 
 #current user details
 currusr=`id 2> /dev/null`
@@ -394,7 +425,7 @@ fi
 
 environmental_info()
 {
-echo -e "${_yellow}### ENVIRONMENTAL #######################################${_reset}" 
+print_title "yellow" "ENVIRONMENT"
 
 #env information
 envinfo=`env 2> /dev/null | grep -v 'LS_COLORS' 2> /dev/null`
@@ -455,7 +486,7 @@ fi
 
 job_info()
 {
-echo -e "${_yellow}### JOBS/TASKS ##########################################${_reset}" 
+print_title "yellow" "JOBS/TASKS"
 
 #are there any cron jobs configured
 cronjobs=`ls ${_color_flag} -lah /etc/cron* 2> /dev/null`
@@ -516,7 +547,7 @@ fi
 
 networking_info()
 {
-echo -e "${_yellow}### NETWORKING  ##########################################${_reset}" 
+print_title "yellow" "NETWORKING" 
 
 #nic information
 nicinfo=`/sbin/ifconfig -a 2> /dev/null`
@@ -554,7 +585,7 @@ if [ "$nsinfosysd" ]; then
 fi
 
 #default route configuration
-defroute=`route 2> /dev/null | grep ${_color_flag} default`
+defroute=`route -n 2> /dev/null | grep ${_color_flag} '^\(0.\?\)\{4\}'`
 if [ "$defroute" ]; then
   render_text "info" "Default route" "$defroute"
 else
@@ -592,7 +623,7 @@ fi
 
 services_info()
 {
-echo -e "${_yellow}### SERVICES #############################################${_reset}" 
+print_title "yellow" "SERVICES" 
 
 #running processes
 psaux=`ps aux 2> /dev/null`
@@ -711,7 +742,7 @@ fi
 
 software_configs()
 {
-echo -e "${_yellow}### SOFTWARE #############################################${_reset}" 
+print_title "yellow" "SOFTWARE"
 
 #sudo version - check to see if there are any known vulnerabilities with this
 sudover=`sudo -V 2> /dev/null | grep "Sudo version" | cut -d" " -f3`
@@ -800,11 +831,11 @@ fi
 
 interesting_files()
 {
-echo -e "${_yellow}### INTERESTING FILES ####################################${_reset}" 
+print_title "yellow" "INTERESTING FILES"
 
 #checks to see if various files are installed
 bin_of_interest="nc netcat socat wget nmap gcc curl"
-bin_fullpath=`echo "$bin_of_interest" | xargs -r which -- 2> /dev/null`
+bin_fullpath=`command -v -- $bin_of_interest 2> /dev/null | xargs -r ls ${_color_flag} -lh 2> /dev/null`
 if [ "$bin_fullpath" ]; then
   render_text "info" "Useful file locations" "$bin_fullpath"
 fi
@@ -818,11 +849,11 @@ fi
 
 #manual check - lists out sensitive files, can we read/modify etc.
 sensitive_files="/etc/passwd /etc/group /etc/profile /etc/shadow /etc/master.passwd /etc/security/opasswd"
-render_text "warning" "Can we read/write sensitive files" "`ls ${_color_flag} -lah $sensitive_files 2> /dev/null`"
+render_text "warning" "Check if we can read/write sensitive files" "`ls ${_color_flag} -lah $sensitive_files 2> /dev/null`"
 
 #files that have changed in the last 10 minutes
 changedfiles=`find / -mmin 10 2> /dev/null | grep -v "^/proc" | xargs -r ls ${_color_flag} -dlah 2> /dev/null`
-if [ "$changedfiles"]; then
+if [ "$changedfiles" ]; then
   render_text "warning" "Files that have changed in the last 10 minutes" "$changedfiles"
 fi
 
@@ -1185,7 +1216,7 @@ fi
 
 docker_checks()
 {
-
+print_title "yellow" "DOCKER CHECKS"
 #specific checks - check to see if we're in a docker container
 dockercontainer=`grep ${_color_flag} -i docker /proc/self/cgroup 2> /dev/null; find / -name "*dockerenv*" 2> /dev/null | \
                  xargs -r ls ${_color_flag} -lah 2> /dev/null`
@@ -1236,7 +1267,7 @@ fi
 
 footer()
 {
-echo -e "${_yellow}### SCAN COMPLETE ####################################${_reset}" 
+print_title "green" "SCAN COMPLETED"
 }
 
 call_each()
