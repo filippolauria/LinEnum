@@ -524,10 +524,12 @@ if [ "$anacrontab" ]; then
 fi
 
 #see if any users have associated cronjobs (priv command)
-cronother=`echo $users | xargs -n1 crontab -l -u 2> /dev/null`
-if [ "$cronother" ]; then
-  render_text "info" "Jobs held by all users" "$cronother"
-fi
+for u in $users; do
+  cronother=`crontab -l -u $u 2> /dev/null`
+  if [ "$cronother" ]; then
+    render_text "warning" "Jobs held by $u" "$cronother"
+  fi
+done
 
 # list systemd timers
 if [ "$thorough" = "1" ]; then
@@ -565,14 +567,13 @@ fi
 
 #arp information
 arpinfo=`(arp -a || /usr/sbin/arp -a) 2> /dev/null`
+if [ -z "$arpinfo" ]; then
+  #arp information (using ip)
+  arpinfo=`(ip neigh || /sbin/ip neigh) 2> /dev/null`
+fi
+
 if [ "$arpinfo" ]; then
   render_text "info" "ARP history" "$arpinfo"
-else
-  #arp information (using ip)
-  arpinfoip=`(ip neigh || /sbin/ip neigh) 2> /dev/null`
-  if [ "$arpinfoip" ]; then
-    render_text "info" "ARP history" "$arpinfoip"
-  fi
 fi
 
 #dns settings
@@ -609,15 +610,14 @@ if [ "$tcpserv" ]; then
 fi
 
 #listening UDP
-udpservs=`netstat -lnup 2> /dev/null`
-if [ "$udpservs" ]; then
-  render_text "info" "Listening UDP" "$udpservs"
-else
+udpserv=`netstat -lnup 2> /dev/null`
+if [ "$udpserv" ]; then
   #listening UDP (using ss)
   udpservsip=`ss -lnup 2> /dev/null`
-  if [ "$udpservsip" ]; then
-    render_text "info" "Listening UDP" "$udpservsip"
-  fi
+fi
+
+if [ "$udpserv" ]; then
+  render_text "info" "Listening UDP" "$udpserv"
 fi
 }
 
