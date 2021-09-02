@@ -7,6 +7,10 @@
 #          @filippolauria (from version 1.0)
 #
 
+###############
+# variables
+###############
+
 # version number
 version="1.0"
 
@@ -20,21 +24,29 @@ _cyan="\033[1;36m"
 _gray="\033[1;37m"
 _color_flag="--color=always"
 
-# set the number of columns
-_cols="`tput cols 2> /dev/null || echo -n "120"`"
-if [ "$_cols" -lt "120" ]; then _cols="120"; fi
-
 # we use sed to colorize some output
 _sed_red="\o033[1;31m&\o033[0m"
 _sed_yellow="\o033[1;33m&\o033[0m"
 
+# set the number of columns
+_cols="`tput cols 2> /dev/null || echo -n "120"`"
+if [ "$_cols" -lt "120" ]; then _cols="120"; fi
+
 # useful binaries (thanks to https://gtfobins.github.io/)
-binarylist='ansible-playbook\|apt-get\|apt\|ar\|aria2c\|arj\|arp\|ash\|at\|atobm\|awk\|base32\|base64\|basenc\|bash\|bpftrace\|bridge\|bundler\|busctl\|busybox\|byebug\|c89\|c99\|cancel\|capsh\|cat\|certbot\|check_by_ssh\|check_cups\|check_log\|check_memory\|check_raid\|check_ssl_cert\|check_statusfile\|chmod\|chown\|chroot\|cmp\|cobc\|column\|comm\|composer\|cowsay\|cowthink\|cp\|cpan\|cpio\|cpulimit\|crash\|crontab\|csh\|csplit\|csvtool\|cupsfilter\|curl\|cut\|dash\|date\|dd\|dialog\|diff\|dig\|dmesg\|dmidecode\|dmsetup\|dnf\|docker\|dpkg\|dvips\|easy_install\|eb\|ed\|emacs\|env\|eqn\|ex\|exiftool\|expand\|expect\|facter\|file\|find\|finger\|flock\|fmt\|fold\|ftp\|gawk\|gcc\|gdb\|gem\|genisoimage\|ghc\|ghci\|gimp\|git\|grep\|gtester\|gzip\|hd\|head\|hexdump\|highlight\|hping3\|iconv\|iftop\|install\|ionice\|ip\|irb\|jjs\|join\|journalctl\|jq\|jrunscript\|knife\|ksh\|ksshell\|latex\|ld.so\|ldconfig\|less\|ln\|loginctl\|logsave\|look\|ltrace\|lua\|lualatex\|luatex\|lwp-download\|lwp-request\|mail\|make\|man\|mawk\|more\|mount\|msgattrib\|msgcat\|msgconv\|msgfilter\|msgmerge\|msguniq\|mtr\|mv\|mysql\|nano\|nawk\|nc\|nice\|nl\|nmap\|node\|nohup\|npm\|nroff\|nsenter\|octave\|od\|openssl\|openvpn\|openvt\|paste\|pdb\|pdflatex\|pdftex\|perl\|pg\|php\|pic\|pico\|pip\|pkexec\|pkg\|pr\|pry\|psql\|puppet\|python\|rake\|readelf\|red\|redcarpet\|restic\|rev\|rlogin\|rlwrap\|rpm\|rpmquery\|rsync\|ruby\|run-mailcap\|run-parts\|rview\|rvim\|scp\|screen\|script\|sed\|service\|setarch\|sftp\|sg\|shuf\|slsh\|smbclient\|snap\|socat\|soelim\|sort\|split\|sqlite3\|ss\|ssh-keygen\|ssh-keyscan\|ssh\|start-stop-daemon\|stdbuf\|strace\|strings\|su\|sysctl\|systemctl\|systemd-resolve\|tac\|tail\|tar\|taskset\|tbl\|tclsh\|tcpdump\|tee\|telnet\|tex\|tftp\|tic\|time\|timedatectl\|timeout\|tmux\|top\|troff\|tshark\|ul\|unexpand\|uniq\|unshare\|update-alternatives\|uudecode\|uuencode\|valgrind\|vi\|view\|vigr\|vim\|vimdiff\|vipw\|virsh\|watch\|wc\|wget\|whois\|wish\|xargs\|xelatex\|xetex\|xmodmap\|xmore\|xxd\|xz\|yarn\|yelp\|yum\|zip\|zsh\|zsoelim\|zypper'
+interesting_binaries='ansible-playbook\|apt-get\|apt\|ar\|aria2c\|arj\|arp\|ash\|at\|atobm\|awk\|base32\|base64\|basenc\|bash\|bpftrace\|bridge\|bundler\|busctl\|busybox\|byebug\|c89\|c99\|cancel\|capsh\|cat\|certbot\|check_by_ssh\|check_cups\|check_log\|check_memory\|check_raid\|check_ssl_cert\|check_statusfile\|chmod\|chown\|chroot\|cmp\|cobc\|column\|comm\|composer\|cowsay\|cowthink\|cp\|cpan\|cpio\|cpulimit\|crash\|crontab\|csh\|csplit\|csvtool\|cupsfilter\|curl\|cut\|dash\|date\|dd\|dialog\|diff\|dig\|dmesg\|dmidecode\|dmsetup\|dnf\|docker\|dpkg\|dvips\|easy_install\|eb\|ed\|emacs\|env\|eqn\|ex\|exiftool\|expand\|expect\|facter\|file\|find\|finger\|flock\|fmt\|fold\|ftp\|gawk\|gcc\|gdb\|gem\|genisoimage\|ghc\|ghci\|gimp\|git\|grep\|gtester\|gzip\|hd\|head\|hexdump\|highlight\|hping3\|iconv\|iftop\|install\|ionice\|ip\|irb\|jjs\|join\|journalctl\|jq\|jrunscript\|knife\|ksh\|ksshell\|latex\|ld.so\|ldconfig\|less\|ln\|loginctl\|logsave\|look\|ltrace\|lua\|lualatex\|luatex\|lwp-download\|lwp-request\|mail\|make\|man\|mawk\|more\|mount\|msgattrib\|msgcat\|msgconv\|msgfilter\|msgmerge\|msguniq\|mtr\|mv\|mysql\|nano\|nawk\|nc\|nice\|nl\|nmap\|node\|nohup\|npm\|nroff\|nsenter\|octave\|od\|openssl\|openvpn\|openvt\|paste\|pdb\|pdflatex\|pdftex\|perl\|pg\|php\|pic\|pico\|pip\|pkexec\|pkg\|pr\|pry\|psql\|puppet\|python\|rake\|readelf\|red\|redcarpet\|restic\|rev\|rlogin\|rlwrap\|rpm\|rpmquery\|rsync\|ruby\|run-mailcap\|run-parts\|rview\|rvim\|scp\|screen\|script\|sed\|service\|setarch\|sftp\|sg\|shuf\|slsh\|smbclient\|snap\|socat\|soelim\|sort\|split\|sqlite3\|ss\|ssh-keygen\|ssh-keyscan\|ssh\|start-stop-daemon\|stdbuf\|strace\|strings\|su\|sysctl\|systemctl\|systemd-resolve\|tac\|tail\|tar\|taskset\|tbl\|tclsh\|tcpdump\|tee\|telnet\|tex\|tftp\|tic\|time\|timedatectl\|timeout\|tmux\|top\|troff\|tshark\|ul\|unexpand\|uniq\|unshare\|update-alternatives\|uudecode\|uuencode\|valgrind\|vi\|view\|vigr\|vim\|vimdiff\|vipw\|virsh\|watch\|wc\|wget\|whois\|wish\|xargs\|xelatex\|xetex\|xmodmap\|xmore\|xxd\|xz\|yarn\|yelp\|yum\|zip\|zsh\|zsoelim\|zypper'
 
 # interesting groups
-interesting_groups="root\|sudo\|shadow\|adm\|wheel\|staff\|lxd\|lxc"
+interesting_groups="root\|sudo\|shadow\|adm\|wheel\|staff\|lxd\|lxc\|docker"
 
-# util functions
+# interesting sudo keywords
+interesting_sudo="env_keep+=LD_PRELOAD\|(\?ALL\s\?\(:\s\?ALL\)\?)\?\|NOPASSWD"
+
+# current user id
+myid=`(id || (groups | cut -d':' -f2)) 2> /dev/null`
+
+###############
+# utils
+###############
 
 # usage: print_title "color" "title"
 print_title()
@@ -84,17 +96,24 @@ render_text()
   else echo -e "\n"; fi
 }
 
+print_ls_lah()
+{
+  if [ "$1" ]; then
+    ((for f in $1; do [[ -e "$f" ]] || continue; ls ${_color_flag} -lah "$f"; done) | head -n50) 2> /dev/null
+  fi
+}
+
 banner()
 {
   print_title "red"
 
 if [ -z "$quiet" ]; then
-  echo -e "${_yellow}      _      _       ______                       
-     | |    (_)     |  ____|                      
+  echo -e "${_yellow}      _              ______                       
+     | |    (o)     |  ____|                      
      | |     _ _ __ | |__   _ __  _   _ _ __ ___  
-     | |    | | '_ \\|  __| | '_ \\| | | | '_ \` _ \\ 
+     | |    | | \`_ \\|  __| | \`_ \\| | | | '_ \` _ \\ 
      | |____| | | | | |____| | | | |_| | | | | | |
-     |______|_|_| |_|______|_| |_|\\__,_|_| |_| |_| v${_yellow}$version${_reset}
+     |______|_|_| |_|______|_| |_|\\__,_|_| |_| |_| v${_yellow}$version
 ${_reset}
   Local Linux Enumeration & Privilege Escalation Script
 "
@@ -102,27 +121,30 @@ print_title "red"
 fi
 }
 
-#help function
 usage ()
 { 
 banner
 echo -e "OPTIONS:
--k	Enter keyword
--e	Enter export location
+-q	Quiet mode
+-C	Disable colored output
 -s 	Supply user password for sudo checks (INSECURE)
 -t	Include thorough (lengthy) tests
+-k	Enter keyword
 -r	Enter report name
--C	Disable colored output
--q	Hide banner
+-e	Enter export location
 -h	Displays this help text
 
 ${_yellow}Running with no options = limited scans/no output file${_reset}
 
 EXAMPLE:
-    ./LinEnum.sh -k keyword -r report -e /tmp/ -t
+    ./LinEnum.sh -t -k password -r report -e /tmp/
 "
 print_title "red"
 }
+
+###############
+# checks
+###############
 
 debug_info()
 {
@@ -192,10 +214,9 @@ user_info()
 print_title "yellow" "USER/GROUP" 
 
 #current user details
-currusr=`(id | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`
-if [ "$currusr" ]; then
-  render_text "info" "Current user/group info" "$currusr"
-fi
+render_text "info" "Current user/group info" \
+                   "`(echo "$myid" | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
+
 
 #last logged on user information
 lastlogedonusrs=`(lastlog | grep -v "Never") 2> /dev/null`
@@ -272,68 +293,57 @@ if [ "$superman" ]; then
 fi
 
 # we proceed with sudo checks, only if we can get the sudo binary path
-sudobin=`command -v sudo`
+sudobin=`command -v sudo 2> /dev/null`
 if [ "$sudobin" ]; then
 
-  #pull out vital sudoers info
+  # we get /etc/sudoers content,
+  # strip out comments and empty lines
+  # and highlight interesting keywords
   sudoers=`grep -v '^#\|^$' /etc/sudoers 2> /dev/null`
   if [ "$sudoers" ]; then
-    render_text "warning" "Sudoers configuration (condensed)" "$sudoers"
+    sudoers=`(echo "$sudoers" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,$interesting_binaries,${_sed_yellow},g") 2> /dev/null`
+    render_text "warning" "We can read /etc/sudoers" "$sudoers"
     
-    # is LD_PRELOAD explicitly defined in /etc/sudoers?
-    ldpreloadsudoers=`echo "$sudoers" | grep ${_color_flag} LD_PRELOAD`
-    if [ "$ldpreloadsudoers" ]; then
-      render_text "danger" "LD_PRELOAD is explicitly defined in /etc/sudoers" "$ldpreloadsudoers"
-    fi
-    
-    # check for NOPASSWD in /etc/sudoers
-    nopasswdsudoers=`echo "$sudoers" | grep ${_color_flag} NOPASSWD`
-    if [ "$nopasswdsudoers" ]; then
-      render_text "danger" "NOPASSWD flag(s) found in /etc/sudoers" "$nopasswdsudoers"
-    fi
-
     if [ "$export" ]; then
       mkdir $format/etc-export/ 2> /dev/null
       cp /etc/sudoers $format/etc-export/sudoers 2> /dev/null
     fi
   fi
   
-  #can we sudo without supplying a password?
-  sudoperms=`echo '' | sudo -S -l -k 2> /dev/null`
+  # check if we can sudo without password
+  sudoperms=`(echo '' | sudo -S -l -k) 2> /dev/null`
   if [ "$sudoperms" ]; then
-    render_text "danger" "We can sudo without supplying a password" "$sudoperms"
-
-    #known 'good' breakout binaries (cleaned to parse /etc/sudoers for comma separated values)
-    sudopwnage=`echo "$sudoperms" | xargs -n 1 2> /dev/null | sed 's/,*$//g' 2> /dev/null | grep -w $binarylist 2> /dev/null`
-    if [ "$sudopwnage" ]; then
-      render_text "danger" "Possible sudo pwnage" "$sudopwnage"
-    fi
-
+    sudoperms=`(echo "$sudoperms" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,$interesting_binaries,${_sed_yellow},g") 2> /dev/null`
+    render_text "danger" "We can 'sudo -l' without supplying a password" "$sudoperms"
   else
-    
     if [ "$sudopass" ]; then
-      #can we sudo when supplying a password?
-      sudoauth=`echo $userpassword | sudo -S -l -k 2> /dev/null`
-      if [ "$sudoauth" ]; then
-        render_text "danger" "We can sudo when supplying a password" "$sudoauth"
-
-        #known 'good' breakout binaries (cleaned to parse /etc/sudoers for comma separated values) - authenticated
-        sudopermscheck=`echo "$sudoauth" | xargs -n 1 2> /dev/null | sed 's/,*$//g' 2> /dev/null | grep -w $binarylist 2> /dev/null`
-        if [ "$sudopermscheck" ]; then
-          render_text "danger" "Possible sudo pwnage" "$sudopermscheck"
-        fi
-
-      fi
+      # check if we can sudo with password
+      sudoauth=`(echo $userpassword | sudo -S -l -k) 2> /dev/null`
       
+      if [ "$sudoauth" ]; then
+        sudoauth=`(echo "$sudoauth" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,$interesting_binaries,${_sed_yellow},g") 2> /dev/null`
+        render_text "danger" "We can sudo when supplying a password" "$sudoauth"
+      fi
     fi
   fi
 
-  #who has sudoed in the past
-  sudoerhomelist="`find /home -name .sudo_as_admin_successful -exec dirname {} \; 2> /dev/null | sort -u`"
+  # check for writable/readable files in /etc/sudoers.d
+  sudoersd=`find /etc/sudoers.d \! -name README -type f -exec ls -lah {} \; 2> /dev/null`
+  if [ "$sudoersd" ]; then
+    render_text "danger" "Check if we can read/write files in /etc/sudoers.d" "$sudoersd"
+    
+    if [ "$export" ]; then
+      mkdir -p $format/etc-export/sudoers.d/ 2> /dev/null
+      cp /etc/sudoers.d/* $format/etc-export/sudoers.d/ 2> /dev/null
+    fi
+  fi
+
+  # who has sudoed in the past
+  sudoerhomelist="`(find /home -name .sudo_as_admin_successful -type f -exec dirname {} \; | sort -u) 2> /dev/null`"
   if [ "$sudoerhomelist" ]; then
     sudoerslist=""
     for h in $sudoerhomelist; do
-      entry=`ls -dl "$h" 2> /dev/null | awk 'NR==1 {print $3}' 2> /dev/null`
+      entry=`(ls -dl "$h" 2> /dev/null | awk 'NR==1 {print $3}') 2> /dev/null`
       if [ "$sudoerslist" ]; then sudoerslist="$sudoerslist"$'\n'"$entry"; else sudoerslist="$entry"; fi
     done
     
@@ -341,83 +351,78 @@ if [ "$sudobin" ]; then
         render_text "info" "Users that have recently used sudo" "$sudoerslist"
     fi
   fi
-
 fi
 
 #checks to see if roots home directory is accessible
-rthmdir=`ls ${_color_flag} -ahl /root/ 2> /dev/null`
+rthmdir=`ls ${_color_flag} -lah /root/ 2> /dev/null`
 if [ "$rthmdir" ]; then
   render_text "danger" "We can read root's home directory" "$rthmdir"
 fi
 
 #displays /home directory permissions - check if any are lax
-homedirperms=`ls ${_color_flag} -ahl /home/ 2> /dev/null`
+homedirperms=`ls ${_color_flag} -lah /home/ 2> /dev/null`
 if [ "$homedirperms" ]; then
-  render_text "info" "Are permissions on /home directories lax" "$homedirperms"
+  render_text "info" "Check if permissions on /home directories are lax" "$homedirperms"
 fi
 
-#is root permitted to login via ssh
-sshrootlogin=`grep '^\s*PermitRootLogin\s\+' /etc/ssh/sshd_config 2> /dev/null | cut -d' ' -f2`
-if [ "$sshrootlogin" = "yes" ]; then
-  render_text "info" "Root is allowed to login via SSH" "${sshrootlogin}"
+# # we proceed with ssh checks, only if we can read /etc/ssh/sshd_config
+if [ -r "/etc/ssh/sshd_config" ]; then
+  #~ https://www.cyberciti.biz/tips/linux-unix-bsd-openssh-server-best-practices.html
+
+  #is root permitted to login via ssh
+  sshrootlogin=`(grep '^\s*PermitRootLogin\s\+' /etc/ssh/sshd_config) 2> /dev/null`
+  if [ -z "$sshrootlogin" ]; then sshrootlogin="no"; fi
+  render_text "info" "Check if root is allowed to login via SSH" "$sshrootlogin"
 fi
 
 #thorough checks
 if [ "$thorough" = "1" ]; then
-  current_user=`whoami`
+  current_user=`whoami 2> /dev/null`
+  current_user_homedir=`(cat /etc/passwd | grep "^$current_user" | cut -d':' -f6) 2> /dev/null`
   
   #looks for files we can write to that don't belong to us
-  grfilesall=`find / -writable \! -user $current_user -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null | \
-              xargs -r ls ${_color_flag} -lah 2> /dev/null`
+  grfilesall=`find / -writable \! -user $current_user -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$grfilesall" ]; then
-    render_text "info" "Files not owned by user but writable by group" "$grfilesall"
+    render_text "info" "Files not owned by user but writable by group" "`print_ls_lah "$grfilesall"`"
   fi
 
   #looks for files that belong to us
-  ourfilesall=`find / -user $current_user -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null | \
-               xargs -r ls ${_color_flag} -lah 2> /dev/null`
+  ourfilesall=`find / -user $current_user -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$ourfilesall" ]; then
-    render_text "info" "Files owned by our user" "$ourfilesall"
+    render_text "info" "Files owned by our user" "`print_ls_lah "$ourfilesall"`"
   fi
 
   #looks for hidden files
-  hiddenfiles=`find / -name ".*" -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null | \
-               xargs -r ls ${_color_flag} -lah 2> /dev/null`
+  hiddenfiles=`find / -name .* -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$hiddenfiles" ]; then
-    render_text "warning" "Hidden files" "$hiddenfiles"
+    render_text "warning" "Hidden files" "`print_ls_lah "$hiddenfiles"`"
   fi
   
-  #looks for world-reabable files within /home
-  # depending on number of /home dirs & files, this can take some time so is only 'activated' with thorough scanning switch
+  # looks for world-reabable files within /home
   wrfilesinhome=`find /home/ -perm -4 -type f 2> /dev/null`
   if [ "$wrfilesinhome" ]; then
-    wrfilesinhomeoutput=`echo "$wrfilesinhome" | xargs -r ${_color_flag} ls -lah 2> /dev/null`
-    render_text "warning" "World-readable files within /home" "$wrfilesinhomeoutput"
+    render_text "warning" "World-readable files within /home" "`print_ls_lah "$wrfilesinhome"`"
 
     if [ "$export" ]; then
       mkdir $format/wr-files/ 2> /dev/null
-      for f in $wrfilesinhome; do cp --parents $f $format/wr-files/ ; done 2> /dev/null
+      for f in $wrfilesinhome; do cp --parents "$f" $format/wr-files/; done 2> /dev/null
     fi
   fi
 
-  #lists current user's home directory contents
-  current_user_homedir=`cat /etc/passwd | grep "^$current_user" | cut -d':' -f6`
+  # lists current user's home directory contents
   homedircontents=`ls ${_color_flag} -Rlah "$current_user_homedir" 2> /dev/null`
   if [ "$homedircontents" ] ; then
     render_text "info" "Home directory contents" "$homedircontents"
   fi
-
-  #checks for if various ssh files (or their backups) are accessible
-  # this can take some time so is only 'activated' with thorough scanning switch
-  sshfiles=`find / \( -name "id_dsa*" -o -name "id_rsa*" -o -name "known_hosts*" -o -name "authorized_hosts*" -o -name "authorized_keys*" \) 2> /dev/null`
-
+  
+  # checks for if various ssh files (or their backups) are accessible
+  sshfiles=`find / \( -name "id_dsa*" -o -name "id_rsa*" -o -name "known_hosts*" -o -name "authorized_hosts*" -o -name "authorized_keys*" \) -type f 2> /dev/null`
   if [ "$sshfiles" ]; then
-    sshfilesoutput="`echo "$sshfiles" | xargs ls ${_color_flag} -lah 2> /dev/null`"
-    render_text "danger" "SSH keys/host information found in the following locations" "$sshfiles"
-    
+    render_text "warning" "SSH keys/host information found in the following locations" "`print_ls_lah "$sshfiles"`"
+
     if [ "$export" ]; then
       mkdir $format/ssh-files/ 2> /dev/null
-      for f in $sshfiles; do cp --parents $f $format/ssh-files/; done 2> /dev/null
+      for f in $sshfiles; do cp --parents "$f" $format/ssh-files/; done 2> /dev/null
     fi
   fi
 fi
@@ -662,13 +667,13 @@ if [ "$inetdread" ]; then
 fi
 
 #very 'rough' command to extract associated binaries from inetd.conf & show permisisons of each
-inetdbinperms=`awk '{print $7}' /etc/inetd.conf 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+inetdbinperms=`awk '{print $7}' /etc/inetd.conf 2> /dev/null`
 if [ "$inetdbinperms" ]; then
-  render_text "info" "The related inetd binary permissions" "$inetdbinperms"
+  render_text "info" "The related inetd binary permissions" "`print_ls_lah "$inetdbinperms"`"
 fi
 
 #check /etc/xinetd.conf file content
-xinetdread=`cat /etc/xinetd.conf 2> /dev/null`
+xinetdread=`grep -v '^#\|^$' /etc/xinetd.conf 2> /dev/null`
 if [ "$xinetdread" ]; then
   render_text "info" "Contents of /etc/xinetd.conf" "$xinetdread"
   
@@ -681,13 +686,14 @@ fi
 #check /etc/xinetd.d directory content
 xinetdincd=`grep ${_color_flag} "/etc/xinetd.d" /etc/xinetd.conf 2> /dev/null`
 if [ "$xinetdincd" ]; then
-  render_text "info" "/etc/xinetd.d is included in /etc/xinetd.conf - associated binary permissions are listed below" "`ls ${_color_flag} -lah /etc/xinetd.d 2> /dev/null`"
+  render_text "info" "/etc/xinetd.d is included in /etc/xinetd.conf - associated binary permissions are listed below" \
+                     "`ls ${_color_flag} -lah /etc/xinetd.d 2> /dev/null`"
 fi
 
 #very 'rough' command to extract associated binaries from xinetd.conf & show permisisons of each
-xinetdbinperms=`awk '{print $7}' /etc/xinetd.conf 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+xinetdbinperms=`awk '{print $7}' /etc/xinetd.conf 2> /dev/null`
 if [ "$xinetdbinperms" ]; then
-  render_text "info" "The related xinetd binary permissions" "$xinetdbinperms"
+  render_text "info" "The related xinetd binary permissions" "`print_ls_lah "$xinetdbinperms"`"
 fi
 
 initdread=`ls ${_color_flag} -lah /etc/init.d 2> /dev/null`
@@ -696,9 +702,9 @@ if [ "$initdread" ]; then
 fi
 
 #init.d files NOT belonging to root!
-initdperms=`find /etc/init.d/ \! -uid 0 -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+initdperms=`find /etc/init.d/ \! -uid 0 -type f 2> /dev/null`
 if [ "$initdperms" ]; then
-  render_text "info" "/etc/init.d/ files not belonging to root" "$initdperms"
+  render_text "info" "/etc/init.d/ files not belonging to root" "`print_ls_lah "$initdperms"`"
 fi
 
 rcdread=`ls ${_color_flag} -la /etc/rc.d/init.d 2> /dev/null`
@@ -707,9 +713,9 @@ if [ "$rcdread" ]; then
 fi
 
 #init.d files NOT belonging to root!
-rcdperms=`find /etc/rc.d/init.d \! -uid 0 -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+rcdperms=`find /etc/rc.d/init.d \! -uid 0 -type f 2> /dev/null`
 if [ "$rcdperms" ]; then
-  render_text "danger" "/etc/rc.d/init.d files not belonging to root" "$rcdperms"
+  render_text "danger" "/etc/rc.d/init.d files not belonging to root" "`print_ls_lah "$rcdperms"`"
 fi
 
 usrrcdread=`ls ${_color_flag} -lah /usr/local/etc/rc.d 2> /dev/null`
@@ -718,9 +724,9 @@ if [ "$usrrcdread" ]; then
 fi
 
 #rc.d files NOT belonging to root!
-usrrcdperms=`find /usr/local/etc/rc.d \! -uid 0 -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+usrrcdperms=`find /usr/local/etc/rc.d \! -uid 0 -type f 2> /dev/null`
 if [ "$usrrcdperms" ]; then
-  render_text "danger" "/usr/local/etc/rc.d files not belonging to root" "$usrrcdperms"
+  render_text "danger" "/usr/local/etc/rc.d files not belonging to root" "`print_ls_lah "$xinetdbinperms"`"
 fi
 
 initread=`ls ${_color_flag} -la /etc/init/ 2> /dev/null`
@@ -729,21 +735,27 @@ if [ "$initread" ]; then
 fi
 
 # upstart scripts not belonging to root
-initperms=`find /etc/init \! -uid 0 -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+initperms=`find /etc/init \! -uid 0 -type f 2> /dev/null`
 if [ "$initperms" ]; then
-   render_text "danger" "/etc/init/ config files not belonging to root" "$initperms"
+   render_text "danger" "/etc/init/ config files not belonging to root" "`print_ls_lah "$initdperms"`"
 fi
 
-if [ "$thorough" = "1" ]; then systemdread=`ls ${_color_flag} -lthR /lib/systemd/ /etc/systemd/ 2> /dev/null`;
-else systemdread="`find /lib/systemd/ /etc/systemd/ -name *.service -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`"; fi
+if [ "$thorough" = "1" ]; then
+  systemdread="`find /lib/systemd/ /etc/systemd/ -type f 2> /dev/null`";
+  systemdperms="`find /lib/systemd/ /etc/systemd/ \( \! -uid 0 -o -writable \) -type f 2> /dev/null`"
+else
+  systemdread="`find /lib/systemd/ /etc/systemd/ -name *.service -type f 2> /dev/null`"
+  systemdperms="`find /lib/systemd/ /etc/systemd/ \( \! -uid 0 -o -writable \) -name *.service -type f 2> /dev/null`"
+fi
+
+# systemd files
 if [ "$systemdread" ]; then
-  render_text "info" "systemd config file permissions" "$systemdread"
+  render_text "info" "systemd config file permissions" "`print_ls_lah "$systemdread"`"
 fi
 
-# systemd files not belonging to root
-systemdperms=`find /lib/systemd/ /etc/systemd/ \! -uid 0 -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+# systemd files not belonging to root or writable
 if [ "$systemdperms" ]; then
-   render_text "danger" "systemd config files not belonging to root" "$systemdperms"
+   render_text "danger" "systemd config files not belonging to root or writable" "`print_ls_lah "$systemdperms"`"
 fi
 }
 
@@ -857,53 +869,52 @@ interesting_files()
 print_title "yellow" "INTERESTING FILES"
 
 #checks to see if various files are installed
-bin_of_interest="nc netcat socat wget nmap gcc curl"
-bin_fullpath=`command -v -- $bin_of_interest 2> /dev/null | xargs -r ls ${_color_flag} -lh 2> /dev/null`
+bin_of_interest="nc netcat socat wget nmap ncat gcc curl ftp"
+bin_fullpath=`command -v -- $bin_of_interest 2> /dev/null`
 if [ "$bin_fullpath" ]; then
-  render_text "info" "Useful file locations" "$bin_fullpath"
+  render_text "info" "Useful utilities" "`print_ls_lah "$bin_fullpath"`"
 fi
 
 #limited search for installed compilers
-compiler=`dpkg --list 2> /dev/null | grep compiler | grep -v decompiler 2> /dev/null && yum list installed 'gcc*' 2> /dev/null| grep gcc 2> /dev/null`
+compiler=`((dpkg --list | grep '\s\+compiler') || (yum list installed 'gcc*' | grep gcc)) 2> /dev/null`
 if [ "$compiler" ]; then
   render_text "info" "Installed compilers" "$compiler"
-  echo -e "\n"
 fi
 
 #manual check - lists out sensitive files, can we read/modify etc.
 sensitive_files="/etc/passwd /etc/group /etc/profile /etc/shadow /etc/master.passwd /etc/security/opasswd"
-render_text "warning" "Check if we can read/write sensitive files" "`ls ${_color_flag} -lah $sensitive_files 2> /dev/null`"
+render_text "warning" "Check if we can read/write sensitive files" "`print_ls_lah "$sensitive_files"`"
 
-#files that have changed in the last 10 minutes
-changedfiles=`find / -mmin 10 2> /dev/null | grep -v "^/proc" | xargs -r ls ${_color_flag} -dlah 2> /dev/null`
+# regular files that have changed in the last 10 minutes
+changedfiles=`find / -mmin 10 \! -path "/proc/*" -type f 2> /dev/null`
 if [ "$changedfiles" ]; then
-  render_text "warning" "Files that have changed in the last 10 minutes" "$changedfiles"
+  render_text "warning" "Regular files that have changed in the last 10 minutes" "`print_ls_lah "$changedfiles"`"
 fi
 
 #search for suid files
 allsuid=`find / -perm -4000 -type f 2> /dev/null`
 if [ "$allsuid" ]; then
-  allsuiddetails=`echo "$allsuid" | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+  allsuiddetails="`print_ls_lah "$allsuid"`"
   if [ "$allsuiddetails" ]; then
     render_text "info" "SUID files" "$allsuiddetails"
-  fi
 
-  #list of 'interesting' suid files - feel free to make additions
-  interestingsuid=`echo "$allsuiddetails" | grep -w $binarylist 2> /dev/null`
-  if [ "$interestingsuid" ]; then
-    render_text "warning" "Possibly interesting SUID files" "$interestingsuid"
+    #list of 'interesting' suid files - feel free to make additions
+    interestingsuid=`(echo "$allsuiddetails" | grep -w $interesting_binaries) 2> /dev/null`
+    if [ "$interestingsuid" ]; then
+      render_text "warning" "Possibly interesting SUID files" "$interestingsuid"
+    fi
   fi
 
   #lists world-writable suid files
-  wwsuid=`find $allsuid \! -uid 0 -perm -4002 -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+  wwsuid=`find $allsuid \! -uid 0 -perm -4002 -type f 2> /dev/null`
   if [ "$wwsuid" ]; then
-    render_text "warning" "World-writable SUID files" "$wwsuid"
+    render_text "warning" "World-writable SUID files" "`print_ls_lah "$wwsuid"`"
   fi
 
   #lists world-writable suid files owned by root
-  wwrootsuid=`find $allsuid -uid 0 -perm -4002 -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+  wwrootsuid=`find $allsuid -uid 0 -perm -4002 -type f 2> /dev/null`
   if [ "$wwrootsuid" ]; then
-    render_text "warning" "World-writable SUID files owned by root" "$wwrootsuid"
+    render_text "warning" "World-writable SUID files owned by root" "`print_ls_lah "$wwrootsuid"`"
   fi
 
   if [ "$export" ]; then
@@ -915,27 +926,27 @@ fi
 #search for sgid files
 allsgid=`find / -perm -2000 -type f 2> /dev/null`
 if [ "$allsgid" ]; then
-  allsgiddetails=`echo "$allsgid" | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+  allsgiddetails="`print_ls_lah "$allsgid"`"
   if [ "$allsgiddetails" ]; then
     render_text "info" "SGID files" "$allsgiddetails"
+
+    #list of 'interesting' sgid files
+    interestingsgid=`echo "$allsgiddetails" | grep -w $interesting_binaries 2> /dev/null`
+    if [ "$interestingsgid" ]; then
+      render_text "warning" "Possibly interesting SGID files" "$interestingsgid"
+    fi
   fi
   
-  #list of 'interesting' sgid files
-  interestingsgid=`echo "$allsgiddetails" | grep -w $binarylist 2> /dev/null`
-  if [ "$interestingsgid" ]; then
-    render_text "warning" "Possibly interesting SGID files" "$interestingsgid"
-  fi
-
   #lists world-writable sgid files
-  wwsgid=`find $allsgid \! -uid 0 -perm -2002 -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+  wwsgid=`find $allsgid \! -uid 0 -perm -2002 -type f 2> /dev/null`
   if [ "$wwsgid" ]; then
-    render_text "warning" "World-writable SGID files" "$wwsgid"
+    render_text "warning" "World-writable SGID files" "`print_ls_lah "$wwsgid"`"
   fi
 
   #lists world-writable sgid files owned by root
-  wwrootsgid=`find $allsgid -uid 0 -perm -2002 -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+  wwrootsgid=`find $allsgid -uid 0 -perm -2002 -type f 2> /dev/null`
   if [ "$wwrootsgid" ]; then
-    render_text "warning" "World-writable SGID files owned by root" "$wwrootsgid"
+    render_text "warning" "World-writable SGID files owned by root" "`print_ls_lah "$wwrootsgid"`"
   fi
   
   if [ "$export" ]; then
@@ -945,7 +956,7 @@ if [ "$allsgid" ]; then
 fi
 
 #list all files with POSIX capabilities set along with there capabilities
-fileswithcaps=`getcap -r / 2> /dev/null || /sbin/getcap -r / 2> /dev/null`
+fileswithcaps=`(getcap -r / || /sbin/getcap -r /) 2> /dev/null`
 if [ "$fileswithcaps" ]; then
   render_text "info" "Files with POSIX capabilities set" "$fileswithcaps"
   
@@ -961,24 +972,24 @@ if [ "$userswithcaps" ]; then
   render_text "info" "Users with specific POSIX capabilities" "$userswithcaps"
 
   #matches the capabilities found associated with users with the current user
-  matchedcaps=`echo -e "$userswithcaps" | grep \`whoami\` | awk '{print $1}' 2> /dev/null`
+  matchedcaps=`(echo -e "$userswithcaps" | grep \`whoami\` | awk '{print $1}') 2> /dev/null`
   if [ "$matchedcaps" ]; then
     render_text "info" "Capabilities associated with the current user" "$matchedcaps"
 
     #matches the files with capapbilities with capabilities associated with the current user
-    matchedfiles=`echo -e "$matchedcaps" | while read -r cap; do echo -e "$fileswithcaps" | grep "$cap"; done 2> /dev/null`
+    matchedfiles=`(echo -e "$matchedcaps" | while read -r cap; do echo -e "$fileswithcaps" | grep "$cap"; done) 2> /dev/null`
     if [ "$matchedfiles" ]; then
       render_text "warning" "Files with the same capabilities associated with the current user (You may want to try abusing those capabilties)" "$matchedfiles"
       
       #lists the permissions of the files having the same capabilies associated with the current user
-      matchedfilesperms=`echo -e "$matchedfiles" | awk '{print $1}' | while read -r f; do ls ${_color_flag} -lah $f; done 2> /dev/null`
-      render_text "info" "Permissions of files with the same capabilities associated with the current user" "$matchedfilesperms"
+      matchedfilesperms=`(echo -e "$matchedfiles" | awk '{print $1}') 2> /dev/null`
+      render_text "info" "Permissions of files with the same capabilities associated with the current user" "`print_ls_lah "$matchedfilesperms"`"
       
       if [ "$matchedfilesperms" ]; then
         #checks if any of the files with same capabilities associated with the current user is writable
-        writablematchedfiles=`echo -e "$matchedfiles" | awk '{print $1}' | while read -r f; do find $f -writable -exec ls -la {} \; 2> /dev/null; done`
+        writablematchedfiles=`(echo -e "$matchedfiles" | awk '{print $1}' | while read -r f; do find $f -writable; done) 2> /dev/null`
         if [ "$writablematchedfiles" ]; then
-          render_text "info" "User/Group writable files with the same capabilities associated with the current user" "$writablematchedfiles"
+          render_text "info" "User/Group writable files with the same capabilities associated with the current user" "`print_ls_lah "$writablematchedfiles"`"
         fi
       fi
     fi
@@ -1067,44 +1078,31 @@ if [ "$nfsexports" ]; then
   fi
 fi
 
-if [ "$thorough" = "1" ]; then
-  #phackt
-  #displaying /etc/fstab
-  fstab=`cat /etc/fstab 2> /dev/null`
-  if [ "$fstab" ]; then
-    render_text "info" "NFS displaying partitions and filesystems - you need to look for exotic filesystems" "$fstab"
+#looking for credentials in /etc/fstab and /etc/mtab
+tabfiles="/etc/fstab /etc/mtab"
+for f in $tabfiles; do
+  [[ -e "$f" ]] || continue
+  
+  tabcreds=`grep "\(credentials\|login\|user\(name\)\?\|pass\(word\)\?\|pwd\?\)[=]" $f 2> /dev/null`
+  if [ "$tabcreds" ]; then
+    render_text "warning" "Look for possible credentials in $f" "`cat $f 2> /dev/null`"
+  else
+    if [ "$thorough" = "1" ]; then
+      render_text "info" "NFS displaying partitions and filesystems - you need to look for exotic filesystems" "$f"
+    fi
   fi
-fi
-
-#looking for credentials in /etc/fstab
-fstab=`grep username /etc/fstab 2> /dev/null | awk '{sub(/.*\username=/,""); sub(/\,.*/,"")}1' 2> /dev/null | \
-       xargs -r echo username: 2> /dev/null; grep password /etc/fstab 2> /dev/null | awk '{sub(/.*\password=/,"");sub(/\,.*/,"")}1' 2> /dev/null | \
-       xargs -r echo password: 2> /dev/null; grep domain /etc/fstab 2> /dev/null | awk '{sub(/.*\domain=/,"");sub(/\,.*/,"")}1' 2> /dev/null | \
-       xargs -r echo domain: 2> /dev/null`
-if [ "$fstab" ]; then
-  render_text "danger" "Looks like there are credentials in /etc/fstab" "$fstab"
-
+  
   if [ "$export" ]; then
     mkdir $format/etc-exports/ 2> /dev/null
-    cp /etc/fstab $format/etc-exports/fstab done 2> /dev/null
+    cp "$f" $format/etc-exports/ 2> /dev/null
   fi
-fi
-
-fstabcred=`grep cred /etc/fstab 2> /dev/null | awk '{sub(/.*\credentials=/,"");sub(/\,.*/,"")}1' 2> /dev/null | \
-           xargs -I{} sh -c 'ls ${_color_flag} -lah {}; cat {}' 2> /dev/null`
-if [ "$fstabcred" ]; then
-  render_text "danger" "/etc/fstab contains a credentials file" "$fstabcred"
   
-  if [ "$export" ] && [ "$fstabcred" ]; then
-    mkdir $format/etc-exports/ 2> /dev/null
-    cp /etc/fstab $format/etc-exports/fstab done 2> /dev/null
-  fi
-fi
+done
 
 #can we read some log?
-readablelogs=`find /etc/log /var/log -type f -name *log* -readable 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+readablelogs=`find /etc/log /var/log -type f -name *log* -readable 2> /dev/null`
 if [ "$readablelogs" ]; then
-  render_text "warning" "We can read these log files content" "$readablelogs"
+  render_text "warning" "We can read these log files content" "`print_ls_lah "$readablelogs"`"
 fi
 
 if [ "$keyword" ]; then
@@ -1166,7 +1164,7 @@ if [ "$keyword" ]; then
 fi
 
 #quick extract of .conf files from /etc - only 1 level
-allconf=`find /etc/ -maxdepth 1 \( -name *.conf -a \! -name *example \) -type f 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+allconf=`find /etc/ -maxdepth 1 \( -name *.conf -a \! -name *example \) -type f -exec ls -lah {} \; 2> /dev/null`
 if [ "$allconf" ]; then
   render_text "info" "All *.conf files in /etc (recursive 1 level)" "$allconf"
 
@@ -1196,16 +1194,16 @@ for entry in $(grep "^.*sh$" /etc/passwd 2> /dev/null); do
 done
 
 #all accessible .bash_history files in /home
-checkbashhist=`find /home -name .bash_history -exec ls -lah {} 2> /dev/null \; -exec tail -n 30 {} 2> /dev/null \;  2> /dev/null`
+checkbashhist=`find /home -name .bash_history -exec ls -lah {} \; -exec tail -n 30 {} \;  2> /dev/null`
 if [ "$checkbashhist" ]; then
   render_text "info" "Location and contents (last 30 rows, if accessible) of .bash_history file(s)" "$checkbashhist"
 fi
 
 #hijack tmux session
-tmux_installed=`which -- tmux 2> /dev/null`
+tmux_installed=`command -v tmux 2> /dev/null`
 if [ "$tmux_installed" ]; then
   # look for readable access to the tmux socket
-  tmux_sessions=`find /var/tmp/tmux-*/default /tmp/tmux-*/default -type f -readable 2> /dev/null | xargs -r ls ${_color_flag} -lah 2> /dev/null`
+  tmux_sessions=`find /var/tmp/tmux-*/default /tmp/tmux-*/default -type f -readable -exec ls -lah {} \; 2> /dev/null`
   if [ "$tmux_sessions" ]; then
     render_text "danger" "Possible tmux session hijacking" "$tmux_sessions"
   fi
@@ -1213,8 +1211,7 @@ if [ "$tmux_installed" ]; then
 fi
 
 #any bakup file that may be of interest
-bakfiles="`find / \( -name *.bak -o -name *.tmp -o -name *.temp -o -name *.old -o -name *.001 -o -name *\~ \) -type f 2> /dev/null | \
-           xargs -r ls ${_color_flag} -lah 2> /dev/null`"
+bakfiles="`find / \( -name *.bak -o -name *.tmp -o -name *.temp -o -name *.old -o -name *.001 -o -name *\~ \) -type f -exec ls -lah {} \; 2> /dev/null`"
 if [ "$bakfiles" ]; then
   render_text "info" "Location and Permissions (if accessible) of backup file(s)" "$bakfiles"
 fi
@@ -1241,34 +1238,34 @@ docker_checks()
 {
 print_title "yellow" "DOCKER CHECKS"
 #specific checks - check to see if we're in a docker container
-dockercontainer=`grep ${_color_flag} -i docker /proc/self/cgroup 2> /dev/null; find / -name "*dockerenv*" 2> /dev/null | \
-                 xargs -r ls ${_color_flag} -lah 2> /dev/null`
+dockerproc=`(grep -i docker /proc/self/cgroup; \
+             find / -name "*dockerenv*" \! \( -path "/proc/*" -o -path "/sys/*" \) -exec ls -lah {} \;) 2> /dev/null`
 if [ "$dockercontainer" ]; then
   render_text "warning" "It looks like we're in a Docker container" "$dockercontainer"
 fi
 
 #specific checks - check to see if we're a docker host
-dockerhost=`docker --version 2> /dev/null; docker ps -a 2> /dev/null`
+dockerhost=`(docker --version; docker ps -a) 2> /dev/null`
 if [ "$dockerhost" ]; then
   render_text "info" "It looks like we're hosting Docker" "$dockerhost"
 fi
 
 #specific checks - are we a member of the docker group
-dockergrp=`id | grep ${_color_flag} -i docker 2> /dev/null`
-if [ "$dockergrp" ]; then
-  render_text "warning" "We're a member of the (docker) group - could possibly misuse these rights!" "$dockergrp"
+if `(echo "$myid" | grep -q "\((\|\s\)\(docker\)\()\|\s\)") 2> /dev/null`; then
+  render_text "warning" "We're a member of the (docker) group - could possibly misuse these rights!" \
+                        "`(echo "$myid" | sed "s,\((\|\s\)\(docker\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
 fi
 
 #specific checks - are there any docker files present
-dockerfiles=`find / -name Dockerfile* 2> /dev/null | xargs -r ls -lah 2> /dev/null`
+dockerfiles=`find / \( -name Dockerfile* -o -name docker-compose.yml* \) -type f -exec ls -lah {} \; 2> /dev/null`
 if [ "$dockerfiles" ]; then
-  render_text "warning" "Anything juicy in the Dockerfile" "$dockerfiles"
+  render_text "warning" "Checks for Dokerfile(s) and docker-compose.yml(s)" "$dockerfiles"
 fi
 
-#specific checks - are there any docker files present
-dockeryml=`find / -name docker-compose.yml* 2> /dev/null | xargs -r ls -lah 2> /dev/null `
-if [ "$dockeryml" ]; then
-  render_text "warning" "Anything juicy in docker-compose.yml" "$dockeryml"
+# check if we can access some docker socket
+dockersock=`find / \! \( -path "/proc/*" -o -path "/sys/*" \) -type s -name "docker.sock" -o -name "docker.socket" -exec \ ls -lah {} \; 2> /dev/null`
+if [ "$dockersock" ]; then
+  render_text "info" "Check if we can read from/write to docker socket(s)" "$dockersock"
 fi
 }
 
@@ -1282,9 +1279,9 @@ if [ "$lxccontainer" ]; then
 fi
 
 #specific checks - are we a member of the lxd group
-lxdgroup=`id | grep ${_color_flag} -i "(lxd)" 2> /dev/null`
-if [ "$lxdgroup" ]; then
-  render_text "warning" "We're a member of the (lxd) group - could possibly misuse these rights!" "$lxdgroup"
+if `(echo "$myid" | grep -q '\((\|\s\)\(lxd\|lxc\)\()\|\s\)') 2> /dev/null`; then
+  render_text "warning" "We're a member of the (lxc/lxd) group - could possibly misuse these rights!" \
+                        "`(echo "$myid" | sed "s,\((\|\s\)\(lxd\|lxc\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
 fi
 }
 
@@ -1332,17 +1329,19 @@ call_each()
   print_title "green" "Scan ended at `date +%R` (completed in $seconds secs)"
 }
 
-while getopts "k:r:e:stCqh" option; do
+while getopts "qCstk:r:e:h" option; do
   case "${option}" in
-    k) keyword=${OPTARG};;
-    r) report=${OPTARG}"-"`date +"%d-%m-%y"`;;
-    e) export=${OPTARG};;
-    s) sudopass=1;;
-    t) thorough=1;;
+    q) quiet=1;;
     C) _reset=""; _red=""; _green=""; _yellow=""; _cyan=""; _purple=""; _gray=""; _color_flag=""
        _sed_red="\o033[4m&\o033[0m"; _sed_yellow="\o033[4m&\o033[0m"
     ;;
-    q) quiet=1;;
+    s) sudopass=1;;
+    t) thorough=1;;
+    
+    k) keyword=${OPTARG};;
+    r) report=${OPTARG}"-"`date +"%d-%m-%y"`;;
+    e) export=${OPTARG};;
+    
     h) usage; exit;;
     *) usage; exit;;
   esac
