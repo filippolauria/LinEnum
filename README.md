@@ -7,34 +7,36 @@ General usage:
 
 version 1.0
 
-* Example: ./LinEnum.sh -s -k keyword -r report -e /tmp/ -t 
-
 OPTIONS:
-* -k	Enter keyword
-* -e	Enter export location
-* -t	Include thorough (lengthy) tests
-* -s	Supply current user password to check sudo perms (INSECURE)
-* -r	Enter report name
+* -q	Quiet mode
 * -C	Disable colored output
-* -q	Hide banner
+* -s 	Supply user password for sudo checks (INSECURE)
+* -t	Include thorough (lengthy) tests
+* -k	Enter keyword
+* -r	Enter report name
+* -e	Enter export location
 * -h	Displays this help text
-
 
 Running with no options = limited scans/no output file
 
-* -e Requires the user enters an output location i.e. /tmp/export. If this location does not exist, it will be created.
-* -r Requires the user to enter a report name. The report (.txt file) will be saved to the current working directory.
-* -t Performs thorough (slow) tests. Without this switch default 'quick' scans are performed.
+EXAMPLE:
+    ./LinEnum.sh -t -k password -r report -e /tmp/
+
 * -s Use the current user with supplied password to check for sudo permissions - note this is insecure and only really for CTF use!
+* -t Performs thorough (slow) tests. Without this switch default 'quick' scans are performed.
 * -k An optional switch for which the user can search for a single keyword within many files (documented below).
+* -r Requires the user to enter a report name. The report (.txt file) will be saved to the current working directory.
+* -e Requires the user to enter an output location i.e. /tmp/export. If this location does not exist, it will be created.
 
 See CHANGELOG.md for further details
 
 High-level summary of the checks/tasks performed by LinEnum:
 
 * Kernel and distribution release details
+  * Quick lookup for kernel vulnerabilities (thanks to https://github.com/lucyoa/kernel-exploits)
 * System Information:
   * Hostname
+  * Disk, Memory, CPU, Printers
   * Networking details:
   * Current IP
   * Default route details
@@ -42,26 +44,26 @@ High-level summary of the checks/tasks performed by LinEnum:
 * User Information:
   * Current user details
   * Last logged on users
-  * Shows users logged onto the host
+  * Show users logged onto the host
   * List all users including uid/gid information
   * List root accounts
-  * Extracts password policies and hash storage method information
-  * Checks umask value
-  * Checks if password hashes are stored in /etc/passwd
+  * Extract password policies and hash storage method information
+  * Check umask value
+  * Check if password hashes are stored in /etc/passwd
   * Extract full details for ‘default’ uid’s such as 0, 1000, 1001 etc
   * Attempt to read restricted files i.e. /etc/shadow
   * List current users history files (i.e .bash_history, .nano_history etc.)
   * Basic SSH checks
 * Privileged access:
-  * Which users have recently used sudo
-  * Determine if /etc/sudoers is accessible (and check for LD_PRELOAD)
+  * Which users have recently used sudo?
+  * Determine if /etc/sudoers is accessible (executes common checks on it like LD_PRELOAD, NOPASSWD, etc.)
   * Determine if the current user has Sudo access without a password
   * Are known ‘good’ breakout binaries available via Sudo (i.e. nmap, vim etc.)
   * Is root’s home directory accessible
   * List permissions for /home/
 * Environmental:
   * Display current $PATH
-  * Displays env information
+  * Display env information
   * Check for in-memory passwords
 * Jobs/Tasks:
   * List all cron jobs
@@ -76,6 +78,7 @@ High-level summary of the checks/tasks performed by LinEnum:
   * List init.d binary permissions
 * Version Information (of the following):
   * Sudo
+  * Exim4
   * MYSQL
   * Postgres
   * Apache

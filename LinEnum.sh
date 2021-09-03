@@ -26,23 +26,13 @@ _color_flag="--color=always"
 
 # we use sed to colorize some output
 _sed_red="\o033[1;31m&\o033[0m"
+_sed_green="\o033[1;32m&\o033[0m"
 _sed_yellow="\o033[1;33m&\o033[0m"
+_sed_cyan="\o033[1;36m&\o033[0m"
 
 # set the number of columns
 _cols="`tput cols 2> /dev/null || echo -n "120"`"
 if [ "$_cols" -lt "120" ]; then _cols="120"; fi
-
-# useful binaries (thanks to https://gtfobins.github.io/)
-interesting_binaries='ansible-playbook\|apt-get\|apt\|ar\|aria2c\|arj\|arp\|ash\|at\|atobm\|awk\|base32\|base64\|basenc\|bash\|bpftrace\|bridge\|bundler\|busctl\|busybox\|byebug\|c89\|c99\|cancel\|capsh\|cat\|certbot\|check_by_ssh\|check_cups\|check_log\|check_memory\|check_raid\|check_ssl_cert\|check_statusfile\|chmod\|chown\|chroot\|cmp\|cobc\|column\|comm\|composer\|cowsay\|cowthink\|cp\|cpan\|cpio\|cpulimit\|crash\|crontab\|csh\|csplit\|csvtool\|cupsfilter\|curl\|cut\|dash\|date\|dd\|dialog\|diff\|dig\|dmesg\|dmidecode\|dmsetup\|dnf\|docker\|dpkg\|dvips\|easy_install\|eb\|ed\|emacs\|env\|eqn\|ex\|exiftool\|expand\|expect\|facter\|file\|find\|finger\|flock\|fmt\|fold\|ftp\|gawk\|gcc\|gdb\|gem\|genisoimage\|ghc\|ghci\|gimp\|git\|grep\|gtester\|gzip\|hd\|head\|hexdump\|highlight\|hping3\|iconv\|iftop\|install\|ionice\|ip\|irb\|jjs\|join\|journalctl\|jq\|jrunscript\|knife\|ksh\|ksshell\|latex\|ld.so\|ldconfig\|less\|ln\|loginctl\|logsave\|look\|ltrace\|lua\|lualatex\|luatex\|lwp-download\|lwp-request\|mail\|make\|man\|mawk\|more\|mount\|msgattrib\|msgcat\|msgconv\|msgfilter\|msgmerge\|msguniq\|mtr\|mv\|mysql\|nano\|nawk\|nc\|nice\|nl\|nmap\|node\|nohup\|npm\|nroff\|nsenter\|octave\|od\|openssl\|openvpn\|openvt\|paste\|pdb\|pdflatex\|pdftex\|perl\|pg\|php\|pic\|pico\|pip\|pkexec\|pkg\|pr\|pry\|psql\|puppet\|python\|rake\|readelf\|red\|redcarpet\|restic\|rev\|rlogin\|rlwrap\|rpm\|rpmquery\|rsync\|ruby\|run-mailcap\|run-parts\|rview\|rvim\|scp\|screen\|script\|sed\|service\|setarch\|sftp\|sg\|shuf\|slsh\|smbclient\|snap\|socat\|soelim\|sort\|split\|sqlite3\|ss\|ssh-keygen\|ssh-keyscan\|ssh\|start-stop-daemon\|stdbuf\|strace\|strings\|su\|sysctl\|systemctl\|systemd-resolve\|tac\|tail\|tar\|taskset\|tbl\|tclsh\|tcpdump\|tee\|telnet\|tex\|tftp\|tic\|time\|timedatectl\|timeout\|tmux\|top\|troff\|tshark\|ul\|unexpand\|uniq\|unshare\|update-alternatives\|uudecode\|uuencode\|valgrind\|vi\|view\|vigr\|vim\|vimdiff\|vipw\|virsh\|watch\|wc\|wget\|whois\|wish\|xargs\|xelatex\|xetex\|xmodmap\|xmore\|xxd\|xz\|yarn\|yelp\|yum\|zip\|zsh\|zsoelim\|zypper'
-
-# interesting groups
-interesting_groups="root\|sudo\|shadow\|adm\|wheel\|staff\|lxd\|lxc\|docker"
-
-# interesting sudo keywords
-interesting_sudo="env_keep+=LD_PRELOAD\|(\?ALL\s\?\(:\s\?ALL\)\?)\?\|NOPASSWD"
-
-# current user id
-myid=`(id || (groups | cut -d':' -f2)) 2> /dev/null`
 
 ###############
 # utils
@@ -99,7 +89,9 @@ render_text()
 print_ls_lah()
 {
   if [ "$1" ]; then
+    OLD_IFS=$IFS; IFS=$'\n'
     ((for f in $1; do [[ -e "$f" ]] || continue; ls ${_color_flag} -lah "$f"; done) | head -n50) 2> /dev/null
+    IFS=OLD_IFS
   fi
 }
 
@@ -142,11 +134,64 @@ EXAMPLE:
 print_title "red"
 }
 
+common()
+{
+  render_text "hint" "Please wait while the scan is starting..."
+  
+  # useful binaries (thanks to https://gtfobins.github.io/)
+  # update this list with:
+  # wget -q -O- https://gtfobins.github.io/ | grep -o 'bin-name">.*</a>' | sed 's,^.*">\(.*\)</a>,\1,g' | sed ':a;N;$!ba;s,\n,\\|,g'
+  interesting_binaries='ansible-playbook\|apt-get\|apt\|ar\|aria2c\|arj\|arp\|ash\|at\|atobm\|awk\|base32\|base64\|basenc\|bash\|bpftrace\|bridge\|bundler\|busctl\|busybox\|byebug\|c89\|c99\|cancel\|capsh\|cat\|certbot\|check_by_ssh\|check_cups\|check_log\|check_memory\|check_raid\|check_ssl_cert\|check_statusfile\|chmod\|chown\|chroot\|cmp\|cobc\|column\|comm\|composer\|cowsay\|cowthink\|cp\|cpan\|cpio\|cpulimit\|crash\|crontab\|csh\|csplit\|csvtool\|cupsfilter\|curl\|cut\|dash\|date\|dd\|dialog\|diff\|dig\|dmesg\|dmidecode\|dmsetup\|dnf\|docker\|dpkg\|dvips\|easy_install\|eb\|ed\|emacs\|env\|eqn\|ex\|exiftool\|expand\|expect\|facter\|file\|find\|finger\|flock\|fmt\|fold\|ftp\|gawk\|gcc\|gdb\|gem\|genisoimage\|ghc\|ghci\|gimp\|git\|grep\|gtester\|gzip\|hd\|head\|hexdump\|highlight\|hping3\|iconv\|iftop\|install\|ionice\|ip\|irb\|jjs\|join\|journalctl\|jq\|jrunscript\|knife\|ksh\|ksshell\|latex\|ld.so\|ldconfig\|less\|ln\|loginctl\|logsave\|look\|ltrace\|lua\|lualatex\|luatex\|lwp-download\|lwp-request\|mail\|make\|man\|mawk\|more\|mount\|msgattrib\|msgcat\|msgconv\|msgfilter\|msgmerge\|msguniq\|mtr\|mv\|mysql\|nano\|nawk\|nc\|nice\|nl\|nmap\|node\|nohup\|npm\|nroff\|nsenter\|octave\|od\|openssl\|openvpn\|openvt\|paste\|pdb\|pdflatex\|pdftex\|perl\|pg\|php\|pic\|pico\|pip\|pkexec\|pkg\|pr\|pry\|psql\|puppet\|python\|rake\|readelf\|red\|redcarpet\|restic\|rev\|rlogin\|rlwrap\|rpm\|rpmquery\|rsync\|ruby\|run-mailcap\|run-parts\|rview\|rvim\|scp\|screen\|script\|sed\|service\|setarch\|sftp\|sg\|shuf\|slsh\|smbclient\|snap\|socat\|soelim\|sort\|split\|sqlite3\|ss\|ssh-keygen\|ssh-keyscan\|ssh\|start-stop-daemon\|stdbuf\|strace\|strings\|su\|sysctl\|systemctl\|systemd-resolve\|tac\|tail\|tar\|taskset\|tbl\|tclsh\|tcpdump\|tee\|telnet\|tex\|tftp\|tic\|time\|timedatectl\|timeout\|tmux\|top\|troff\|tshark\|ul\|unexpand\|uniq\|unshare\|update-alternatives\|uudecode\|uuencode\|valgrind\|vi\|view\|vigr\|vim\|vimdiff\|vipw\|virsh\|watch\|wc\|wget\|whois\|wish\|xargs\|xelatex\|xetex\|xmodmap\|xmore\|xxd\|xz\|yarn\|yelp\|yum\|zip\|zsh\|zsoelim\|zypper'
+
+  # exploitable kernel versions
+  # update this list with:
+  # wget -q -O- https://raw.githubusercontent.com/lucyoa/kernel-exploits/master/README.md | grep "Kernels:\s\+" | sed 's,Kernels:\s\+\(.*\)$,\1,g' | tr -d ',' | tr ' ' '\n' | sort -u -r | sed ':a;N;$!ba;s,\n,\\|,g'
+  vulnerable_kernels='3.9.6\|3.9.0\|3.9\|3.8.9\|3.8.8\|3.8.7\|3.8.6\|3.8.5\|3.8.4\|3.8.3\|3.8.2\|3.8.1\|3.8.0\|3.8\|3.7.6\|3.7.0\|3.7\|3.6.0\|3.6\|3.5.0\|3.5\|3.4.9\|3.4.8\|3.4.6\|3.4.5\|3.4.4\|3.4.3\|3.4.2\|3.4.1\|3.4.0\|3.4\|3.3\|3.2\|3.19.0\|3.16.0\|3.15\|3.14\|3.13.1\|3.13.0\|3.13\|3.12.0\|3.12\|3.11.0\|3.11\|3.10.6\|3.10.0\|3.10\|3.1.0\|3.0.6\|3.0.5\|3.0.4\|3.0.3\|3.0.2\|3.0.1\|3.0.0\|2.6.9\|2.6.8\|2.6.7\|2.6.6\|2.6.5\|2.6.4\|2.6.39\|2.6.38\|2.6.37\|2.6.36\|2.6.35\|2.6.34\|2.6.33\|2.6.32\|2.6.31\|2.6.30\|2.6.3\|2.6.29\|2.6.28\|2.6.27\|2.6.26\|2.6.25\|2.6.24.1\|2.6.24\|2.6.23\|2.6.22\|2.6.21\|2.6.20\|2.6.2\|2.6.19\|2.6.18\|2.6.17\|2.6.16\|2.6.15\|2.6.14\|2.6.13\|2.6.12\|2.6.11\|2.6.10\|2.6.1\|2.6.0\|2.4.9\|2.4.8\|2.4.7\|2.4.6\|2.4.5\|2.4.4\|2.4.37\|2.4.36\|2.4.35\|2.4.34\|2.4.33\|2.4.32\|2.4.31\|2.4.30\|2.4.29\|2.4.28\|2.4.27\|2.4.26\|2.4.25\|2.4.24\|2.4.23\|2.4.22\|2.4.21\|2.4.20\|2.4.19\|2.4.18\|2.4.17\|2.4.16\|2.4.15\|2.4.14\|2.4.13\|2.4.12\|2.4.11\|2.4.10\|2.2.24'
+
+  # interesting groups
+  interesting_groups="root\|sudo\|shadow\|adm\|wheel\|staff\|lxd\|lxc\|docker"
+
+  # interesting sudo keywords
+  interesting_sudo="env_keep+=LD_PRELOAD\|(\?ALL\s\?\(:\s\?ALL\)\?)\?\|NOPASSWD"
+
+  # caching /etc/passwd content
+  etc_passwd_cache=`grep -v '^#\|^$' /etc/passwd`
+
+  # my (current user) information
+  my_id=`(id || (groups | cut -d':' -f2)) 2> /dev/null`
+  my_username=`whoami 2> /dev/null`
+  my_homedir=`(echo "$etc_passwd_cache" | grep "^$my_username" | cut -d':' -f6) 2> /dev/null`
+
+  # writable folders
+  writable_folders="`find / -type d -writable 2> /dev/null`"
+  
+  #PATH manipulation: in debian some directory (e.g. /sbin or /usr/sbin) is not added to the path
+  # this manipulation adds some known dir to the path, if it exists on the system
+  OLD_PATH=$PATH
+  known_good_path_dirs="/usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin /usr/games /usr/local/games /snap/bin"
+  path_manipulated=0
+  
+  OLD_IFS=$IFS
+  IFS=$'\n'
+  for d in $known_good_path_dirs; do
+  
+    if [[ -d "$d" ]] && [[ ! "$PATH" =~ "$d" ]]; then
+      PATH="$PATH:$d"
+      path_manipulated=1
+    fi
+  done
+  IFS=$OLD_IFS
+
+  if [ "$path_manipulated" = "1" ]; then
+    render_text "warning" "Path changed to: $PATH"
+  fi
+}
+
 ###############
 # checks
 ###############
 
-debug_info()
+script_info()
 {
 print_title "yellow" "INFO"
 
@@ -159,9 +204,6 @@ if [ "$report" ]; then render_text "info" "Report name" "$report"; fi
 if [ "$export" ]; then render_text "info" "Export location" "$export"; fi
 
 render_text "info" "Thorough tests" "`if [ "$thorough" ]; then echo -n "Enabled"; else echo -n "Disabled"; fi`"
-echo
-
-sleep 2
 
 # prepare to export findings
 if [ "$export" ]; then
@@ -181,31 +223,58 @@ fi
 
 system_info()
 {
-print_title "yellow" "SYSTEM"
+print_title "yellow" "SYSTEM INFO"
 
-#basic kernel info
-unameinfo=`uname -a 2> /dev/null`
+# basic kernel info
+unameinfo=`(uname -a | sed "s,\s\+\($vulnerable_kernels\),${_sed_red},g") 2> /dev/null`
 if [ "$unameinfo" ]; then
   render_text "info" "Kernel information" "$unameinfo"  
 fi
 
-procver=`cat /proc/version 2> /dev/null`
+# kernel info
+procver=`(cat /proc/version | sed "s,\s\+\($vulnerable_kernels\),${_sed_red},g") 2> /dev/null`
 if [ "$procver" ]; then
   render_text "info" "Kernel information (continued)" "$procver"
 fi
 
-render_text "hint" "Use 'searchsploit `uname -s` Kernel `uname -r | cut -d'.' -f1-2`' to look for kernel exploits"
+if `(uname -a || cat /proc/version) | grep -q "\s\+\($vulnerable_kernels\)" 2> /dev/null`; then
+  render_text "hint" "It looks like we have an unpatched kernel" "Use '${_red}searchsploit `uname -s` Kernel `uname -r | cut -d'.' -f1-2`${_reset}' to look for kernel exploits"
+fi
 
-#search all *-release files for version info
+# search all *-release files for version info
 release=`cat /etc/*-release 2> /dev/null`
 if [ "$release" ]; then
   render_text "info" "Specific release information" "$release"
 fi
 
-#target hostname info
+# target hostname info
 hostnamed=`hostname 2> /dev/null`
 if [ "$hostnamed" ]; then
   render_text "info" "Hostname" "$hostnamed"
+fi
+
+# memory
+freeinfo=`free -h 2> /dev/null`
+if [ "$freeinfo" ]; then
+  render_text "info" "Free and used memory in the system" "$freeinfo"
+fi
+
+# disk
+dfinfo=`(df -h || lsblk) 2> /dev/null`
+if [ "$dfinfo" ]; then
+  render_text "info" "Disk space usage" "$dfinfo"
+fi
+
+# cpu
+cpuinfo=`lscpu 2> /dev/null`
+if [ "$cpuinfo" ]; then
+  render_text "info" "CPU architecture" "$cpuinfo"
+fi
+
+# printers
+printersinfo=`lpstat -a 2>/dev/null`
+if [ "$printersinfo" ]; then
+  render_text "info" "Printer(s)" "$printersinfo"
 fi
 }
 
@@ -215,11 +284,10 @@ print_title "yellow" "USER/GROUP"
 
 #current user details
 render_text "info" "Current user/group info" \
-                   "`(echo "$myid" | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
-
+                   "`(echo "$my_id" | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
 
 #last logged on user information
-lastlogedonusrs=`(lastlog | grep -v "Never") 2> /dev/null`
+lastlogedonusrs=`(lastlog | awk 'NR>1' | grep -v "Never") 2> /dev/null`
 if [ "$lastlogedonusrs" ]; then
   render_text "info" "Users that have previously logged onto the system" "$lastlogedonusrs"
 fi
@@ -231,7 +299,7 @@ if [ "`echo "$loggedonusrs" | wc -l`" -gt "1" ]; then
 fi
 
 # save all users in the users variable
-users=`(grep -v '^#\|^$' /etc/passwd | cut -d":" -f1) 2> /dev/null`
+users=`(echo "$etc_passwd_cache" | cut -d":" -f1) 2> /dev/null`
 
 #lists all id's and respective group(s)
 grpinfo=""
@@ -248,13 +316,13 @@ if [ "$grpinfo" ]; then
 fi
 
 #checks to see if any hashes are stored in /etc/passwd (deprecated *nix storage method)
-hashesinpasswd=`grep -v '^[^:]*:[x]' /etc/passwd 2> /dev/null`
+hashesinpasswd=`(echo "$etc_passwd_cache" | grep -v '^[^:]*:[^:]:') 2> /dev/null`
 if [ "$hashesinpasswd" ]; then
   render_text "danger" "It looks like we have password hashes in /etc/passwd" "$hashesinpasswd"
 fi
 
 #contents of /etc/passwd
-readpasswd=`(cat /etc/passwd | sed "s/.*sh$/${_sed_red}/") 2> /dev/null`
+readpasswd=`(echo "$etc_passwd_cache" | sed "s/.*sh$/${_sed_yellow}/") 2> /dev/null`
 if [ "$readpasswd" ]; then
   render_text "info" "Contents of /etc/passwd" "$readpasswd"
 
@@ -287,7 +355,7 @@ if [ "$readmasterpasswd" ]; then
 fi
 
 #all root accounts (uid 0)
-superman=`grep -v '^#\|^$' /etc/passwd 2> /dev/null | awk -F':' '$3 == 0 {print $1}' 2> /dev/null`
+superman=`(echo "$etc_passwd_cache" | awk -F':' '$3 == 0 {print $1}') 2> /dev/null`
 if [ "$superman" ]; then
   render_text "warning" "Super user account(s)" "$superman"
 fi
@@ -365,29 +433,27 @@ if [ "$homedirperms" ]; then
   render_text "info" "Check if permissions on /home directories are lax" "$homedirperms"
 fi
 
-# # we proceed with ssh checks, only if we can read /etc/ssh/sshd_config
+# we proceed with ssh checks, only if we can read /etc/ssh/sshd_config
 if [ -r "/etc/ssh/sshd_config" ]; then
-  #~ https://www.cyberciti.biz/tips/linux-unix-bsd-openssh-server-best-practices.html
+  ssh_interesting_keywords="PubkeyAuthentication\|AuthenticationMethods\|PermitRootLogin\|PermitEmptyPasswords\|AllowUsers\|DenyUsers"
+  sshdchecks="`(grep '^#\|^$' /etc/ssh/sshd_config | sed "s,\($ssh_interesting_keywords\)\s\+,${_sed_yellow},g") 2> /dev/null`"
+  
+  if [ "$sshdchecks" ]; then
+    render_text "info" "Check SSH daemon configuration" "$sshdchecks"
+  fi
 
-  #is root permitted to login via ssh
-  sshrootlogin=`(grep '^\s*PermitRootLogin\s\+' /etc/ssh/sshd_config) 2> /dev/null`
-  if [ -z "$sshrootlogin" ]; then sshrootlogin="no"; fi
-  render_text "info" "Check if root is allowed to login via SSH" "$sshrootlogin"
 fi
 
 #thorough checks
 if [ "$thorough" = "1" ]; then
-  current_user=`whoami 2> /dev/null`
-  current_user_homedir=`(cat /etc/passwd | grep "^$current_user" | cut -d':' -f6) 2> /dev/null`
-  
   #looks for files we can write to that don't belong to us
-  grfilesall=`find / -writable \! -user $current_user -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
+  grfilesall=`find / -writable \! -user $my_username -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$grfilesall" ]; then
     render_text "info" "Files not owned by user but writable by group" "`print_ls_lah "$grfilesall"`"
   fi
 
   #looks for files that belong to us
-  ourfilesall=`find / -user $current_user -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
+  ourfilesall=`find / -user $my_username -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$ourfilesall" ]; then
     render_text "info" "Files owned by our user" "`print_ls_lah "$ourfilesall"`"
   fi
@@ -410,7 +476,7 @@ if [ "$thorough" = "1" ]; then
   fi
 
   # lists current user's home directory contents
-  homedircontents=`ls ${_color_flag} -Rlah "$current_user_homedir" 2> /dev/null`
+  homedircontents=`ls ${_color_flag} -Rlah "$my_homedir" 2> /dev/null`
   if [ "$homedircontents" ] ; then
     render_text "info" "Home directory contents" "$homedircontents"
   fi
@@ -447,10 +513,27 @@ fi
 #phackt
 
 #current path configuration
-pathinfo=`echo $PATH 2> /dev/null`
+pathinfo=`echo $OLD_PATH 2> /dev/null`
 if [ "$pathinfo" ]; then
-  pathswriteable=`ls ${_color_flag} -dlah $(echo $PATH | tr ":" " ")`
-  render_text "info" "Path information" "$pathinfo\n\n$pathswriteable"
+  render_text "info" "PATH" "$pathinfo"
+  
+  # check if some writable folder is in the PATH
+  wr_folder_in_path="";
+  
+  OLD_IFS=$IFS
+  IFS=$'\n'
+  for d in $writable_folders; do  
+    if [[ "$OLD_PATH" =~ "$d" ]]; then
+      if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
+    fi
+  done
+  IFS=$OLD_IFS
+
+  pathswriteable=`(ls -dlah $(echo $OLD_PATH | tr ":" " ") | sed "s,$wr_folder_in_path,${_sed_green},g") 2> /dev/null`
+  if [ "$pathswriteable" ]; then
+    render_text "warning" "Check if some folder of the PATH is ${_green}writable" "$pathswriteable"
+  fi
+
 fi
 
 #lists available shells
@@ -1176,7 +1259,7 @@ fi
 
 # retrieves accessible history file paths (e.g. ~/.bash_history, ~/.wget-hsts, ~/.lesshst, ecc.)
 # from users with valid home directories and shells
-for entry in $(grep "^.*sh$" /etc/passwd 2> /dev/null); do
+for entry in `(echo "$etc_passwd_cache" | grep "^.*sh$") 2> /dev/null`; do
   user=`echo $entry | cut -d":" -f1`
   home=`echo $entry | cut -d":" -f6`
   usrhist=`ls ${_color_flag} -lah $home/.*_history $home/.*-hsts $home/.*hst 2> /dev/null`
@@ -1251,9 +1334,9 @@ if [ "$dockerhost" ]; then
 fi
 
 #specific checks - are we a member of the docker group
-if `(echo "$myid" | grep -q "\((\|\s\)\(docker\)\()\|\s\)") 2> /dev/null`; then
+if `(echo "$my_id" | grep -q "\((\|\s\)\(docker\)\()\|\s\)") 2> /dev/null`; then
   render_text "warning" "We're a member of the (docker) group - could possibly misuse these rights!" \
-                        "`(echo "$myid" | sed "s,\((\|\s\)\(docker\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
+                        "`(echo "$my_id" | sed "s,\((\|\s\)\(docker\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
 fi
 
 #specific checks - are there any docker files present
@@ -1279,38 +1362,24 @@ if [ "$lxccontainer" ]; then
 fi
 
 #specific checks - are we a member of the lxd group
-if `(echo "$myid" | grep -q '\((\|\s\)\(lxd\|lxc\)\()\|\s\)') 2> /dev/null`; then
+if `(echo "$my_id" | grep -q '\((\|\s\)\(lxd\|lxc\)\()\|\s\)') 2> /dev/null`; then
   render_text "warning" "We're a member of the (lxc/lxd) group - could possibly misuse these rights!" \
-                        "`(echo "$myid" | sed "s,\((\|\s\)\(lxd\|lxc\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
+                        "`(echo "$my_id" | sed "s,\((\|\s\)\(lxd\|lxc\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
 fi
 }
 
 call_each()
 {
   banner
-  debug_info
+  script_info
+  
+  # load common data
+  common
   
   # head
   start_epoch=`date +%s`
   print_title "green" "Scan started at `date +%R`"
-  
-  #PATH manipulation, in debian some directory (e.g. /sbin or /usr/sbin) is not added to the path
-  # this manipulation adds some known dir to the path, if it exists on the system
-  OLD_PATH=$PATH
-  known_good_path_dirs="/usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin /usr/games /usr/local/games /snap/bin"
-  path_manipulated=0
-  for d in $known_good_path_dirs; do
-  
-    if [[ -d "$d" ]] && [[ ! "$PATH" =~ "$d" ]]; then
-      PATH="$PATH:$d"
-      path_manipulated=1
-    fi
-  done
 
-  if [ "$path_manipulated" = "1" ]; then
-    render_text "warning" "Path changed to: $PATH"
-  fi
-  
   # call checks
   system_info
   user_info
