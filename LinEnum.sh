@@ -97,9 +97,11 @@ print_ls_lah()
 
 banner()
 {
+if [ "$quiet" ]; then
+  echo
+else
   print_title "red"
-
-if [ -z "$quiet" ]; then
+  
   echo -e "${_yellow}      _              ______                       
      | |    (o)     |  ____|                      
      | |     _ _ __ | |__   _ __  _   _ _ __ ___  
@@ -109,7 +111,8 @@ if [ -z "$quiet" ]; then
 ${_reset}
   Local Linux Enumeration & Privilege Escalation Script
 "
-print_title "red"
+
+  print_title "red"
 fi
 }
 
@@ -280,6 +283,12 @@ fi
 
 user_info()
 {
+  
+# if we have to export something, we prepare the destination directory
+if [ "$export" ]; then
+  mkdir $format/etc-export/ 2> /dev/null
+fi
+  
 print_title "yellow" "USER/GROUP" 
 
 #current user details
@@ -326,10 +335,7 @@ readpasswd=`(echo "$etc_passwd_cache" | sed "s/.*sh$/${_sed_yellow}/") 2> /dev/n
 if [ "$readpasswd" ]; then
   render_text "info" "Contents of /etc/passwd" "$readpasswd"
 
-  if [ "$export" ]; then
-    mkdir $format/etc-export/ 2> /dev/null
-    cp /etc/passwd $format/etc-export/passwd 2> /dev/null
-  fi
+  if [ "$export" ]; then cp /etc/passwd $format/etc-export/passwd 2> /dev/null; fi
 fi
 
 #checks to see if the shadow file can be read
@@ -337,10 +343,7 @@ readshadow=`cat /etc/shadow 2> /dev/null`
 if [ "$readshadow" ]; then
   render_text "danger" "We can read the shadow file" "$readshadow"
   
-  if [ "$export" ]; then
-    mkdir $format/etc-export/ 2> /dev/null
-    cp /etc/shadow $format/etc-export/shadow 2> /dev/null
-  fi
+  if [ "$export" ]; then cp /etc/shadow $format/etc-export/shadow 2> /dev/null; fi
 fi
 
 #checks to see if /etc/master.passwd can be read - BSD 'shadow' variant
@@ -348,10 +351,7 @@ readmasterpasswd=`cat /etc/master.passwd 2> /dev/null`
 if [ "$readmasterpasswd" ]; then
   render_text "danger" "We can read the master.passwd file" "$readmasterpasswd"
 
-  if [ "$export" ]; then
-    mkdir $format/etc-export/ 2> /dev/null
-    cp /etc/master.passwd $format/etc-export/master.passwd 2> /dev/null
-  fi
+  if [ "$export" ]; then cp /etc/master.passwd $format/etc-export/master.passwd 2> /dev/null; fi
 fi
 
 #all root accounts (uid 0)
@@ -372,10 +372,7 @@ if [ "$sudobin" ]; then
     sudoers=`(echo "$sudoers" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,$interesting_binaries,${_sed_yellow},g") 2> /dev/null`
     render_text "warning" "We can read /etc/sudoers" "$sudoers"
     
-    if [ "$export" ]; then
-      mkdir $format/etc-export/ 2> /dev/null
-      cp /etc/sudoers $format/etc-export/sudoers 2> /dev/null
-    fi
+    if [ "$export" ]; then cp /etc/sudoers $format/etc-export/sudoers 2> /dev/null; fi
   fi
   
   # check if we can sudo without password
@@ -441,6 +438,8 @@ if [ -r "/etc/ssh/sshd_config" ]; then
   if [ "$sshdchecks" ]; then
     render_text "info" "Check SSH daemon configuration" "$sshdchecks"
   fi
+  
+  if [ "$export" ]; then cp /etc/ssh/sshd_config $format/etc-export/ 2> /dev/null; fi
 
 fi
 
@@ -952,7 +951,7 @@ interesting_files()
 print_title "yellow" "INTERESTING FILES"
 
 #checks to see if various files are installed
-bin_of_interest="nc netcat socat wget nmap ncat gcc curl ftp"
+bin_of_interest="nc netcat ncat socat wget curl ftp nmap ping gcc gdb perl php ruby python python2 python3"
 bin_fullpath=`command -v -- $bin_of_interest 2> /dev/null`
 if [ "$bin_fullpath" ]; then
   render_text "info" "Useful utilities" "`print_ls_lah "$bin_fullpath"`"
@@ -1416,5 +1415,10 @@ while getopts "qCstk:r:e:h" option; do
   esac
 done
 
-call_each | tee -a $report 2> /dev/null
+if [ -z "$report" ]; then
+  call_each
+else
+  call_each | tee -a $report 2> /dev/null
+  sed -i 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' $report 2> /dev/null
+fi
 #EndOfScript
