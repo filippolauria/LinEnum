@@ -71,6 +71,8 @@ Note: **Export functionality is currently in the experimental stage.**
     * Look for ssh related files (e.g. id_rsa, id_dsa, etc.) and/or their backup files
 * Environment
   * List environment variables
+  * Look for AppArmor and SeLinux presence
+  * Look for ASRL status
   * Look for writable directories in the PATH variable
   * List available shells
   * Get password and storage information (from */etc/login.defs*)

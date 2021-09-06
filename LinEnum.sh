@@ -499,18 +499,35 @@ environmental_info()
 print_title "yellow" "ENVIRONMENT"
 
 #env information
-envinfo=`env 2> /dev/null | grep -v 'LS_COLORS' 2> /dev/null`
+envinfo=`( (env || set) | grep -v 'LS_COLORS' ) 2> /dev/null`
 if [ "$envinfo" ]; then
   render_text "info" "Environment information" "$envinfo"
 fi
 
-#check if selinux is enabled
+# check if apparmor is present
+apparmor=`aa-status 2> /dev/null`
+if [ -z "$apparmor" ]; then
+  apparmor=`apparmor_status 2> /dev/null`
+fi
+
+if [ "$apparmor" ]; then
+  render_text "warning" "AppArmor seems to be present" "$apparmor"
+  
+  apparmorls=`ls -dlah /etc/apparmor* 2> /dev/null`
+  if [ "$apparmorls" ]; then
+    render_text "info" "AppArmor dir(s)" "$apparmorls"
+  fi
+fi
+
+# check if selinux is present
 sestatus=`sestatus 2> /dev/null`
 if [ "$sestatus" ]; then
   render_text "info" "SELinux seems to be present" "$sestatus"
 fi
 
-#phackt
+# ASLR check
+aslr_enabled=`cat /proc/sys/kernel/randomize_va_space 2> /dev/null`
+render_text "warning" "ASLR status" "`if [ "$aslr_enabled" -eq "0" ]; then echo "disabled"; else echo "enabled"; fi`"
 
 #current path configuration
 if [ "$OLD_PATH" ]; then
