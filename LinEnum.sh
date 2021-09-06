@@ -471,7 +471,9 @@ if [ "$thorough" = "1" ]; then
 
     if [ "$export" ]; then
       mkdir "$format/wr-files/" 2> /dev/null
+      OLD_IFS=$IFS; IFS=$'\n'
       for f in $wrfilesinhome; do cp --parents "$f" "$format/wr-files/"; done 2> /dev/null
+      IFS=$OLD_IFS
     fi
   fi
 
@@ -488,7 +490,9 @@ if [ "$thorough" = "1" ]; then
 
     if [ "$export" ]; then
       mkdir "$format/ssh-files/" 2> /dev/null
+      OLD_IFS=$IFS; IFS=$'\n'
       for f in $sshfiles; do cp --parents "$f" "$format/ssh-files/"; done 2> /dev/null
+      IFS=$OLD_IFS
     fi
   fi
 fi
@@ -740,17 +744,21 @@ fi
 psoutput=`(ps -eo command | grep -v "^\(\[\|COMMAND\|(\)" | awk '{print $1}' | awk '!x[$0]++') 2> /dev/null`
 if [ "$psoutput" ]; then
   proclist=""
+  OLD_IFS=$IFS; IFS=$'\n'
   for proc in $psoutput; do
     procpath="`command -v -- $proc 2> /dev/null`"
     if [ "$proclist" ]; then proclist="$proclist"$'\n'"$procpath"; else proclist="$procpath"; fi
   done
+  IFS=$OLD_IFS
   
   if [ "$proclist" ]; then
     render_text "info" "Process binaries and associated permissions (from the above list)" "`ls ${_color_flag} -lah $proclist 2> /dev/null`"
   
     if [ "$export" ]; then
       mkdir "$format/ps-export/" 2> /dev/null
+      OLD_IFS=$IFS; IFS=$'\n'
       for binary in $proclist; do cp --parents "$binary" "$format/ps-export/"; done 2> /dev/null
+      IFS=$OLD_IFS
     fi
   fi
 fi
@@ -881,8 +889,8 @@ if [ "$mysqlver" ]; then
   render_text "info" "MYSQL version" "$mysqlver"
   
   #checks to see if we can get very low MYSQL hanging fruits
-  mysql_usernames="root `whoami`"
-  mysql_passwords="root toor `whoami`"
+  mysql_usernames="root $my_username"
+  mysql_passwords="root toor $my_username"
   for u in $mysql_usernames; do
     for p in $mysql_passwords; do
       mysqlcon=`mysqladmin -u "$u" -p "$p" version 2> /dev/null`
@@ -1019,7 +1027,9 @@ if [ "$allsuid" ]; then
 
   if [ "$export" ]; then
     mkdir "$format/suid-files/" 2> /dev/null
+    OLD_IFS=$IFS; IFS=$'\n'
     for f in $allsuid; do cp "$f" "$format/suid-files/"; done 2> /dev/null
+    IFS=$OLD_IFS
   fi
 fi
 
@@ -1051,7 +1061,9 @@ if [ "$allsgid" ]; then
   
   if [ "$export" ]; then
     mkdir "$format/sgid-files/" 2> /dev/null
+    OLD_IFS=$IFS; IFS=$'\n'
     for f in $allsgid; do cp "$f" "$format/sgid-files/"; done 2> /dev/null
+    IFS=$OLD_IFS
   fi
 fi
 
@@ -1062,7 +1074,9 @@ if [ "$fileswithcaps" ]; then
   
   if [ "$export" ]; then
     mkdir "$format/files_with_capabilities/" 2> /dev/null
+    OLD_IFS=$IFS; IFS=$'\n'
     for f in $fileswithcaps; do cp "$f" "$format/files_with_capabilities/"; done 2> /dev/null
+    IFS=$OLD_IFS
   fi
 fi
 
@@ -1123,8 +1137,10 @@ if [ "$thorough" = "1" ]; then
 
     if [ "$export" ]; then
       mkdir "$format/ww-files/" 2> /dev/null
+      OLD_IFS=$IFS; IFS=$'\n'
       for f in $wwfiles; do cp --parents "$f" "$format/ww-files/"; done 2> /dev/null
-	fi
+      IFS=$OLD_IFS
+	  fi
   fi
 
 fi
@@ -1136,7 +1152,9 @@ if [ "$usrplan" ]; then
 
   if [ "$export" ]; then
     mkdir "$format/plan_files/" 2> /dev/null
+    OLD_IFS=$IFS; IFS=$'\n'
     for f in $usrplan; do cp --parents "$f" "$format/plan_files/"; done 2> /dev/null
+    IFS=$OLD_IFS
   fi
 fi
 
@@ -1157,7 +1175,9 @@ if [ "$rhostssys" ]; then
 
   if [ "$export" ]; then
     mkdir "$format/rhosts/" 2> /dev/null
+    OLD_IFS=$IFS; IFS=$'\n'
     for f in $rhostssys; do cp --parents "$f" "$format/rhosts/"; done 2> /dev/null
+    IFS=$OLD_IFS
   fi
 fi
 
@@ -1401,7 +1421,8 @@ while getopts "qCstk:r:e:h" option; do
   case "${option}" in
     q) quiet=1;;
     C) _reset=""; _red=""; _green=""; _yellow=""; _cyan=""; _purple=""; _gray=""; _color_flag=""
-       _sed_red="\o033[4m&\o033[0m"; _sed_yellow="\o033[4m&\o033[0m"
+       _sed_red="\o033[4m&\o033[0m"; _sed_green="\o033[4m&\o033[0m"
+       _sed_yellow="\o033[4m&\o033[0m"; _sed_cyan="\o033[4m&\o033[0m"
     ;;
     s) sudopass=1;;
     t) thorough=1;;
