@@ -9,6 +9,10 @@
 
 LinEnum is a shell script that when executed on a Linux host allows to enumerate local information.
 
+[![Linux](https://svgshare.com/i/Zhy.svg)](https://svgshare.com/i/Zhy.svg)
+[![made-with-bash](https://img.shields.io/badge/Made%20with-Bash-1f425f.svg)](https://www.gnu.org/software/bash/)
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
+
 ## Usage
 
     $ ./LinEnum.sh -h
@@ -112,7 +116,7 @@ Note: **Export functionality is currently in the experimental stage.**
   * Find/list all accessible *.rhosts files and display contents
   * Look for private keys or password files
   * Show NFS server details (check for no_root_squash)
-  * Locate *.conf*, *.cnf* and *.log* files containing keyword supplied at script runtime
+  * Locate *.php*, *.py*, *.conf*, *.cnf* and *.log* files containing keyword supplied at script runtime
   * List all *.conf files located in /etc
   * Check /etc/fstab and /etc/mtab for common misconfigurations
   * Check for history files (e.g. .*_history, .*-hsts, etc.)

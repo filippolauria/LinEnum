@@ -47,9 +47,10 @@ print_title()
   if [ "$2" ]; then title="### $2 "; else title="#####"; fi
   title_len=`echo -n "$title" | wc -c`
   
-  q=`expr \`expr $_cols / 2\` - $title_len`
+  half_cols=`expr "$_cols" / 2`
+  q=`expr "$half_cols" - "$title_len"`
   echo -n -e "${_color}$title"
-  printf '#%.0s' `seq 1 $q`
+  printf '#%.0s' `seq 1 "$q"`
   echo -e "${_reset}\n"
 }
 
@@ -61,7 +62,7 @@ render_text()
     "danger") bullet="[${_red}!${_reset}]"; keyword_color="${_red}"; value_color="${_yellow}";;
     "warning") bullet="[${_yellow}!${_reset}]"; keyword_color="${_yellow}"; value_color="";;
     "success") bullet="[${_green}+${_reset}]"; keyword_color="${_green}"; value_color="";;
-    "hint") bullet="[${_green}*${_reset}]"; keyword_color="${_green}"; value_color="";;
+    "hint") bullet="[${_purple}*${_reset}]"; keyword_color="${_purple}"; value_color="";;
     *) bullet="[.]"; keyword_color=""; value_color="";;
   esac
   
@@ -71,7 +72,7 @@ render_text()
     
     echo -e -n "${_gray}:${_reset}"
     if [ "$lines" -le "1" ]; then
-      output="`echo $3 | sed 's,\n,,'`"
+      output="`echo "$3" | sed 's,\n,,'`"
       total_chars=`echo "[.] $2: $output" | wc -c`
       if [ "$total_chars" -le "$_cols" ]; then
         first_char=" "
@@ -90,8 +91,8 @@ print_ls_lah()
 {
   if [ "$1" ]; then
     OLD_IFS=$IFS; IFS=$'\n'
-    ((for f in $1; do [[ -e "$f" ]] || continue; ls ${_color_flag} -lah "$f"; done) | head -n50) 2> /dev/null
-    IFS=OLD_IFS
+    ( (for f in $1; do [[ -e "$f" ]] || continue; ls ${_color_flag} -lah "$f"; done) | head -n50 ) 2> /dev/null
+    IFS=$OLD_IFS
   fi
 }
 
@@ -161,9 +162,9 @@ common()
   etc_passwd_cache=`grep -v '^#\|^$' /etc/passwd`
 
   # my (current user) information
-  my_id=`(id || (groups | cut -d':' -f2)) 2> /dev/null`
+  my_id=`(id || (groups | cut -d":" -f2)) 2> /dev/null`
   my_username=`whoami 2> /dev/null`
-  my_homedir=`(echo "$etc_passwd_cache" | grep "^$my_username" | cut -d':' -f6) 2> /dev/null`
+  my_homedir=`(echo "$etc_passwd_cache" | grep "^$my_username" | cut -d":" -f6) 2> /dev/null`
 
   # writable folders
   writable_folders="`find / -type d -writable 2> /dev/null`"
@@ -178,7 +179,7 @@ common()
   IFS=$'\n'
   for d in $known_good_path_dirs; do
   
-    if [[ -d "$d" ]] && [[ ! "$PATH" =~ "$d" ]]; then
+    if [[ -d "$d" ]] && [[ ! "$PATH" =~ $d ]]; then
       PATH="$PATH:$d"
       path_manipulated=1
     fi
@@ -235,12 +236,12 @@ if [ "$unameinfo" ]; then
 fi
 
 # kernel info
-procver=`(cat /proc/version | sed "s,\s\+\($vulnerable_kernels\),${_sed_red},g") 2> /dev/null`
+procver=`sed "s,\s\+\($vulnerable_kernels\),${_sed_red},g" /proc/version 2> /dev/null`
 if [ "$procver" ]; then
   render_text "info" "Kernel information (continued)" "$procver"
 fi
 
-if `(uname -a || cat /proc/version) | grep -q "\s\+\($vulnerable_kernels\)" 2> /dev/null`; then
+if (uname -a || cat /proc/version) | grep -q "\s\+\($vulnerable_kernels\)" 2> /dev/null; then
   render_text "hint" "It looks like we have an unpatched kernel" "Use '${_red}searchsploit `uname -s` Kernel `uname -r | cut -d'.' -f1-2`${_reset}' to look for kernel exploits"
 fi
 
@@ -286,17 +287,17 @@ user_info()
   
 # if we have to export something, we prepare the destination directory
 if [ "$export" ]; then
-  mkdir $format/etc-export/ 2> /dev/null
+  mkdir "$format/etc-export/" 2> /dev/null
 fi
   
 print_title "yellow" "USER/GROUP" 
 
 #current user details
 render_text "info" "Current user/group info" \
-                   "`(echo "$my_id" | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
+                   "`(echo "$my_id" | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_cyan},g") 2> /dev/null`"
 
 #last logged on user information
-lastlogedonusrs=`(lastlog | awk 'NR>1' | grep -v "Never") 2> /dev/null`
+lastlogedonusrs=`(lastlog | awk "NR>1" | grep -v "Never") 2> /dev/null`
 if [ "$lastlogedonusrs" ]; then
   render_text "info" "Users that have previously logged onto the system" "$lastlogedonusrs"
 fi
@@ -313,7 +314,7 @@ users=`(echo "$etc_passwd_cache" | cut -d":" -f1) 2> /dev/null`
 #lists all id's and respective group(s)
 grpinfo=""
 for u in $users; do
-  idoutput=`((id $u || (groups $u | cut -d':' -f2)) | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`
+  idoutput=`( (id "$u" || (groups "$u" | cut -d":" -f2) ) | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`
   entry="${_cyan}$u${_reset} : $idoutput"
   
   # we concatenate or init the list of processes
@@ -335,7 +336,7 @@ readpasswd=`(echo "$etc_passwd_cache" | sed "s/.*sh$/${_sed_yellow}/") 2> /dev/n
 if [ "$readpasswd" ]; then
   render_text "info" "Contents of /etc/passwd" "$readpasswd"
 
-  if [ "$export" ]; then cp /etc/passwd $format/etc-export/passwd 2> /dev/null; fi
+  if [ "$export" ]; then cp /etc/passwd "$format/etc-export/passwd" 2> /dev/null; fi
 fi
 
 #checks to see if the shadow file can be read
@@ -343,7 +344,7 @@ readshadow=`cat /etc/shadow 2> /dev/null`
 if [ "$readshadow" ]; then
   render_text "danger" "We can read the shadow file" "$readshadow"
   
-  if [ "$export" ]; then cp /etc/shadow $format/etc-export/shadow 2> /dev/null; fi
+  if [ "$export" ]; then cp /etc/shadow "$format/etc-export/shadow" 2> /dev/null; fi
 fi
 
 #checks to see if /etc/master.passwd can be read - BSD 'shadow' variant
@@ -351,7 +352,7 @@ readmasterpasswd=`cat /etc/master.passwd 2> /dev/null`
 if [ "$readmasterpasswd" ]; then
   render_text "danger" "We can read the master.passwd file" "$readmasterpasswd"
 
-  if [ "$export" ]; then cp /etc/master.passwd $format/etc-export/master.passwd 2> /dev/null; fi
+  if [ "$export" ]; then cp /etc/master.passwd "$format/etc-export/master.passwd" 2> /dev/null; fi
 fi
 
 #all root accounts (uid 0)
@@ -372,7 +373,7 @@ if [ "$sudobin" ]; then
     sudoers=`(echo "$sudoers" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,$interesting_binaries,${_sed_yellow},g") 2> /dev/null`
     render_text "warning" "We can read /etc/sudoers" "$sudoers"
     
-    if [ "$export" ]; then cp /etc/sudoers $format/etc-export/sudoers 2> /dev/null; fi
+    if [ "$export" ]; then cp /etc/sudoers "$format/etc-export/sudoers" 2> /dev/null; fi
   fi
   
   # check if we can sudo without password
@@ -383,7 +384,7 @@ if [ "$sudobin" ]; then
   else
     if [ "$sudopass" ]; then
       # check if we can sudo with password
-      sudoauth=`(echo $userpassword | sudo -S -l -k) 2> /dev/null`
+      sudoauth=`(echo "$userpassword" | sudo -S -l -k) 2> /dev/null`
       
       if [ "$sudoauth" ]; then
         sudoauth=`(echo "$sudoauth" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,$interesting_binaries,${_sed_yellow},g") 2> /dev/null`
@@ -398,8 +399,8 @@ if [ "$sudobin" ]; then
     render_text "danger" "Check if we can read/write files in /etc/sudoers.d" "$sudoersd"
     
     if [ "$export" ]; then
-      mkdir -p $format/etc-export/sudoers.d/ 2> /dev/null
-      cp /etc/sudoers.d/* $format/etc-export/sudoers.d/ 2> /dev/null
+      mkdir -p "$format/etc-export/sudoers.d/" 2> /dev/null
+      cp /etc/sudoers.d/* "$format/etc-export/sudoers.d/" 2> /dev/null
     fi
   fi
 
@@ -408,7 +409,7 @@ if [ "$sudobin" ]; then
   if [ "$sudoerhomelist" ]; then
     sudoerslist=""
     for h in $sudoerhomelist; do
-      entry=`(ls -dl "$h" 2> /dev/null | awk 'NR==1 {print $3}') 2> /dev/null`
+      entry=`(ls -dl "$h" | awk 'NR==1 {print $3}') 2> /dev/null`
       if [ "$sudoerslist" ]; then sudoerslist="$sudoerslist"$'\n'"$entry"; else sudoerslist="$entry"; fi
     done
     
@@ -439,26 +440,26 @@ if [ -r "/etc/ssh/sshd_config" ]; then
     render_text "info" "Check SSH daemon configuration" "$sshdchecks"
   fi
   
-  if [ "$export" ]; then cp /etc/ssh/sshd_config $format/etc-export/ 2> /dev/null; fi
+  if [ "$export" ]; then cp /etc/ssh/sshd_config "$format/etc-export/" 2> /dev/null; fi
 
 fi
 
 #thorough checks
 if [ "$thorough" = "1" ]; then
   #looks for files we can write to that don't belong to us
-  grfilesall=`find / -writable \! -user $my_username -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
+  grfilesall=`find / -writable \! -user "$my_username" -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$grfilesall" ]; then
     render_text "info" "Files not owned by user but writable by group" "`print_ls_lah "$grfilesall"`"
   fi
 
   #looks for files that belong to us
-  ourfilesall=`find / -user $my_username -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
+  ourfilesall=`find / -user "$my_username" -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$ourfilesall" ]; then
     render_text "info" "Files owned by our user" "`print_ls_lah "$ourfilesall"`"
   fi
 
   #looks for hidden files
-  hiddenfiles=`find / -name .* -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
+  hiddenfiles=`find / -name ".*" -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$hiddenfiles" ]; then
     render_text "warning" "Hidden files" "`print_ls_lah "$hiddenfiles"`"
   fi
@@ -469,8 +470,8 @@ if [ "$thorough" = "1" ]; then
     render_text "warning" "World-readable files within /home" "`print_ls_lah "$wrfilesinhome"`"
 
     if [ "$export" ]; then
-      mkdir $format/wr-files/ 2> /dev/null
-      for f in $wrfilesinhome; do cp --parents "$f" $format/wr-files/; done 2> /dev/null
+      mkdir "$format/wr-files/" 2> /dev/null
+      for f in $wrfilesinhome; do cp --parents "$f" "$format/wr-files/"; done 2> /dev/null
     fi
   fi
 
@@ -486,8 +487,8 @@ if [ "$thorough" = "1" ]; then
     render_text "warning" "SSH keys/host information found in the following locations" "`print_ls_lah "$sshfiles"`"
 
     if [ "$export" ]; then
-      mkdir $format/ssh-files/ 2> /dev/null
-      for f in $sshfiles; do cp --parents "$f" $format/ssh-files/; done 2> /dev/null
+      mkdir "$format/ssh-files/" 2> /dev/null
+      for f in $sshfiles; do cp --parents "$f" "$format/ssh-files/"; done 2> /dev/null
     fi
   fi
 fi
@@ -512,9 +513,8 @@ fi
 #phackt
 
 #current path configuration
-pathinfo=`echo $OLD_PATH 2> /dev/null`
-if [ "$pathinfo" ]; then
-  render_text "info" "PATH" "$pathinfo"
+if [ "$OLD_PATH" ]; then
+  render_text "info" "PATH" "$OLD_PATH"
   
   # check if some writable folder is in the PATH
   wr_folder_in_path="";
@@ -522,21 +522,22 @@ if [ "$pathinfo" ]; then
   OLD_IFS=$IFS
   IFS=$'\n'
   for d in $writable_folders; do  
-    if [[ "$OLD_PATH" =~ "$d" ]]; then
+    if [[ "$OLD_PATH" =~ $d ]]; then
       if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
     fi
   done
   IFS=$OLD_IFS
-
-  pathswriteable=`(ls -dlah $(echo $OLD_PATH | tr ":" " ") | sed "s,$wr_folder_in_path,${_sed_green},g") 2> /dev/null`
+  
+  PATH_W_SPACES=`echo "$OLD_PATH" | tr ':' ' '`
+  pathswriteable=`(ls -dlah $PATH_W_SPACES | sed "s,$wr_folder_in_path,${_sed_green},g") 2> /dev/null`
   if [ "$pathswriteable" ]; then
     render_text "warning" "Check if some folder of the PATH is ${_green}writable" "$pathswriteable"
   fi
-
 fi
 
 #lists available shells
-shellinfo=`ls ${_color_flag} -dlah $(grep -v '^#\|^$' /etc/shells 2> /dev/null) 2> /dev/null`
+etc_shells_content=`grep -v '^#\|^$' /etc/shells 2> /dev/null`
+shellinfo=`print_ls_lah "$etc_shells_content"`
 if [ "$shellinfo" ]; then
   render_text "info" "Available shells as specified in /etc/shells" "$shellinfo"
 fi
@@ -560,8 +561,8 @@ if [[ -f "/etc/login.defs" ]]; then
     render_text "info" "Password and storage information" "$logindefs"
 
     if [ "$export" ]; then
-      mkdir $format/etc-export/ 2> /dev/null
-      cp /etc/login.defs $format/etc-export/login.defs 2> /dev/null
+      mkdir "$format/etc-export/" 2> /dev/null
+      cp /etc/login.defs "$format/etc-export/login.defs" 2> /dev/null
     fi
   fi
 fi
@@ -584,7 +585,7 @@ if [ "$cronjobs" ]; then
 fi
 
 #can we manipulate these jobs in any way
-cronjobwwperms=`find /etc/cron* -perm -0002 -type f -exec ls -lah {} \; -exec cat {} 2> /dev/null \;`
+cronjobwwperms=`find /etc/cron* -perm -0002 -type f -exec ls -lah {} \; -exec cat {} \; 2> /dev/null`
 if [ "$cronjobwwperms" ]; then
   render_text "info" "World-writable cron jobs and file contents" "$cronjobwwperms"
 fi
@@ -612,7 +613,7 @@ fi
 
 #see if any users have associated cronjobs (priv command)
 for u in $users; do
-  cronother=`crontab -l -u $u 2> /dev/null`
+  cronother=`crontab -l -u "$u" 2> /dev/null`
   if [ "$cronother" ]; then
     render_text "warning" "Jobs held by $u" "$cronother"
   fi
@@ -700,7 +701,7 @@ fi
 udpserv=`netstat -lnup 2> /dev/null`
 if [ "$udpserv" ]; then
   #listening UDP (using ss)
-  udpservsip=`ss -lnup 2> /dev/null`
+  udpserv=`ss -lnup 2> /dev/null`
 fi
 
 if [ "$udpserv" ]; then
@@ -731,8 +732,8 @@ if [ "$psoutput" ]; then
     render_text "info" "Process binaries and associated permissions (from the above list)" "`ls ${_color_flag} -lah $proclist 2> /dev/null`"
   
     if [ "$export" ]; then
-      mkdir $format/ps-export/ 2> /dev/null
-      for binary in $proclist; do cp --parents $binary $format/ps-export/; done 2> /dev/null
+      mkdir "$format/ps-export/" 2> /dev/null
+      for binary in $proclist; do cp --parents "$binary" "$format/ps-export/"; done 2> /dev/null
     fi
   fi
 fi
@@ -743,8 +744,8 @@ if [ "$inetdread" ]; then
   render_text "info" "Contents of /etc/inetd.conf (condensed)" "$inetdread"
 
   if [ "$export" ]; then
-    mkdir $format/etc-export/ 2> /dev/null
-    cp /etc/inetd.conf $format/etc-export/inetd.conf 2> /dev/null
+    mkdir "$format/etc-export/" 2> /dev/null
+    cp /etc/inetd.conf "$format/etc-export/inetd.conf" 2> /dev/null
   fi
 fi
 
@@ -760,8 +761,8 @@ if [ "$xinetdread" ]; then
   render_text "info" "Contents of /etc/xinetd.conf" "$xinetdread"
   
   if [ "$export" ]; then
-    mkdir $format/etc-export/ 2> /dev/null
-    cp /etc/xinetd.conf $format/etc-export/xinetd.conf 2> /dev/null
+    mkdir "$format/etc-export/" 2> /dev/null
+    cp /etc/xinetd.conf "$format/etc-export/xinetd.conf" 2> /dev/null
   fi
 fi
 
@@ -826,8 +827,8 @@ if [ "$thorough" = "1" ]; then
   systemdread="`find /lib/systemd/ /etc/systemd/ -type f 2> /dev/null`";
   systemdperms="`find /lib/systemd/ /etc/systemd/ \( \! -uid 0 -o -writable \) -type f 2> /dev/null`"
 else
-  systemdread="`find /lib/systemd/ /etc/systemd/ -name *.service -type f 2> /dev/null`"
-  systemdperms="`find /lib/systemd/ /etc/systemd/ \( \! -uid 0 -o -writable \) -name *.service -type f 2> /dev/null`"
+  systemdread="`find /lib/systemd/ /etc/systemd/ -name "*.service" -type f 2> /dev/null`"
+  systemdperms="`find /lib/systemd/ /etc/systemd/ \( \! -uid 0 -o -writable \) -name "*.service" -type f 2> /dev/null`"
 fi
 
 # systemd files
@@ -867,7 +868,7 @@ if [ "$mysqlver" ]; then
   mysql_passwords="root toor `whoami`"
   for u in $mysql_usernames; do
     for p in $mysql_passwords; do
-      mysqlcon=`mysqladmin -u$u -p$p version 2> /dev/null`
+      mysqlcon=`mysqladmin -u "$u" -p "$p" version 2> /dev/null`
 
       if [ "$mysqlcon" ]; then
         render_text "danger" "We can connect to MYSQL service as $u with password $p" "$mysqlcon"
@@ -876,7 +877,7 @@ if [ "$mysqlver" ]; then
     done
     
     # test connection without password 
-    mysqlcon=`mysqladmin -u$u version 2> /dev/null`
+    mysqlcon=`mysqladmin -u "$u" version 2> /dev/null`
     if [ "$mysqlcon" ]; then
       render_text "danger" "We can connect to the MYSQL service as $u with no password" "$mysqlcon"
     fi
@@ -893,7 +894,7 @@ if [ "$postgver" ]; then
   for u in $psql_default_users; do
     for i in {0..9}; do
       w="template$i"
-      postcon=`psql -U $u -w $w -c 'select version()' 2> /dev/null | grep ${_color_flag} version`
+      postcon=`psql -U "$u" -w "$w" -c 'select version()' 2> /dev/null | grep ${_color_flag} version`
 
       if [ "$postcon" ]; then
         render_text "danger" "We can connect to Postgres DB $w as user $u with no password" "$postcon"
@@ -904,7 +905,7 @@ if [ "$postgver" ]; then
 fi
 
 #apache details - if installed
-apachever=`((apache2 -v || httpd -v) | head -n1 | awk -F': ' '{ print $2 }') 2> /dev/null`
+apachever=`( (apache2 -v || httpd -v) | head -n1 | awk -F': ' '{ print $2 }' ) 2> /dev/null`
 if [ "$apachever" ]; then
   render_text "info" "Apache version" "$apachever"
 
@@ -917,8 +918,8 @@ if [ "$apachever" ]; then
       render_text "info" "Apache is running as (user:group)" "$apacheusr:$apachegrp"
 
       if [ "$export" ]; then
-        mkdir --parents $format/etc-export/apache2/ 2> /dev/null
-        cp /etc/apache2/envvars $format/etc-export/apache2/envvars 2> /dev/null
+        mkdir --parents "$format/etc-export/apache2/" 2> /dev/null
+        cp /etc/apache2/envvars "$format/etc-export/apache2/envvars" 2> /dev/null
       fi
     fi
   fi
@@ -930,7 +931,7 @@ if [ "$apachever" ]; then
   fi
 
   #htpasswd check
-  htpasswd=`find / -name .htpasswd* -print -exec cat {} \; 2> /dev/null`
+  htpasswd=`find / -name ".htpasswd*" -print -exec cat {} \; 2> /dev/null`
   if [ "$htpasswd" ]; then
     render_text "danger" ".htpasswd found - could contain passwords" "$htpasswd"
   fi
@@ -938,7 +939,7 @@ if [ "$apachever" ]; then
   #anything in the default http home dirs (a thorough only check as output can be large)
   if [ "$thorough" = "1" ]; then
     apache_dirs="/var/www/ /srv/www/htdocs/ /usr/local/www/apache2/data/ /opt/lampp/htdocs/"
-    apachehomedirs=`ls ${_color_flag} -Rlah $d 2> /dev/null`
+    apachehomedirs=`ls ${_color_flag} -Rlah $apache_dirs 2> /dev/null`
     if [ "$apachehomedirs" ]; then
       render_text "info" "Apache2 home dir contents" "$apachehomedirs"
     fi
@@ -958,7 +959,7 @@ if [ "$bin_fullpath" ]; then
 fi
 
 #limited search for installed compilers
-compiler=`((dpkg --list | grep '\s\+compiler') || (yum list installed 'gcc*' | grep gcc)) 2> /dev/null`
+compiler=`( (dpkg --list | grep '\s\+compiler') || (yum list installed 'gcc*' | grep gcc) ) 2> /dev/null`
 if [ "$compiler" ]; then
   render_text "info" "Installed compilers" "$compiler"
 fi
@@ -1000,8 +1001,8 @@ if [ "$allsuid" ]; then
   fi
 
   if [ "$export" ]; then
-    mkdir $format/suid-files/ 2> /dev/null
-    for f in $allsuid; do cp $f $format/suid-files/; done 2> /dev/null
+    mkdir "$format/suid-files/" 2> /dev/null
+    for f in $allsuid; do cp "$f" "$format/suid-files/"; done 2> /dev/null
   fi
 fi
 
@@ -1032,8 +1033,8 @@ if [ "$allsgid" ]; then
   fi
   
   if [ "$export" ]; then
-    mkdir $format/sgid-files/ 2> /dev/null
-    for f in $allsgid; do cp $f $format/sgid-files/; done 2> /dev/null
+    mkdir "$format/sgid-files/" 2> /dev/null
+    for f in $allsgid; do cp "$f" "$format/sgid-files/"; done 2> /dev/null
   fi
 fi
 
@@ -1043,8 +1044,8 @@ if [ "$fileswithcaps" ]; then
   render_text "info" "Files with POSIX capabilities set" "$fileswithcaps"
   
   if [ "$export" ]; then
-    mkdir $format/files_with_capabilities/ 2> /dev/null
-    for i in $fileswithcaps; do cp $i $format/files_with_capabilities/; done 2> /dev/null
+    mkdir "$format/files_with_capabilities/" 2> /dev/null
+    for f in $fileswithcaps; do cp "$f" "$format/files_with_capabilities/"; done 2> /dev/null
   fi
 fi
 
@@ -1054,7 +1055,7 @@ if [ "$userswithcaps" ]; then
   render_text "info" "Users with specific POSIX capabilities" "$userswithcaps"
 
   #matches the capabilities found associated with users with the current user
-  matchedcaps=`(echo -e "$userswithcaps" | grep \`whoami\` | awk '{print $1}') 2> /dev/null`
+  matchedcaps=`(echo -e "$userswithcaps" | grep "$my_username" | awk '{print $1}') 2> /dev/null`
   if [ "$matchedcaps" ]; then
     render_text "info" "Capabilities associated with the current user" "$matchedcaps"
 
@@ -1069,7 +1070,7 @@ if [ "$userswithcaps" ]; then
       
       if [ "$matchedfilesperms" ]; then
         #checks if any of the files with same capabilities associated with the current user is writable
-        writablematchedfiles=`(echo -e "$matchedfiles" | awk '{print $1}' | while read -r f; do find $f -writable; done) 2> /dev/null`
+        writablematchedfiles=`(echo -e "$matchedfiles" | awk '{print $1}' | while read -r f; do find "$f" -writable; done) 2> /dev/null`
         if [ "$writablematchedfiles" ]; then
           render_text "info" "User/Group writable files with the same capabilities associated with the current user" "`print_ls_lah "$writablematchedfiles"`"
         fi
@@ -1104,42 +1105,42 @@ if [ "$thorough" = "1" ]; then
     render_text "info" "World-writable files (excluding /proc and /sys)" "$wwfiles"
 
     if [ "$export" ]; then
-      mkdir $format/ww-files/ 2> /dev/null
-      for f in $wwfiles; do cp --parents $f $format/ww-files/; done 2> /dev/null
+      mkdir "$format/ww-files/" 2> /dev/null
+      for f in $wwfiles; do cp --parents "$f" "$format/ww-files/"; done 2> /dev/null
 	fi
   fi
 
 fi
 
 #are any .plan files accessible in /home (could contain useful information)
-usrplan=`find /home /usr/home -iname *.plan -exec ls -lah {} \; -exec cat {} \; 2> /dev/null`
+usrplan=`find /home /usr/home -iname "*.plan" -exec ls -lah {} \; -exec cat {} \; 2> /dev/null`
 if [ "$usrplan" ]; then
   render_text "warning" "Plan file permissions and contents" "$usrplan"
 
   if [ "$export" ]; then
-    mkdir $format/plan_files/ 2> /dev/null
-    for f in $usrplan; do cp --parents $f $format/plan_files/; done 2> /dev/null
+    mkdir "$format/plan_files/" 2> /dev/null
+    for f in $usrplan; do cp --parents "$f" "$format/plan_files/"; done 2> /dev/null
   fi
 fi
 
 #are there any .rhosts files accessible - these may allow us to login as another user etc.
-rhostsusr=`find /home /usr/home -iname *.rhosts -exec ls -lah {} 2> /dev/null \; -exec cat {} \; 2> /dev/null`
+rhostsusr=`find /home /usr/home -iname "*.rhosts" -exec ls -lah {} \; -exec cat {} \; 2> /dev/null`
 if [ "$rhostsusr" ]; then
   render_text "warning" "rhost config file(s) and file contents" "$rhostsusr"
 
   if [ "$export" ]; then
-    mkdir $format/rhosts/ 2> /dev/null
-    for i in $rhostsusr; do cp --parents $i $format/rhosts/; done 2> /dev/null
+    mkdir "$format/rhosts/" 2> /dev/null
+    for f in $rhostsusr; do cp --parents "$f" "$format/rhosts/"; done 2> /dev/null
   fi
 fi
 
-rhostssys=`find /etc -iname hosts.equiv -exec ls -lah {} 2> /dev/null \; -exec cat {} \; 2> /dev/null`
+rhostssys="`find /etc -iname hosts.equiv -exec ls -lah {} \; -exec cat {} \; 2> /dev/null`"
 if [ "$rhostssys" ]; then
   render_text "info" "hosts.equiv file and contents" "$rhostssys"
 
   if [ "$export" ]; then
-    mkdir $format/rhosts/ 2> /dev/null
-    for f in $rhostssys; do cp --parents $f $format/rhosts/; done 2> /dev/null
+    mkdir "$format/rhosts/" 2> /dev/null
+    for f in $rhostssys; do cp --parents "$f" "$format/rhosts/"; done 2> /dev/null
   fi
 fi
 
@@ -1155,19 +1156,21 @@ if [ "$nfsexports" ]; then
   fi
 
   if [ "$export" ]; then
-    mkdir $format/etc-export/ 2> /dev/null
-    cp /etc/exports $format/etc-export/exports 2> /dev/null
+    mkdir "$format/etc-export/" 2> /dev/null
+    cp /etc/exports "$format/etc-export/exports" 2> /dev/null
   fi
 fi
 
 #looking for credentials in /etc/fstab and /etc/mtab
 tabfiles="/etc/fstab /etc/mtab"
+OLD_IFS=$IFS
+IFS=$'\n'
 for f in $tabfiles; do
   [[ -e "$f" ]] || continue
   
-  tabcreds=`grep "\(credentials\|login\|user\(name\)\?\|pass\(word\)\?\|pwd\?\)[=]" $f 2> /dev/null`
+  tabcreds=`grep "\(credentials\|login\|user\(name\)\?\|pass\(word\)\?\|pwd\?\)[=]" "$f" 2> /dev/null`
   if [ "$tabcreds" ]; then
-    render_text "warning" "Look for possible credentials in $f" "`cat $f 2> /dev/null`"
+    render_text "warning" "Look for possible credentials in $f" "`cat "$f" 2> /dev/null`"
   else
     if [ "$thorough" = "1" ]; then
       render_text "info" "NFS displaying partitions and filesystems - you need to look for exotic filesystems" "$f"
@@ -1175,93 +1178,71 @@ for f in $tabfiles; do
   fi
   
   if [ "$export" ]; then
-    mkdir $format/etc-exports/ 2> /dev/null
-    cp "$f" $format/etc-exports/ 2> /dev/null
+    mkdir "$format/etc-exports/" 2> /dev/null
+    cp "$f" "$format/etc-exports/" 2> /dev/null
   fi
   
 done
+IFS=$OLD_IFS
 
 #can we read some log?
-readablelogs=`find /etc/log /var/log -type f -name *log* -readable 2> /dev/null`
+readablelogs=`find /etc/log /var/log -type f -name "*log*" -readable 2> /dev/null`
 if [ "$readablelogs" ]; then
   render_text "warning" "We can read these log files content" "`print_ls_lah "$readablelogs"`"
 fi
 
 if [ "$keyword" ]; then
-  #use supplied keyword and cat *.conf files for potential matches - output will show line number within relevant file path where a match has been located
-  confkeyfiles=`find / -maxdepth 4 \( -name *.conf* -o -name *.cnf* -a \! -name *example \) -type f 2> /dev/null`
-  if [ "$confkeyfiles" ]; then
-    confkey=`echo "$confkeyfiles" | xargs grep -Hn $keyword 2> /dev/null`
-    if [ "$confkey" ]; then
-      render_text "warning" "Find keyword ($keyword) in .conf files (recursive 4 levels - output format filepath:identified line number where keyword appears)" "$confkey"
-    
-      if [ "$export" ]; then
-        mkdir --parents $format/keyword_file_matches/config_files/ 2> /dev/null
-        for f in $confkeyfiles; do cp --parents $f $format/keyword_file_matches/config_files/; done 2> /dev/null
-      fi
-    fi
-  fi
-
-  #use supplied keyword and cat *.php files for potential matches - output will show line number within relevant file path where a match has been located
-  phpkeyfiles=`find / -maxdepth 10 -name *.php* -type f 2> /dev/null`
+  # first of all get all files
+  keyfiles="`find / -maxdepth 4 \( \! -name "*example" -a \( -name "*.conf*" -o -name "*.cnf*"  -o -name "*.log*" -o -name "*.ini*" \) \) -type f 2> /dev/null`"
+  phpkeyfiles="`find / -maxdepth 10 \( -name "*.php*" -o -name "*.py*" \) -type f 2> /dev/null`"
+  
   if [ "$phpkeyfiles" ]; then
-    phpkey=`echo "$phpkeyfiles" | xargs grep -Hn $keyword 2> /dev/null`
-    if [ "$phpkey" ]; then
-      render_text "warning" "Find keyword ($keyword) in .php files (recursive 10 levels - output format filepath:identified line number where keyword appears)" "$phpkey"
+    keyfiles="$keyfiles\n$phpkeyfiles"
+  fi
+  
+  if [ "$keyfiles" ]; then
+    OLD_IFS=$IFS
+    IFS=$'\n'
+    keyfilesoutput=""
+    for f in $keyfiles; do
+      entry="`grep -Hn "$keyword" "$f" 2> /dev/null`"
+      if [ "$keyfilesoutput" ]; then keyfilesoutput="$keyfilesoutput"$'\n'"$entry"; else keyfilesoutput="$entry"; fi
+    done
+    IFS=$OLD_IFS
+    
+    if [ "$keyfilesoutput" ]; then
+      render_text "warning" "Find keyword ($keyword) in *.php, *.conf, etc. files (output format filepath:identified line number where keyword appears)" "$keyfilesoutput"
       
       if [ "$export" ]; then
-        mkdir --parents $format/keyword_file_matches/php_files/ 2> /dev/null
-        for f in $phpkeyfiles; do cp --parents $f $format/keyword_file_matches/php_files/; done 2> /dev/null
-      fi
-    fi
-  fi
-
-  #use supplied keyword and cat *.log files for potential matches - output will show line number within relevant file path where a match has been located
-  logkeyfiles=`find / -maxdepth 4 -name *.log* -type f 2> /dev/null`
-  if [ "$logkeyfiles" ]; then
-    logkey=`echo "$logkeyfiles" | xargs grep -Hn $keyword 2> /dev/null`
-    if [ "$logkey" ]; then
-      render_text "warning" "Find keyword ($keyword) in .log files (recursive 4 levels - output format filepath:identified line number where keyword appears)" "$logkey"
-
-      if [ "$export" ]; then
-        mkdir --parents $format/keyword_file_matches/log_files/ 2> /dev/null
-        for f in $logkeyfiles; do cp --parents $f $format/keyword_file_matches/log_files/; done 2> /dev/null
-      fi
-    fi
-  fi
-
-  #use supplied keyword and cat *.ini files for potential matches - output will show line number within relevant file path where a match has been located
-  inikeyfiles=`find / -maxdepth 4 -name *.ini -type f 2> /dev/null`
-  if [ "$inikeyfiles" ]; then
-    inikey=`echo "$inikeyfiles" | xargs grep -Hn $keyword 2> /dev/null`
-    if [ "$inikey" ]; then
-      render_text "warning" "Find keyword ($keyword) in .ini files (recursive 4 levels - output format filepath:identified line number where keyword appears)" "$inikey"
-
-      if [ "$export" ]; then
-	    mkdir --parents $format/keyword_file_matches/ini_files/ 2> /dev/null
-        for f in $inikeyfiles; do cp --parents $f $format/keyword_file_matches/ini_files/; done 2> /dev/null
+        mkdir --parents "$format/keyword_file_matches/" 2> /dev/null
+        OLD_IFS=$IFS
+        IFS=$'\n'
+        for f in $keyfiles; do cp --parents "$f" "$format/keyword_file_matches/"; done 2> /dev/null
+        IFS=$OLD_IFS
       fi
     fi
   fi
 fi
 
 #quick extract of .conf files from /etc - only 1 level
-allconf=`find /etc/ -maxdepth 1 \( -name *.conf -a \! -name *example \) -type f -exec ls -lah {} \; 2> /dev/null`
+allconf=`find /etc/ -maxdepth 1 \( -name "*.conf" -a \! -name "*example" \) -type f -exec ls -lah {} \; 2> /dev/null`
 if [ "$allconf" ]; then
   render_text "info" "All *.conf files in /etc (recursive 1 level)" "$allconf"
 
   if [ "$export" ]; then
-    mkdir $format/conf-files/ 2> /dev/null
-    for f in $allconf; do cp --parents $f $format/conf-files/; done 2> /dev/null
+    mkdir "$format/conf-files/" 2> /dev/null
+    OLD_IFS=$IFS; IFS=$'\n'
+    for f in $allconf; do cp --parents "$f" "$format/conf-files/"; done 2> /dev/null
+    IFS=$OLD_IFS
   fi
 fi
 
 # retrieves accessible history file paths (e.g. ~/.bash_history, ~/.wget-hsts, ~/.lesshst, ecc.)
 # from users with valid home directories and shells
 for entry in `(echo "$etc_passwd_cache" | grep "^.*sh$") 2> /dev/null`; do
-  user=`echo $entry | cut -d":" -f1`
-  home=`echo $entry | cut -d":" -f6`
-  usrhist=`ls ${_color_flag} -lah $home/.*_history $home/.*-hsts $home/.*hst 2> /dev/null`
+  user=`echo "$entry" | cut -d":" -f1`
+  home=`echo "$entry" | cut -d":" -f6`
+  usrhist=`ls ${_color_flag} -lah "$home/.*_history" "$home/.*-hsts" "$home/.*hst" 2> /dev/null`
 
   if [ "$usrhist" ]; then
     render_text "warning" "${user}'s history files" "$usrhist"
@@ -1269,8 +1250,10 @@ for entry in `(echo "$etc_passwd_cache" | grep "^.*sh$") 2> /dev/null`; do
     # if requested we export history files
     if [ "$export" ]; then
       # create dir only if it does not exist
-        mkdir -p $format/history_files/ 2> /dev/null
-        for f in $usrhist; do cp --parents $f $format/history_files/; done 2> /dev/null
+        mkdir -p "$format/history_files/" 2> /dev/null
+        OLD_IFS=$IFS; IFS=$'\n'
+        for f in $usrhist; do cp --parents "$f" "$format/history_files/"; done 2> /dev/null
+        IFS=$OLD_IFS
     fi
   fi
 done
@@ -1293,7 +1276,7 @@ if [ "$tmux_installed" ]; then
 fi
 
 #any bakup file that may be of interest
-bakfiles="`find / \( -name *.bak -o -name *.tmp -o -name *.temp -o -name *.old -o -name *.001 -o -name *\~ \) -type f -exec ls -lah {} \; 2> /dev/null`"
+bakfiles="`find / \( -name "*.bak" -o -name "*.tmp" -o -name "*.temp" -o -name "*.old" -o -name "*.001" -o -name "*~" \) -type f -exec ls -lah {} \; 2> /dev/null`"
 if [ "$bakfiles" ]; then
   render_text "info" "Location and Permissions (if accessible) of backup file(s)" "$bakfiles"
 fi
@@ -1310,8 +1293,8 @@ if [ "$readmailroot" ]; then
   render_text "danger" "We can read /var/mail/root! (snippet below)" "$readmailroot"
   
   if [ "$export" ]; then
-    mkdir $format/mail-from-root/ 2> /dev/null
-    cp $readmailroot $format/mail-from-root/ 2> /dev/null
+    mkdir "$format/mail-from-root/" 2> /dev/null
+    cp "$readmailroot" "$format/mail-from-root/" 2> /dev/null
   fi
 fi
 }
@@ -1320,7 +1303,7 @@ docker_checks()
 {
 print_title "yellow" "DOCKER CHECKS"
 #specific checks - check to see if we're in a docker container
-dockerproc=`(grep -i docker /proc/self/cgroup; \
+dockercontainer=`(grep -i docker /proc/self/cgroup; \
              find / -name "*dockerenv*" \! \( -path "/proc/*" -o -path "/sys/*" \) -exec ls -lah {} \;) 2> /dev/null`
 if [ "$dockercontainer" ]; then
   render_text "warning" "It looks like we're in a Docker container" "$dockercontainer"
@@ -1333,19 +1316,19 @@ if [ "$dockerhost" ]; then
 fi
 
 #specific checks - are we a member of the docker group
-if `(echo "$my_id" | grep -q "\((\|\s\)\(docker\)\()\|\s\)") 2> /dev/null`; then
+if (echo "$my_id" | grep -q "\((\|\s\)\(docker\)\()\|\s\)") 2> /dev/null; then
   render_text "warning" "We're a member of the (docker) group - could possibly misuse these rights!" \
                         "`(echo "$my_id" | sed "s,\((\|\s\)\(docker\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
 fi
 
 #specific checks - are there any docker files present
-dockerfiles=`find / \( -name Dockerfile* -o -name docker-compose.yml* \) -type f -exec ls -lah {} \; 2> /dev/null`
+dockerfiles=`find / \( -name "Dockerfile*" -o -name "docker-compose.yml*" \) -type f -exec ls -lah {} \; 2> /dev/null`
 if [ "$dockerfiles" ]; then
   render_text "warning" "Checks for Dokerfile(s) and docker-compose.yml(s)" "$dockerfiles"
 fi
 
 # check if we can access some docker socket
-dockersock=`find / \! \( -path "/proc/*" -o -path "/sys/*" \) -type s -name "docker.sock" -o -name "docker.socket" -exec \ ls -lah {} \; 2> /dev/null`
+dockersock=`find / \! \( -path "/proc/*" -o -path "/sys/*" \) -type s -name "docker.sock*" -exec \ ls -lah {} \; 2> /dev/null`
 if [ "$dockersock" ]; then
   render_text "info" "Check if we can read from/write to docker socket(s)" "$dockersock"
 fi
@@ -1361,7 +1344,7 @@ if [ "$lxccontainer" ]; then
 fi
 
 #specific checks - are we a member of the lxd group
-if `(echo "$my_id" | grep -q '\((\|\s\)\(lxd\|lxc\)\()\|\s\)') 2> /dev/null`; then
+if (echo "$my_id" | grep -q '\((\|\s\)\(lxd\|lxc\)\()\|\s\)') 2> /dev/null; then
   render_text "warning" "We're a member of the (lxc/lxd) group - could possibly misuse these rights!" \
                         "`(echo "$my_id" | sed "s,\((\|\s\)\(lxd\|lxc\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
 fi
@@ -1393,7 +1376,7 @@ call_each()
   
   # foot
   end_epoch=`date +%s`
-  seconds=`expr $end_epoch - $start_epoch`
+  seconds=`expr "$end_epoch" - "$start_epoch"`
   print_title "green" "Scan ended at `date +%R` (completed in $seconds secs)"
 }
 
@@ -1418,7 +1401,7 @@ done
 if [ -z "$report" ]; then
   call_each
 else
-  call_each | tee -a $report 2> /dev/null
-  sed -i 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' $report 2> /dev/null
+  call_each | tee -a "$report" 2> /dev/null
+  sed -i 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' "$report" 2> /dev/null
 fi
 #EndOfScript
