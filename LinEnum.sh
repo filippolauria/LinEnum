@@ -601,90 +601,67 @@ print_title "yellow" "JOBS/TASKS"
 
 # caching all automated jobs/tasks files
 automated_jobs=`find /etc/cron* /etc/anacron* /etc/at* /var/spool/anacron /var/spool/cron/crontabs \! -name ".placeholder" -type f 2> /dev/null`
+if [ "$automated_jobs" ]; then
+  # showing jobs files
+  render_text "info" "Automated jobs/tasks files" "`print_ls_lah "$automated_jobs"`"
+fi
 
-automated_jobs_output=""
-writable_jobs=""
-jobs_with_path=""
-
-OLD_IFS=$IFS
-IFS=$'\n'
-if [ "$thorough" ]; then
-  for f in $automated_jobs; do
-    automated_job_output=`(echo -n "-)) "; ls ${_color_flag} -lah "$f"; echo; grep -v '^#\|^$' "$f" | head -n30; echo; echo) 2> /dev/null`
-    if [ "$automated_jobs_output" ]; then automated_jobs_output="$automated_jobs_output"$'\n'"$automated_job_output"; else automated_jobs_output="$automated_job_output"; fi
-  done
+if [ "$thorough" ] && [ -z "$automated_jobs" ]; then
+  effective_automated_jobs=$automated_jobs
 else
-  automated_jobs_output="`print_ls_lah "$automated_jobs"`"
+  effective_automated_jobs="/etc/crontab"$'\n'"/etc/anacrontab"$'\n'
 fi
 
-#are there any cron jobs configured
-if [ "$automated_jobs_output" ]; then
-  render_text "info" "Automated jobs/tasks files" "$automated_jobs_output"
-fi
+if [ "$effective_automated_jobs" ]; then
 
-for f in $automated_jobs; do
-  # update writable jobs
-  writable_job="`find "$f" -writable 2> /dev/null`"
-  if [ "$writable_jobs" ]; then writable_jobs="$writable_jobs"$'\n'"$writable_job"; else writable_jobs="$writable_job"; fi
+  automated_jobs_output=""
+  writable_jobs=""
+  jobs_with_path=""
 
-  # update jobs with PATH
-  path="`(grep '^PATH=' "$f" | sed 's,^PATH=,,' | tr ':' '\n') 2> /dev/null`"
-  if [ "path" ]; then
-    wr_folder_in_path="";
-    
-    for d in $path; do
-      if [[ -d "$d" ]] && [[ ! -L "$d" ]] && [[ "$writable_folders" =~ $d ]]; then
-        if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
-      fi
-    done
-    
-    if [ "$wr_folder_in_path" ]; then
-      job_with_path="`( (ls ${_color_flag} -lah "$f"; echo; sed "s,[=:]\($wr_folder_in_path\)\+\(:\|$\),${_sed_green},g" "$f"; echo) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
-      if [ "$jobs_with_path" ]; then jobs_with_path="$jobs_with_path"$'\n'"$job_with_path"; else jobs_with_path="$job_with_path"; fi
+  OLD_IFS=$IFS
+  IFS=$'\n'
+  # showing jobs content
+  for f in $effective_automated_jobs; do
+    automated_job_output=`grep -v '^#\|^$' "$f" 2> /dev/null`
+    if [ "$automated_job_output" ]; then
+      render_text "info" "$f content (condensed)" "$automated_job_output"
     fi
+  done
+
+  for f in $automated_jobs; do
+    # update writable jobs
+    writable_job="`find "$f" -writable 2> /dev/null`"
+    if [ "$writable_jobs" ]; then writable_jobs="$writable_jobs"$'\n'"$writable_job"; else writable_jobs="$writable_job"; fi
+
+    # update jobs with PATH
+    path="`(grep '^PATH=' "$f" | sed 's,^PATH=,,' | tr ':' '\n') 2> /dev/null`"
+    if [ "path" ]; then
+      wr_folder_in_path="";
+      
+      for d in $path; do
+        if [[ -d "$d" ]] && [[ ! -L "$d" ]] && [[ "$writable_folders" =~ $d ]]; then
+          if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
+        fi
+      done
+      
+      if [ "$wr_folder_in_path" ]; then
+        job_with_path="`( (ls ${_color_flag} -lah "$f"; echo; sed "s,[=:]\($wr_folder_in_path\)\+\(:\|$\),${_sed_green},g" "$f"; echo) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
+        if [ "$jobs_with_path" ]; then jobs_with_path="$jobs_with_path"$'\n'"$job_with_path"; else jobs_with_path="$job_with_path"; fi
+      fi
+    fi
+  done
+  IFS=$OLD_IFS
+
+  # show writable job files
+  if [ "$writable_jobs" ]; then
+    render_text "warning" "It looks that we can manipulate some automated job/task" "`print_ls_lah "$writable_jobs"`"
   fi
-done
-IFS=$OLD_IFS
 
-if [ "$writable_jobs" ]; then
-  render_text "warning" "It looks that we can manipulate some automated job/task" "`print_ls_lah "$writable_jobs"`"
+  # show writable folder in PATHs
+  if [ "$jobs_with_path" ]; then
+    render_text "warning" "It looks that we have some writable folder in the job PATH" "$jobs_with_path"
+  fi
 fi
-
-if [ "$jobs_with_path" ]; then
-  render_text "warning" "It looks that we have some writable folder in the job PATH" "$jobs_with_path"
-fi
-#are there any cron jobs configured
-#~ cronjobs=`ls ${_color_flag} -lah /etc/cron* /etc/at* 2> /dev/null`
-#~ if [ "$cronjobs" ]; then
-  #~ render_text "info" "Cron jobs" "$cronjobs"
-#~ fi
-
-#can we manipulate these jobs in any way
-#~ cronjobwwperms=`find /etc/cron* /etc/at* -perm -0002 -type f -exec ls -lah {} \; -exec cat {} \; 2> /dev/null`
-#~ if [ "$cronjobwwperms" ]; then
-  #~ render_text "info" "World-writable cron jobs and file contents" "$cronjobwwperms"
-#~ fi
-
-#contab contents
-#~ crontabvalue=`cat /etc/crontab 2> /dev/null`
-#~ if [ "$crontabvalue" ]; then
-  #~ render_text "info" "Crontab contents" "$crontabvalue"
-#~ fi
-
-#~ crontabvar=`ls ${_color_flag} -lah /var/spool/cron/crontabs 2> /dev/null`
-#~ if [ "$crontabvar" ]; then
-  #~ render_text "info" "Anything interesting in /var/spool/cron/crontabs" "$crontabvar"
-#~ fi
-
-#~ anacronjobs=`ls ${_color_flag} -lah /etc/anacrontab 2> /dev/null; cat /etc/anacrontab 2> /dev/null`
-#~ if [ "$anacronjobs" ]; then
-  #~ render_text "info" "Anacron jobs and associated file permissions" "$anacronjobs"
-#~ fi
-
-#~ anacrontab=`ls ${_color_flag} -lah /var/spool/anacron 2> /dev/null`
-#~ if [ "$anacrontab" ]; then
-  #~ render_text "info" "When were jobs last executed (/var/spool/anacron contents)" "$anacrontab"
-#~ fi
 
 #see if any users have associated cronjobs (priv command)
 for u in $users; do
@@ -1408,7 +1385,7 @@ fi
 
 #specific checks - are we a member of the docker group
 if (echo "$my_id" | grep -q "\((\|\s\)\(docker\)\()\|\s\)") 2> /dev/null; then
-  render_text "warning" "We're a member of the (docker) group - could possibly misuse these rights!" \
+  render_text "warning" "We're a member of the (docker) group" \
                         "`(echo "$my_id" | sed "s,\((\|\s\)\(docker\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
 fi
 
@@ -1436,7 +1413,7 @@ fi
 
 #specific checks - are we a member of the lxd group
 if (echo "$my_id" | grep -q '\((\|\s\)\(lxd\|lxc\)\()\|\s\)') 2> /dev/null; then
-  render_text "warning" "We're a member of the (lxc/lxd) group - could possibly misuse these rights!" \
+  render_text "warning" "We're a member of the (lxc/lxd) group" \
                         "`(echo "$my_id" | sed "s,\((\|\s\)\(lxd\|lxc\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
 fi
 }
