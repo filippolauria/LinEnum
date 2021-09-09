@@ -145,7 +145,7 @@ common()
   # useful binaries (thanks to https://gtfobins.github.io/)
   # update this list with:
   # wget -q -O- https://gtfobins.github.io/ | grep -o 'bin-name">.*</a>' | sed 's,^.*">\(.*\)</a>,\1,g' | sed ':a;N;$!ba;s,\n,\\|,g'
-  interesting_binaries='ansible-playbook\|apt-get\|apt\|ar\|aria2c\|arj\|arp\|ash\|at\|atobm\|awk\|base32\|base64\|basenc\|bash\|bpftrace\|bridge\|bundler\|busctl\|busybox\|byebug\|c89\|c99\|cancel\|capsh\|cat\|certbot\|check_by_ssh\|check_cups\|check_log\|check_memory\|check_raid\|check_ssl_cert\|check_statusfile\|chmod\|chown\|chroot\|cmp\|cobc\|column\|comm\|composer\|cowsay\|cowthink\|cp\|cpan\|cpio\|cpulimit\|crash\|crontab\|csh\|csplit\|csvtool\|cupsfilter\|curl\|cut\|dash\|date\|dd\|dialog\|diff\|dig\|dmesg\|dmidecode\|dmsetup\|dnf\|docker\|dpkg\|dvips\|easy_install\|eb\|ed\|emacs\|env\|eqn\|ex\|exiftool\|expand\|expect\|facter\|file\|find\|finger\|flock\|fmt\|fold\|ftp\|gawk\|gcc\|gdb\|gem\|genisoimage\|ghc\|ghci\|gimp\|git\|grep\|gtester\|gzip\|hd\|head\|hexdump\|highlight\|hping3\|iconv\|iftop\|install\|ionice\|ip\|irb\|jjs\|join\|journalctl\|jq\|jrunscript\|knife\|ksh\|ksshell\|latex\|ld.so\|ldconfig\|less\|ln\|loginctl\|logsave\|look\|ltrace\|lua\|lualatex\|luatex\|lwp-download\|lwp-request\|mail\|make\|man\|mawk\|more\|mount\|msgattrib\|msgcat\|msgconv\|msgfilter\|msgmerge\|msguniq\|mtr\|mv\|mysql\|nano\|nawk\|nc\|nice\|nl\|nmap\|node\|nohup\|npm\|nroff\|nsenter\|octave\|od\|openssl\|openvpn\|openvt\|paste\|pdb\|pdflatex\|pdftex\|perl\|pg\|php\|pic\|pico\|pip\|pkexec\|pkg\|pr\|pry\|psql\|puppet\|python\|rake\|readelf\|red\|redcarpet\|restic\|rev\|rlogin\|rlwrap\|rpm\|rpmquery\|rsync\|ruby\|run-mailcap\|run-parts\|rview\|rvim\|scp\|screen\|script\|sed\|service\|setarch\|sftp\|sg\|shuf\|slsh\|smbclient\|snap\|socat\|soelim\|sort\|split\|sqlite3\|ss\|ssh-keygen\|ssh-keyscan\|ssh\|start-stop-daemon\|stdbuf\|strace\|strings\|su\|sysctl\|systemctl\|systemd-resolve\|tac\|tail\|tar\|taskset\|tbl\|tclsh\|tcpdump\|tee\|telnet\|tex\|tftp\|tic\|time\|timedatectl\|timeout\|tmux\|top\|troff\|tshark\|ul\|unexpand\|uniq\|unshare\|update-alternatives\|uudecode\|uuencode\|valgrind\|vi\|view\|vigr\|vim\|vimdiff\|vipw\|virsh\|watch\|wc\|wget\|whois\|wish\|xargs\|xelatex\|xetex\|xmodmap\|xmore\|xxd\|xz\|yarn\|yelp\|yum\|zip\|zsh\|zsoelim\|zypper'
+  interesting_binaries='ansible-playbook\|apt-get\|apt\|ar\|aria2c\|arj\|arp\|ash\|at\|atobm\|awk\|base32\|base64\|basenc\|bash\|bpftrace\|bridge\|bundler\|busctl\|busybox\|byebug\|c89\|c99\|cancel\|capsh\|cat\|certbot\|check_by_ssh\|check_cups\|check_log\|check_memory\|check_raid\|check_ssl_cert\|check_statusfile\|chmod\|chown\|chroot\|cmp\|cobc\|column\|comm\|composer\|cowsay\|cowthink\|cp\|cpan\|cpio\|cpulimit\|crash\|crontab\|csh\|csplit\|csvtool\|cupsfilter\|curl\|cut\|dash\|date\|dd\|dialog\|diff\|dig\|dmesg\|dmidecode\|dmsetup\|dnf\|docker\|dosbox\|dpkg\|dvips\|easy_install\|eb\|ed\|emacs\|env\|eqn\|ex\|exiftool\|expand\|expect\|facter\|file\|find\|finger\|flock\|fmt\|fold\|ftp\|gawk\|gcc\|gcore\|gdb\|gem\|genisoimage\|ghc\|ghci\|gimp\|git\|grep\|gtester\|gzip\|hd\|head\|hexdump\|highlight\|hping3\|iconv\|iftop\|install\|ionice\|ip\|irb\|jjs\|join\|journalctl\|jq\|jrunscript\|knife\|ksh\|ksshell\|latex\|ld.so\|ldconfig\|less\|ln\|loginctl\|logsave\|look\|ltrace\|lua\|lualatex\|luatex\|lwp-download\|lwp-request\|mail\|make\|man\|mawk\|more\|mount\|msgattrib\|msgcat\|msgconv\|msgfilter\|msgmerge\|msguniq\|mtr\|mv\|mysql\|nano\|nawk\|nc\|nice\|nl\|nmap\|node\|nohup\|npm\|nroff\|nsenter\|octave\|od\|openssl\|openvpn\|openvt\|paste\|pdb\|pdflatex\|pdftex\|perl\|pg\|php\|pic\|pico\|pip\|pkexec\|pkg\|pr\|pry\|psql\|puppet\|python\|rake\|readelf\|red\|redcarpet\|restic\|rev\|rlogin\|rlwrap\|rpm\|rpmquery\|rsync\|ruby\|run-mailcap\|run-parts\|rview\|rvim\|scp\|screen\|script\|sed\|service\|setarch\|sftp\|sg\|shuf\|slsh\|smbclient\|snap\|socat\|soelim\|sort\|split\|sqlite3\|ss\|ssh-keygen\|ssh-keyscan\|ssh\|start-stop-daemon\|stdbuf\|strace\|strings\|su\|sysctl\|systemctl\|systemd-resolve\|tac\|tail\|tar\|taskset\|tbl\|tclsh\|tcpdump\|tee\|telnet\|tex\|tftp\|tic\|time\|timedatectl\|timeout\|tmux\|top\|troff\|tshark\|ul\|unexpand\|uniq\|unshare\|update-alternatives\|uudecode\|uuencode\|valgrind\|vi\|view\|vigr\|vim\|vimdiff\|vipw\|virsh\|watch\|wc\|wget\|whois\|wish\|xargs\|xelatex\|xetex\|xmodmap\|xmore\|xxd\|xz\|yarn\|yelp\|yum\|zip\|zsh\|zsoelim\|zypper'
 
   # exploitable kernel versions
   # update this list with:
@@ -167,7 +167,7 @@ common()
   my_homedir=`(echo "$etc_passwd_cache" | grep "^$my_username" | cut -d":" -f6) 2> /dev/null`
 
   # writable folders
-  writable_folders="`find / -type d -writable 2> /dev/null`"
+  writable_folders="`find / -type d -writable \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`"
   
   #PATH manipulation: in debian some directory (e.g. /sbin or /usr/sbin) is not added to the path
   # this manipulation adds some known dir to the path, if it exists on the system
@@ -326,9 +326,15 @@ if [ "$grpinfo" ]; then
 fi
 
 #checks to see if any hashes are stored in /etc/passwd (deprecated *nix storage method)
-hashesinpasswd=`(echo "$etc_passwd_cache" | grep -v '^[^:]*:[^:]:') 2> /dev/null`
+hashesinpasswd=`(echo "$etc_passwd_cache" | grep -v '^[^:]\+:[^:]\?:') 2> /dev/null`
 if [ "$hashesinpasswd" ]; then
   render_text "danger" "It looks like we have password hashes in /etc/passwd" "$hashesinpasswd"
+fi
+
+#checks to see if there are empty password fields in /etc/passwd
+emptypassfield=`(echo "$etc_passwd_cache" | grep '^[^:]\+::') 2> /dev/null`
+if [ "$emptypassfield" ]; then
+  render_text "danger" "It looks like we have a user with an empty password field in /etc/passwd" "$emptypassfield"
 fi
 
 #contents of /etc/passwd
@@ -645,7 +651,7 @@ if [ "$effective_automated_jobs" ]; then
       done
       
       if [ "$wr_folder_in_path" ]; then
-        job_with_path="`( (ls ${_color_flag} -lah "$f"; echo; sed "s,[=:]\($wr_folder_in_path\)\+\(:\|$\),${_sed_green},g" "$f"; echo) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
+        job_with_path="`( (ls ${_color_flag} -lah "$f"; echo; sed "s,\([=:]\($wr_folder_in_path\)\)\+,${_sed_green},g" "$f"; echo) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
         if [ "$jobs_with_path" ]; then jobs_with_path="$jobs_with_path"$'\n'"$job_with_path"; else jobs_with_path="$job_with_path"; fi
       fi
     fi
