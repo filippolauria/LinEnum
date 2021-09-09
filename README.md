@@ -97,16 +97,15 @@ Note: **Export functionality is currently in the experimental stage.**
   * Sudo
   * Exim4
   * MYSQL
+    * Check for default/weak MYSQL accounts
+    * Attempt to retrieve information from *mysql* database
   * Postgres
+    * Check for default/weak Postgres accounts
   * Apache
     * Checks user config
     * Shows enabled modules
     * Checks for htpasswd files
     * View www directories
-  * Default/Weak Credentials:
-    * Checks for default/weak Postgres accounts
-    * Checks for default/weak MYSQL accounts
-
 * Interesting files:
   * Locate all SUID/GUID files
   * Locate all world-writable SUID/GUID files

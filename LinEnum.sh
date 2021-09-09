@@ -59,7 +59,7 @@ render_text()
 {
   case "$1" in
     "info") bullet="[${_cyan}-${_reset}]"; keyword_color="${_cyan}"; value_color="";;
-    "danger") bullet="[${_red}!${_reset}]"; keyword_color="${_red}"; value_color="${_yellow}";;
+    "danger") bullet="[${_red}!${_reset}]"; keyword_color="${_red}"; value_color="";;
     "warning") bullet="[${_yellow}!${_reset}]"; keyword_color="${_yellow}"; value_color="";;
     "success") bullet="[${_green}+${_reset}]"; keyword_color="${_green}"; value_color="";;
     "hint") bullet="[${_purple}*${_reset}]"; keyword_color="${_purple}"; value_color="";;
@@ -926,24 +926,50 @@ if [ "$mysqlver" ]; then
   render_text "info" "MYSQL version" "$mysqlver"
   
   #checks to see if we can get very low MYSQL hanging fruits
-  mysql_usernames="root $my_username"
-  mysql_passwords="root toor $my_username"
+  mysql_usernames="root"
+  if [[ ! "$mysql_usernames" =~ $my_username ]]; then mysql_usernames="$mysql_usernames"$'\n'"$my_username"; fi
+  
+  mysql_passwords=" "$'\n'"root"$'\n'"toor"
+  if [[ ! "$mysql_passwords" =~ $my_username ]]; then mysql_passwords="$mysql_passwords"$'\n'"$my_username"; fi
+  
+  OLD_IFS=$IFS; IFS=$'\n'
   for u in $mysql_usernames; do
     for p in $mysql_passwords; do
-      mysqlcon=`mysqladmin -u "$u" -p "$p" version 2> /dev/null`
+      if [ "$p" != " " ]; then param="-p$p"; else param=""; fi
+      
+      mysqlcon=`mysqladmin -u$u ${param} version 2> /dev/null`
 
       if [ "$mysqlcon" ]; then
-        render_text "danger" "We can connect to MYSQL service as $u with password $p" "$mysqlcon"
+        title="We can connect to MYSQL service as $u"
+        if [ "$p" != " " ]; then title="$title with password $p";
+        else title="$title without password"; fi
+        
+        render_text "danger" "$title" "$mysqlcon"
+        
+        resultset=`mysql -u$u ${param} -s -e "select User,Host,Password from mysql.user;" 2> /dev/null`
+        
+        mysqluserout=""
+        
+        for row in $resultset; do
+          user=`(echo "$row" | cut -f1) 2> /dev/null`
+          host=`(echo "$row" | cut -f2) 2> /dev/null`
+          pass=`(echo "$row" | cut -f3) 2> /dev/null`
+          if [ -z "$pass" ]; then pass="(no password)"; fi
+          
+          entry="`echo "username: $user@$host, password (hashed): $pass" | sed "s,$user\|$host\|$pass,${_sed_red},g"`"
+          if [ "$mysqluserout" ]; then mysqluserout="$mysqluserout"$'\n'"$entry"; else mysqluserout="$entry"; fi
+          
+        done
+        
+        if [ "$mysqluserout" ]; then
+          render_text "warning" "credentials from mysql.user table" "$mysqluserout"
+          break
+        fi
       fi
       
     done
-    
-    # test connection without password 
-    mysqlcon=`mysqladmin -u "$u" version 2> /dev/null`
-    if [ "$mysqlcon" ]; then
-      render_text "danger" "We can connect to the MYSQL service as $u with no password" "$mysqlcon"
-    fi
   done
+  IFS=$OLD_IFS
 fi
 
 #postgres details - if installed
@@ -956,7 +982,7 @@ if [ "$postgver" ]; then
   for u in $psql_default_users; do
     for i in {0..9}; do
       w="template$i"
-      postcon=`psql -U "$u" -w "$w" -c 'select version()' 2> /dev/null | grep ${_color_flag} version`
+      postcon=`psql -U$u -w$w -c 'select version()' 2> /dev/null | grep ${_color_flag} version`
 
       if [ "$postcon" ]; then
         render_text "danger" "We can connect to Postgres DB $w as user $u with no password" "$postcon"
