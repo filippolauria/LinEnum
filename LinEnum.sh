@@ -120,15 +120,18 @@ fi
 usage ()
 { 
 banner
-echo -e "OPTIONS:
--q	Quiet mode
--C	Disable colored output
--s 	Supply user password for sudo checks (INSECURE)
--t	Include thorough (lengthy) tests
--k	Enter keyword
--r	Enter report name
--e	Enter export location
--h	Displays this help text
+echo -e "USAGE:
+    ./LinEnum.sh -qCst -k <keyword> -r <report name> -e <export location> -h
+
+OPTIONS:
+  -q  Quiet mode
+  -C  Disable colored output
+  -s  Supply user password for sudo checks (INSECURE)
+  -t  Include thorough (lengthy) tests
+  -k  Enter keyword
+  -r  Enter report name
+  -e  Enter export location
+  -h  Displays this help text
 
 ${_yellow}Running with no options = limited scans/no output file${_reset}
 
@@ -157,9 +160,15 @@ common()
 
   # interesting sudo keywords
   interesting_sudo="env_keep+=LD_PRELOAD\|(\?ALL\s\?\(:\s\?ALL\)\?)\?\|NOPASSWD"
+  
+  # interesting parts of variable names
+  interesting_varnames="USER\|ACCESS\|ID\|API\|SECRET\|TOKEN\|KEY\|CLIENT\|EMAIL\|AUTH\|PASS\|PW\|HASH\|DATABASE\|DEPLOY\|GPG\|ACCOUNT\|SID\|BUCKET\|PRIVATE\|GIT\|ENV\|SVN\|SSH\|LOG\|DEV"
 
   # caching /etc/passwd content
   etc_passwd_cache=`grep -v '^#\|^$' /etc/passwd`
+  
+  # save all users in the users variable
+  users=`(echo "$etc_passwd_cache" | cut -d":" -f1) 2> /dev/null`
 
   # my (current user) information
   my_id=`(id || (groups | cut -d":" -f2)) 2> /dev/null`
@@ -307,9 +316,6 @@ loggedonusrs=`w 2> /dev/null`
 if [ "`echo "$loggedonusrs" | wc -l`" -gt "1" ]; then
   render_text "info" "Who else is logged on" "$loggedonusrs"
 fi
-
-# save all users in the users variable
-users=`(echo "$etc_passwd_cache" | cut -d":" -f1) 2> /dev/null`
 
 #lists all id's and respective group(s)
 grpinfo=""
@@ -508,8 +514,8 @@ environmental_info()
 {
 print_title "yellow" "ENVIRONMENT"
 
-#env information
-envinfo=`( (env || set) | grep -v 'LS_COLORS' ) 2> /dev/null`
+# env information (we try to highlight useful variables)
+envinfo=`( (env || set) | grep -v '^LS_COLORS=' | sed "s,^.*\($interesting_varnames\).*=,${_sed_yellow},Ig" ) 2> /dev/null`
 if [ "$envinfo" ]; then
   render_text "info" "Environment information" "$envinfo"
 fi
