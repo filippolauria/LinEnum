@@ -87,11 +87,11 @@ render_text()
   else echo -e "\n"; fi
 }
 
-print_ls_lah()
+print_ls_lh()
 {
-  if [ "$1" ]; then
+  if [ "$1" ]; then  
     OLD_IFS=$IFS; IFS=$'\n'
-    ( (for f in $1; do [[ -e "$f" ]] || continue; ls ${_color_flag} -lah "$f"; done) | head -n50 ) 2> /dev/null
+    find $1 -exec ls -lh {} + 2> /dev/null
     IFS=$OLD_IFS
   fi
 }
@@ -154,6 +154,9 @@ common()
   # update this list with:
   # wget -q -O- https://raw.githubusercontent.com/lucyoa/kernel-exploits/master/README.md | grep "Kernels:\s\+" | sed 's,Kernels:\s\+\(.*\)$,\1,g' | tr -d ',' | tr ' ' '\n' | sort -u -r | sed ':a;N;$!ba;s,\n,\\|,g'
   vulnerable_kernels='3.9.6\|3.9.0\|3.9\|3.8.9\|3.8.8\|3.8.7\|3.8.6\|3.8.5\|3.8.4\|3.8.3\|3.8.2\|3.8.1\|3.8.0\|3.8\|3.7.6\|3.7.0\|3.7\|3.6.0\|3.6\|3.5.0\|3.5\|3.4.9\|3.4.8\|3.4.6\|3.4.5\|3.4.4\|3.4.3\|3.4.2\|3.4.1\|3.4.0\|3.4\|3.3\|3.2\|3.19.0\|3.16.0\|3.15\|3.14\|3.13.1\|3.13.0\|3.13\|3.12.0\|3.12\|3.11.0\|3.11\|3.10.6\|3.10.0\|3.10\|3.1.0\|3.0.6\|3.0.5\|3.0.4\|3.0.3\|3.0.2\|3.0.1\|3.0.0\|2.6.9\|2.6.8\|2.6.7\|2.6.6\|2.6.5\|2.6.4\|2.6.39\|2.6.38\|2.6.37\|2.6.36\|2.6.35\|2.6.34\|2.6.33\|2.6.32\|2.6.31\|2.6.30\|2.6.3\|2.6.29\|2.6.28\|2.6.27\|2.6.26\|2.6.25\|2.6.24.1\|2.6.24\|2.6.23\|2.6.22\|2.6.21\|2.6.20\|2.6.2\|2.6.19\|2.6.18\|2.6.17\|2.6.16\|2.6.15\|2.6.14\|2.6.13\|2.6.12\|2.6.11\|2.6.10\|2.6.1\|2.6.0\|2.4.9\|2.4.8\|2.4.7\|2.4.6\|2.4.5\|2.4.4\|2.4.37\|2.4.36\|2.4.35\|2.4.34\|2.4.33\|2.4.32\|2.4.31\|2.4.30\|2.4.29\|2.4.28\|2.4.27\|2.4.26\|2.4.25\|2.4.24\|2.4.23\|2.4.22\|2.4.21\|2.4.20\|2.4.19\|2.4.18\|2.4.17\|2.4.16\|2.4.15\|2.4.14\|2.4.13\|2.4.12\|2.4.11\|2.4.10\|2.2.24'
+
+  # vulnerable sudo versions
+  vulnerable_sudo='1\.\([0-7]\.[0-9]\+\|8\.\(1[0-9]*\|2[0-7]\)\)'
 
   # interesting groups
   interesting_groups="root\|sudo\|shadow\|adm\|wheel\|staff\|lxd\|lxc\|docker"
@@ -406,7 +409,7 @@ if [ "$sudobin" ]; then
   fi
 
   # check for writable/readable files in /etc/sudoers.d
-  sudoersd=`find /etc/sudoers.d \! -name README -type f -exec ls -lah {} \; 2> /dev/null`
+  sudoersd=`find /etc/sudoers.d \! -name README -type f -exec ls -lah {} + 2> /dev/null`
   if [ "$sudoersd" ]; then
     render_text "danger" "Check if we can read/write files in /etc/sudoers.d" "$sudoersd"
     
@@ -417,7 +420,7 @@ if [ "$sudobin" ]; then
   fi
 
   # who has sudoed in the past
-  sudoerhomelist="`(find /home -name .sudo_as_admin_successful -type f -exec dirname {} \; | sort -u) 2> /dev/null`"
+  sudoerhomelist="`(find /home -name .sudo_as_admin_successful -type f -exec dirname {} + | sort -u) 2> /dev/null`"
   if [ "$sudoerhomelist" ]; then
     sudoerslist=""
     for h in $sudoerhomelist; do
@@ -461,25 +464,25 @@ if [ "$thorough" = "1" ]; then
   #looks for files we can write to that don't belong to us
   grfilesall=`find / -writable \! -user "$my_username" -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$grfilesall" ]; then
-    render_text "info" "Files not owned by user but writable by group" "`print_ls_lah "$grfilesall"`"
+    render_text "info" "Files not owned by user but writable by group" "`print_ls_lh "$grfilesall"`"
   fi
 
   #looks for files that belong to us
   ourfilesall=`find / -user "$my_username" -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$ourfilesall" ]; then
-    render_text "info" "Files owned by our user" "`print_ls_lah "$ourfilesall"`"
+    render_text "info" "Files owned by our user" "`print_ls_lh "$ourfilesall"`"
   fi
 
   #looks for hidden files
   hiddenfiles=`find / -name ".*" -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$hiddenfiles" ]; then
-    render_text "warning" "Hidden files" "`print_ls_lah "$hiddenfiles"`"
+    render_text "warning" "Hidden files" "`print_ls_lh "$hiddenfiles"`"
   fi
   
   # looks for world-reabable files within /home
   wrfilesinhome=`find /home/ -perm -4 -type f 2> /dev/null`
   if [ "$wrfilesinhome" ]; then
-    render_text "warning" "World-readable files within /home" "`print_ls_lah "$wrfilesinhome"`"
+    render_text "warning" "World-readable files within /home" "`print_ls_lh "$wrfilesinhome"`"
 
     if [ "$export" ]; then
       mkdir "$format/wr-files/" 2> /dev/null
@@ -498,7 +501,7 @@ if [ "$thorough" = "1" ]; then
   # checks for if various ssh files (or their backups) are accessible
   sshfiles=`find / \( -name "id_dsa*" -o -name "id_rsa*" -o -name "known_hosts*" -o -name "authorized_hosts*" -o -name "authorized_keys*" \) -type f 2> /dev/null`
   if [ "$sshfiles" ]; then
-    render_text "warning" "SSH keys/host information found in the following locations" "`print_ls_lah "$sshfiles"`"
+    render_text "warning" "SSH keys/host information found in the following locations" "`print_ls_lh "$sshfiles"`"
 
     if [ "$export" ]; then
       mkdir "$format/ssh-files/" 2> /dev/null
@@ -555,7 +558,7 @@ if [ "$OLD_PATH" ]; then
   OLD_IFS=$IFS
   IFS=$'\n'
   for d in $writable_folders; do  
-    if [[ "$OLD_PATH" =~ $d ]]; then
+    if [[ -d "$d" ]] && [[ ! -L "$d" ]] && [[ "$OLD_PATH" =~ $d ]]; then
       if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
     fi
   done
@@ -570,7 +573,7 @@ fi
 
 #lists available shells
 etc_shells_content=`grep -v '^#\|^$' /etc/shells 2> /dev/null`
-shellinfo=`print_ls_lah "$etc_shells_content"`
+shellinfo=`print_ls_lh "$etc_shells_content"`
 if [ "$shellinfo" ]; then
   render_text "info" "Available shells as specified in /etc/shells" "$shellinfo"
 fi
@@ -615,7 +618,7 @@ print_title "yellow" "JOBS/TASKS"
 automated_jobs=`find /etc/cron* /etc/anacron* /etc/at* /var/spool/anacron /var/spool/cron/crontabs \! -name ".placeholder" -type f 2> /dev/null`
 if [ "$automated_jobs" ]; then
   # showing jobs files
-  render_text "info" "Automated jobs/tasks files" "`print_ls_lah "$automated_jobs"`"
+  render_text "info" "Automated jobs/tasks files" "`print_ls_lh "$automated_jobs"`"
 fi
 
 if [ "$thorough" ] && [ -z "$automated_jobs" ]; then
@@ -666,7 +669,7 @@ if [ "$effective_automated_jobs" ]; then
 
   # show writable job files
   if [ "$writable_jobs" ]; then
-    render_text "warning" "It looks that we can manipulate some automated job/task" "`print_ls_lah "$writable_jobs"`"
+    render_text "warning" "It looks that we can manipulate some automated job/task" "`print_ls_lh "$writable_jobs"`"
   fi
 
   # show writable folder in PATHs
@@ -820,7 +823,7 @@ fi
 #very 'rough' command to extract associated binaries from inetd.conf & show permisisons of each
 inetdbinperms=`awk '{print $7}' /etc/inetd.conf 2> /dev/null`
 if [ "$inetdbinperms" ]; then
-  render_text "info" "The related inetd binary permissions" "`print_ls_lah "$inetdbinperms"`"
+  render_text "info" "The related inetd binary permissions" "`print_ls_lh "$inetdbinperms"`"
 fi
 
 #check /etc/xinetd.conf file content
@@ -844,7 +847,7 @@ fi
 #very 'rough' command to extract associated binaries from xinetd.conf & show permisisons of each
 xinetdbinperms=`awk '{print $7}' /etc/xinetd.conf 2> /dev/null`
 if [ "$xinetdbinperms" ]; then
-  render_text "info" "The related xinetd binary permissions" "`print_ls_lah "$xinetdbinperms"`"
+  render_text "info" "The related xinetd binary permissions" "`print_ls_lh "$xinetdbinperms"`"
 fi
 
 initdread=`ls ${_color_flag} -lah /etc/init.d 2> /dev/null`
@@ -855,7 +858,7 @@ fi
 #init.d files NOT belonging to root!
 initdperms=`find /etc/init.d/ \! -uid 0 -type f 2> /dev/null`
 if [ "$initdperms" ]; then
-  render_text "info" "/etc/init.d/ files not belonging to root" "`print_ls_lah "$initdperms"`"
+  render_text "info" "/etc/init.d/ files not belonging to root" "`print_ls_lh "$initdperms"`"
 fi
 
 rcdread=`ls ${_color_flag} -la /etc/rc.d/init.d 2> /dev/null`
@@ -866,7 +869,7 @@ fi
 #init.d files NOT belonging to root!
 rcdperms=`find /etc/rc.d/init.d \! -uid 0 -type f 2> /dev/null`
 if [ "$rcdperms" ]; then
-  render_text "danger" "/etc/rc.d/init.d files not belonging to root" "`print_ls_lah "$rcdperms"`"
+  render_text "danger" "/etc/rc.d/init.d files not belonging to root" "`print_ls_lh "$rcdperms"`"
 fi
 
 usrrcdread=`ls ${_color_flag} -lah /usr/local/etc/rc.d 2> /dev/null`
@@ -877,7 +880,7 @@ fi
 #rc.d files NOT belonging to root!
 usrrcdperms=`find /usr/local/etc/rc.d \! -uid 0 -type f 2> /dev/null`
 if [ "$usrrcdperms" ]; then
-  render_text "danger" "/usr/local/etc/rc.d files not belonging to root" "`print_ls_lah "$xinetdbinperms"`"
+  render_text "danger" "/usr/local/etc/rc.d files not belonging to root" "`print_ls_lh "$xinetdbinperms"`"
 fi
 
 initread=`ls ${_color_flag} -la /etc/init/ 2> /dev/null`
@@ -888,7 +891,7 @@ fi
 # upstart scripts not belonging to root
 initperms=`find /etc/init \! -uid 0 -type f 2> /dev/null`
 if [ "$initperms" ]; then
-   render_text "danger" "/etc/init/ config files not belonging to root" "`print_ls_lah "$initdperms"`"
+   render_text "danger" "/etc/init/ config files not belonging to root" "`print_ls_lh "$initdperms"`"
 fi
 
 if [ "$thorough" = "1" ]; then
@@ -901,12 +904,12 @@ fi
 
 # systemd files
 if [ "$systemdread" ]; then
-  render_text "info" "systemd config file permissions" "`print_ls_lah "$systemdread"`"
+  render_text "info" "systemd config file permissions" "`print_ls_lh "$systemdread"`"
 fi
 
 # systemd files not belonging to root or writable
 if [ "$systemdperms" ]; then
-   render_text "danger" "systemd config files not belonging to root or writable" "`print_ls_lah "$systemdperms"`"
+   render_text "danger" "systemd config files not belonging to root or writable" "`print_ls_lh "$systemdperms"`"
 fi
 }
 
@@ -917,7 +920,13 @@ print_title "yellow" "SOFTWARE"
 #sudo version - check to see if there are any known vulnerabilities with this
 sudover=`(sudo -V | head -n1 | cut -d' ' -f3) 2> /dev/null`
 if [ "$sudover" ]; then
-  render_text "info" "Sudo version" "$sudover"
+  render_text "info" "Sudo version" "`echo "$sudover" | sed "s,$vulnerable_sudo,${_sed_red},"`"
+  
+  if echo "$sudover" | grep -q "$vulnerable_sudo" 2> /dev/null; then
+    render_text "hint" "It looks like we have a vulnearble sudo version" "Use '${_red}searchsploit sudo $sudover ${_reset}' to look for available exploits"
+  fi
+  
+  
 fi
 
 #exim4 details - if installed
@@ -1025,7 +1034,7 @@ if [ "$apachever" ]; then
   fi
 
   #htpasswd check
-  htpasswd=`find / -name ".htpasswd*" -print -exec cat {} \; 2> /dev/null`
+  htpasswd=`find / -name ".htpasswd*" -print -exec cat {} + 2> /dev/null`
   if [ "$htpasswd" ]; then
     render_text "danger" ".htpasswd found - could contain passwords" "$htpasswd"
   fi
@@ -1047,9 +1056,9 @@ print_title "yellow" "INTERESTING FILES"
 
 #checks to see if various files are installed
 bin_of_interest="nc netcat ncat socat wget curl ftp nmap ping gcc gdb perl php ruby python python2 python3"
-bin_fullpath=`command -v -- $bin_of_interest 2> /dev/null`
+bin_fullpath=`command -v $bin_of_interest 2> /dev/null`
 if [ "$bin_fullpath" ]; then
-  render_text "info" "Useful utilities" "`print_ls_lah "$bin_fullpath"`"
+  render_text "info" "Useful utilities" "`print_ls_lh "$bin_fullpath"`"
 fi
 
 #limited search for installed compilers
@@ -1059,19 +1068,24 @@ if [ "$compiler" ]; then
 fi
 
 #manual check - lists out sensitive files, can we read/modify etc.
-sensitive_files="/etc/passwd /etc/group /etc/profile /etc/shadow /etc/master.passwd /etc/security/opasswd"
-render_text "warning" "Check if we can read/write sensitive files" "`print_ls_lah "$sensitive_files"`"
+sensitive_files="/etc/passwd
+/etc/group
+/etc/profile
+/etc/shadow
+/etc/master.passwd
+/etc/security/opasswd"
+render_text "warning" "Check if we can read/write sensitive files" "`print_ls_lh "$sensitive_files"`"
 
 # regular files that have changed in the last 10 minutes
-changedfiles=`find / -mmin 10 \! -path "/proc/*" -type f 2> /dev/null`
+changedfiles=`find / -mmin 10 \! \( -path "/proc/*" -o -path "/sys/*" \) -type f 2> /dev/null`
 if [ "$changedfiles" ]; then
-  render_text "warning" "Regular files that have changed in the last 10 minutes" "`print_ls_lah "$changedfiles"`"
+  render_text "warning" "Regular files that have changed in the last 10 minutes" "`print_ls_lh "$changedfiles"`"
 fi
 
 #search for suid files
 allsuid=`find / -perm -4000 -type f 2> /dev/null`
 if [ "$allsuid" ]; then
-  allsuiddetails="`print_ls_lah "$allsuid"`"
+  allsuiddetails="`print_ls_lh "$allsuid"`"
   if [ "$allsuiddetails" ]; then
     render_text "info" "SUID files" "$allsuiddetails"
 
@@ -1085,13 +1099,13 @@ if [ "$allsuid" ]; then
   #lists world-writable suid files
   wwsuid=`find $allsuid \! -uid 0 -perm -4002 -type f 2> /dev/null`
   if [ "$wwsuid" ]; then
-    render_text "warning" "World-writable SUID files" "`print_ls_lah "$wwsuid"`"
+    render_text "warning" "World-writable SUID files" "`print_ls_lh "$wwsuid"`"
   fi
 
   #lists world-writable suid files owned by root
   wwrootsuid=`find $allsuid -uid 0 -perm -4002 -type f 2> /dev/null`
   if [ "$wwrootsuid" ]; then
-    render_text "warning" "World-writable SUID files owned by root" "`print_ls_lah "$wwrootsuid"`"
+    render_text "warning" "World-writable SUID files owned by root" "`print_ls_lh "$wwrootsuid"`"
   fi
 
   if [ "$export" ]; then
@@ -1105,7 +1119,7 @@ fi
 #search for sgid files
 allsgid=`find / -perm -2000 -type f 2> /dev/null`
 if [ "$allsgid" ]; then
-  allsgiddetails="`print_ls_lah "$allsgid"`"
+  allsgiddetails="`print_ls_lh "$allsgid"`"
   if [ "$allsgiddetails" ]; then
     render_text "info" "SGID files" "$allsgiddetails"
 
@@ -1119,13 +1133,13 @@ if [ "$allsgid" ]; then
   #lists world-writable sgid files
   wwsgid=`find $allsgid \! -uid 0 -perm -2002 -type f 2> /dev/null`
   if [ "$wwsgid" ]; then
-    render_text "warning" "World-writable SGID files" "`print_ls_lah "$wwsgid"`"
+    render_text "warning" "World-writable SGID files" "`print_ls_lh "$wwsgid"`"
   fi
 
   #lists world-writable sgid files owned by root
   wwrootsgid=`find $allsgid -uid 0 -perm -2002 -type f 2> /dev/null`
   if [ "$wwrootsgid" ]; then
-    render_text "warning" "World-writable SGID files owned by root" "`print_ls_lah "$wwrootsgid"`"
+    render_text "warning" "World-writable SGID files owned by root" "`print_ls_lh "$wwrootsgid"`"
   fi
   
   if [ "$export" ]; then
@@ -1166,13 +1180,13 @@ if [ "$userswithcaps" ]; then
       
       #lists the permissions of the files having the same capabilies associated with the current user
       matchedfilesperms=`(echo -e "$matchedfiles" | awk '{print $1}') 2> /dev/null`
-      render_text "info" "Permissions of files with the same capabilities associated with the current user" "`print_ls_lah "$matchedfilesperms"`"
+      render_text "info" "Permissions of files with the same capabilities associated with the current user" "`print_ls_lh "$matchedfilesperms"`"
       
       if [ "$matchedfilesperms" ]; then
         #checks if any of the files with same capabilities associated with the current user is writable
         writablematchedfiles=`(echo -e "$matchedfiles" | awk '{print $1}' | while read -r f; do find "$f" -writable; done) 2> /dev/null`
         if [ "$writablematchedfiles" ]; then
-          render_text "info" "User/Group writable files with the same capabilities associated with the current user" "`print_ls_lah "$writablematchedfiles"`"
+          render_text "info" "User/Group writable files with the same capabilities associated with the current user" "`print_ls_lh "$writablematchedfiles"`"
         fi
       fi
     fi
@@ -1200,7 +1214,7 @@ if [ "$thorough" = "1" ]; then
   fi
 
   #list all world-writable files excluding /proc and /sys
-  wwfiles=`find / \! \( -path "*/proc/*" -o -path "/sys/*" \) -perm -2 -type f -exec ls -lah {} \; 2> /dev/null`
+  wwfiles=`find / \! \( -path "/proc/*" -o -path "/sys/*" \) -perm -2 -type f -exec ls -lah {} + 2> /dev/null`
   if [ "$wwfiles" ]; then
     render_text "info" "World-writable files (excluding /proc and /sys)" "$wwfiles"
 
@@ -1214,28 +1228,56 @@ if [ "$thorough" = "1" ]; then
 
 fi
 
-#are any .plan files accessible in /home (could contain useful information)
-usrplan=`find /home /usr/home -iname "*.plan" -exec ls -lah {} \; -exec cat {} \; 2> /dev/null`
-if [ "$usrplan" ]; then
-  render_text "warning" "Plan file permissions and contents" "$usrplan"
+usrplans_or_usrrhosts="`find /home /usr/home -name "*.plan" -o -name "*.rhosts" -type f 2> /dev/null`"
+if [ "$usrplans_or_usrrhosts" ]; then
 
-  if [ "$export" ]; then
-    mkdir "$format/plan_files/" 2> /dev/null
+  #are any .plan files accessible in /home (could contain useful information)
+  usrplans="`(echo "$usrplans_or_usrrhosts" | grep -i '.plan') 2> /dev/null`"
+  if [ "$usrplans" ]; then
+
+    usrplan_output=""
     OLD_IFS=$IFS; IFS=$'\n'
-    for f in $usrplan; do cp --parents "$f" "$format/plan_files/"; done 2> /dev/null
+    for f in $usrplans; do
+      usrplan="`( (ls ${_color_flag} -lah "$f"; echo; cat "$f"; echo) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
+      if [ "$usrplan_output" ]; then usrplan_output="$usrplan_output"$'\n'"$usrplan"; else usrplan_output="$usrplan"; fi
+    done
+
+    if [ "$usrplan_output" ]; then
+      render_text "warning" "Plan file permissions and contents" "$usrplan_output"
+    fi
+    
+    if [ "$export" ]; then
+      mkdir "$format/plan_files/" 2> /dev/null
+      for f in $usrplan; do cp --parents "$f" "$format/plan_files/"; done 2> /dev/null
+    fi
+    
     IFS=$OLD_IFS
   fi
-fi
 
-#are there any .rhosts files accessible - these may allow us to login as another user etc.
-rhostsusr=`find /home /usr/home -iname "*.rhosts" -exec ls -lah {} \; -exec cat {} \; 2> /dev/null`
-if [ "$rhostsusr" ]; then
-  render_text "warning" "rhost config file(s) and file contents" "$rhostsusr"
+  #are there any .rhosts files accessible - these may allow us to login as another user etc.
+  usrrhosts="`(echo "$usrplans_or_usrrhosts" | grep -i '.rhosts') 2> /dev/null`"
+  if [ "$usrrhosts" ]; then
 
-  if [ "$export" ]; then
-    mkdir "$format/rhosts/" 2> /dev/null
-    for f in $rhostsusr; do cp --parents "$f" "$format/rhosts/"; done 2> /dev/null
+    usrrhost_output=""
+    OLD_IFS=$IFS; IFS=$'\n'
+    for f in $usrrhosts; do
+      usrrhost="`( (ls ${_color_flag} -lah "$f"; echo; cat "$f"; echo) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
+      if [ "$usrrhost_output" ]; then usrrhost_output="$usrrhost_output"$'\n'"$usrrhost"; else usrrhost_output="$usrrhost"; fi
+    done
+    
+    if [ "$usrrhost_output" ]; then
+      render_text "warning" "rhost config file(s) and file contents" "$usrrhost_output"
+    fi
+    
+    if [ "$export" ]; then
+      mkdir "$format/rhosts/" 2> /dev/null
+      for f in $rhostsusr; do cp --parents "$f" "$format/rhosts/"; done 2> /dev/null
+    fi
+    
+    IFS=$OLD_IFS
+    
   fi
+  
 fi
 
 rhostssys="`find /etc -iname hosts.equiv -exec ls -lah {} \; -exec cat {} \; 2> /dev/null`"
@@ -1292,9 +1334,9 @@ done
 IFS=$OLD_IFS
 
 #can we read some log?
-readablelogs=`find /etc/log /var/log -type f -name "*log*" -readable 2> /dev/null`
+readablelogs=`find /etc/log /var/log -type f -name "*log*" -readable -exec ls -l {} + 2> /dev/null`
 if [ "$readablelogs" ]; then
-  render_text "warning" "We can read these log files content" "`print_ls_lah "$readablelogs"`"
+  render_text "warning" "We can read these log files content" "$readablelogs"
 fi
 
 if [ "$keyword" ]; then
@@ -1331,7 +1373,7 @@ if [ "$keyword" ]; then
 fi
 
 #quick extract of .conf files from /etc - only 1 level
-allconf=`find /etc/ -maxdepth 1 \( -name "*.conf" -a \! -name "*example" \) -type f -exec ls -lah {} \; 2> /dev/null`
+allconf=`find /etc/ -maxdepth 1 \( -name "*.conf" -a \! -name "*example" \) -type f -exec ls -lah {} + 2> /dev/null`
 if [ "$allconf" ]; then
   render_text "info" "All *.conf files in /etc (recursive 1 level)" "$allconf"
 
@@ -1374,7 +1416,7 @@ fi
 tmux_installed=`command -v tmux 2> /dev/null`
 if [ "$tmux_installed" ]; then
   # look for readable access to the tmux socket
-  tmux_sessions=`find /var/tmp/tmux-*/default /tmp/tmux-*/default -type f -readable -exec ls -lah {} \; 2> /dev/null`
+  tmux_sessions=`find /var/tmp/tmux-*/default /tmp/tmux-*/default -type f -readable -exec ls -lah {} + 2> /dev/null`
   if [ "$tmux_sessions" ]; then
     render_text "danger" "Possible tmux session hijacking" "$tmux_sessions"
   fi
@@ -1382,7 +1424,7 @@ if [ "$tmux_installed" ]; then
 fi
 
 #any bakup file that may be of interest
-bakfiles="`find / \( -name "*.bak" -o -name "*.tmp" -o -name "*.temp" -o -name "*.old" -o -name "*.001" -o -name "*~" \) -type f -exec ls -lah {} \; 2> /dev/null`"
+bakfiles="`find / \( -name "*.bak" -o -name "*.tmp" -o -name "*.temp" -o -name "*.old" -o -name "*.001" -o -name "*~" \) -type f -exec ls -lah  + 2> /dev/null`"
 if [ "$bakfiles" ]; then
   render_text "info" "Location and Permissions (if accessible) of backup file(s)" "$bakfiles"
 fi
@@ -1409,8 +1451,8 @@ docker_checks()
 {
 print_title "yellow" "DOCKER CHECKS"
 #specific checks - check to see if we're in a docker container
-dockercontainer=`(grep -i docker /proc/self/cgroup; \
-             find / -name "*dockerenv*" \! \( -path "/proc/*" -o -path "/sys/*" \) -exec ls -lah {} \;) 2> /dev/null`
+dockercontainer=`( grep -i docker /proc/self/cgroup; 
+                   find / -name "*dockerenv*" \! \( -path "*/proc/*" -o -path "/sys/*" \) -exec ls -lah {} + ) 2> /dev/null`
 if [ "$dockercontainer" ]; then
   render_text "warning" "It looks like we're in a Docker container" "$dockercontainer"
 fi
@@ -1428,13 +1470,13 @@ if (echo "$my_id" | grep -q "\((\|\s\)\(docker\)\()\|\s\)") 2> /dev/null; then
 fi
 
 #specific checks - are there any docker files present
-dockerfiles=`find / \( -name "Dockerfile*" -o -name "docker-compose.yml*" \) -type f -exec ls -lah {} \; 2> /dev/null`
+dockerfiles=`find / \( -name "Dockerfile*" -o -name "docker-compose.yml*" \) -type f -exec ls -lah {} + 2> /dev/null`
 if [ "$dockerfiles" ]; then
   render_text "warning" "Checks for Dokerfile(s) and docker-compose.yml(s)" "$dockerfiles"
 fi
 
 # check if we can access some docker socket
-dockersock=`find / \! \( -path "/proc/*" -o -path "/sys/*" \) -type s -name "docker.sock*" -exec \ ls -lah {} \; 2> /dev/null`
+dockersock=`find / \! \( -path "/proc/*" -o -path "/sys/*" \) -type s -name "docker.sock*" -exec \ ls -lah {} + 2> /dev/null`
 if [ "$dockersock" ]; then
   render_text "info" "Check if we can read from/write to docker socket(s)" "$dockersock"
 fi

@@ -95,6 +95,7 @@ Note: **Export functionality is currently in the experimental stage.**
   * List init.d binary permissions
 * Installed software:
   * Sudo
+    * Highlight vulnerable sudo versions
   * Exim4
   * MYSQL
     * Check for default/weak MYSQL accounts
