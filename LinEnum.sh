@@ -419,7 +419,7 @@ if [ "$sudobin" ]; then
   fi
 
   # check for writable/readable files in /etc/sudoers.d
-  sudoersd=`find /etc/sudoers.d \! -name README -type f -exec ls -lah {} + 2> /dev/null`
+  sudoersd=`find /etc/sudoers.d \! -name README -type f -exec ls ${_color_flag} -lah {} + 2> /dev/null`
   if [ "$sudoersd" ]; then
     render_text "danger" "Check if we can read/write files in /etc/sudoers.d" "$sudoersd"
     
@@ -472,7 +472,7 @@ fi
 #thorough checks
 if [ "$thorough" = "1" ]; then
   #looks for files we can write to but that don't belong to us
-  grfilesall=`find / -perm /222 \! -user "$my_username" -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
+  grfilesall=`find / -writable \! -user "$my_username" -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$grfilesall" ]; then
     render_text "info" "File(s) not owned by our user ($my_username) but writable" "`print_ls_lh "$grfilesall"`"
   fi
@@ -490,7 +490,7 @@ if [ "$thorough" = "1" ]; then
   fi
   
   # looks for world-reabable files within /home
-  wrfilesinhome=`find /home/ -perm /444 -type f 2> /dev/null`
+  wrfilesinhome=`find /home/ -readable -type f 2> /dev/null`
   if [ "$wrfilesinhome" ]; then
     render_text "warning" "World-readable files within /home" "`print_ls_lh "$wrfilesinhome"`"
 
@@ -1224,7 +1224,7 @@ if [ "$thorough" = "1" ]; then
   fi
 
   #list all world-writable files excluding /proc and /sys
-  wwfiles=`find / \! \( -path "/proc/*" -o -path "/sys/*" \) -perm -2 -type f -exec ls -lah {} + 2> /dev/null`
+  wwfiles=`find / \! \( -path "/proc/*" -o -path "/sys/*" \) -writable -type f -exec ls ${_color_flag} -lah {} + 2> /dev/null`
   if [ "$wwfiles" ]; then
     render_text "info" "World-writable files (excluding /proc and /sys)" "$wwfiles"
 
@@ -1290,7 +1290,7 @@ if [ "$usrplans_or_usrrhosts" ]; then
   
 fi
 
-rhostssys="`find /etc -iname hosts.equiv -exec ls -lah {} \; -exec cat {} \; 2> /dev/null`"
+rhostssys="`find /etc -iname hosts.equiv -exec ls ${_color_flag} -lah {} \; -exec cat {} \; 2> /dev/null`"
 if [ "$rhostssys" ]; then
   render_text "info" "hosts.equiv file and contents" "$rhostssys"
 
@@ -1383,7 +1383,7 @@ if [ "$keyword" ]; then
 fi
 
 #quick extract of .conf files from /etc - only 1 level
-allconf=`find /etc/ -maxdepth 1 \( -name "*.conf" -a \! -name "*example" \) -type f -exec ls -lah {} + 2> /dev/null`
+allconf=`find /etc/ -maxdepth 1 \( -name "*.conf" -a \! -name "*example" \) -type f -exec ls ${_color_flag} -lah {} + 2> /dev/null`
 if [ "$allconf" ]; then
   render_text "info" "All *.conf files in /etc (recursive 1 level)" "$allconf"
 
@@ -1417,7 +1417,7 @@ for entry in `(echo "$etc_passwd_cache" | grep "^.*sh$") 2> /dev/null`; do
 done
 
 #all accessible .bash_history files in /home
-checkbashhist=`find /home -name .bash_history -exec ls -lah {} \; -exec tail -n 30 {} \;  2> /dev/null`
+checkbashhist=`find /home -name .bash_history -exec ls ${_color_flag} -lah {} \; -exec tail -n 30 {} \;  2> /dev/null`
 if [ "$checkbashhist" ]; then
   render_text "info" "Location and contents (last 30 rows, if accessible) of .bash_history file(s)" "$checkbashhist"
 fi
@@ -1426,7 +1426,7 @@ fi
 tmux_installed=`command -v tmux 2> /dev/null`
 if [ "$tmux_installed" ]; then
   # look for readable access to the tmux socket
-  tmux_sessions=`find /var/tmp/tmux-*/default /tmp/tmux-*/default -type f -readable -exec ls -lah {} + 2> /dev/null`
+  tmux_sessions=`find /var/tmp/tmux-*/default /tmp/tmux-*/default -type f -readable -exec ls ${_color_flag} -lah {} + 2> /dev/null`
   if [ "$tmux_sessions" ]; then
     render_text "danger" "Possible tmux session hijacking" "$tmux_sessions"
   fi
@@ -1462,7 +1462,7 @@ docker_checks()
 print_title "yellow" "DOCKER CHECKS"
 #specific checks - check to see if we're in a docker container
 dockercontainer=`( grep -i docker /proc/self/cgroup; 
-                   find / -name "*dockerenv*" \! \( -path "*/proc/*" -o -path "/sys/*" \) -exec ls -lah {} + ) 2> /dev/null`
+                   find / -name "*dockerenv*" \! \( -path "*/proc/*" -o -path "/sys/*" \) -exec ls ${_color_flag} -lah {} + ) 2> /dev/null`
 if [ "$dockercontainer" ]; then
   render_text "warning" "It looks like we're in a Docker container" "$dockercontainer"
 fi
@@ -1480,7 +1480,7 @@ if (echo "$my_id" | grep -q "\((\|\s\)\(docker\)\()\|\s\)") 2> /dev/null; then
 fi
 
 #specific checks - are there any docker files present
-dockerfiles=`find / \( -name "Dockerfile*" -o -name "docker-compose.yml*" \) -type f -exec ls -lah {} + 2> /dev/null`
+dockerfiles=`find / \( -name "Dockerfile*" -o -name "docker-compose.yml*" \) -type f -exec ls ${_color_flag} -lah {} + 2> /dev/null`
 if [ "$dockerfiles" ]; then
   render_text "warning" "Checks for Dokerfile(s) and docker-compose.yml(s)" "$dockerfiles"
 fi
