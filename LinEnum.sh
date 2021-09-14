@@ -91,7 +91,7 @@ print_ls_lh()
 {
   if [ "$1" ]; then  
     OLD_IFS=$IFS; IFS=$'\n'
-    find $1 -exec ls -lh {} + 2> /dev/null
+    find $1 -exec ls -lh ${_color_flag} {} + 2> /dev/null
     IFS=$OLD_IFS
   fi
 }
@@ -461,16 +461,16 @@ fi
 
 #thorough checks
 if [ "$thorough" = "1" ]; then
-  #looks for files we can write to that don't belong to us
-  grfilesall=`find / -writable \! -user "$my_username" -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
+  #looks for files we can write to but that don't belong to us
+  grfilesall=`find / -perm /222 \! -user "$my_username" -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$grfilesall" ]; then
-    render_text "info" "Files not owned by user but writable by group" "`print_ls_lh "$grfilesall"`"
+    render_text "info" "File(s) not owned by our user ($my_username) but writable" "`print_ls_lh "$grfilesall"`"
   fi
 
   #looks for files that belong to us
   ourfilesall=`find / -user "$my_username" -type f \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`
   if [ "$ourfilesall" ]; then
-    render_text "info" "Files owned by our user" "`print_ls_lh "$ourfilesall"`"
+    render_text "info" "File(s) owned by our user ($my_username)" "`print_ls_lh "$ourfilesall"`"
   fi
 
   #looks for hidden files
@@ -480,7 +480,7 @@ if [ "$thorough" = "1" ]; then
   fi
   
   # looks for world-reabable files within /home
-  wrfilesinhome=`find /home/ -perm -4 -type f 2> /dev/null`
+  wrfilesinhome=`find /home/ -perm /444 -type f 2> /dev/null`
   if [ "$wrfilesinhome" ]; then
     render_text "warning" "World-readable files within /home" "`print_ls_lh "$wrfilesinhome"`"
 
