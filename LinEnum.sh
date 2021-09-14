@@ -89,9 +89,16 @@ render_text()
 
 print_ls_lh()
 {
-  if [ "$1" ]; then  
+  if [ "$1" ]; then
+    
+    if [ "`(echo "$1" | wc -l) 2> /dev/null`" -le "$max_listable_files" ]; then
+      args="$1"
+    else
+      args="`(echo "$1" | head -n${max_listable_files}) 2> /dev/null`"
+      echo "${_yellow}... (only $max_listable_files entries shown)${_reset}"
+    fi
     OLD_IFS=$IFS; IFS=$'\n'
-    find $1 -exec ls -lh ${_color_flag} {} + 2> /dev/null
+    find $args -exec ls -lh ${_color_flag} {} + 2> /dev/null
     IFS=$OLD_IFS
   fi
 }
@@ -144,6 +151,9 @@ print_title "red"
 common()
 {
   render_text "hint" "Please wait while the scan is starting..."
+  
+  # maximum number of files listable
+  max_listable_files=70
   
   # useful binaries (thanks to https://gtfobins.github.io/)
   # update this list with:
