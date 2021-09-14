@@ -459,10 +459,10 @@ fi
 # we proceed with ssh checks, only if we can read /etc/ssh/sshd_config
 if [ -r "/etc/ssh/sshd_config" ]; then
   ssh_interesting_keywords="PubkeyAuthentication\|AuthenticationMethods\|PermitRootLogin\|PermitEmptyPasswords\|AllowUsers\|DenyUsers"
-  sshdchecks="`(grep '^#\|^$' /etc/ssh/sshd_config | sed "s,\($ssh_interesting_keywords\)\s\+,${_sed_yellow},g") 2> /dev/null`"
+  sshdchecks="`(grep -v '^#\|^$' /etc/ssh/sshd_config | sed "s,\($ssh_interesting_keywords\)\s\+,${_sed_yellow},g") 2> /dev/null`"
   
   if [ "$sshdchecks" ]; then
-    render_text "info" "Check SSH daemon configuration" "$sshdchecks"
+    render_text "info" "Check SSH daemon configuration (condensed)" "$sshdchecks"
   fi
   
   if [ "$export" ]; then cp /etc/ssh/sshd_config "$format/etc-export/" 2> /dev/null; fi
