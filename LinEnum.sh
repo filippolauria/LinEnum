@@ -395,7 +395,7 @@ if [ "$sudobin" ]; then
   # and highlight interesting keywords
   sudoers=`grep -v '^#\|^$' /etc/sudoers 2> /dev/null`
   if [ "$sudoers" ]; then
-    sudoers=`(echo "$sudoers" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,$interesting_binaries,${_sed_yellow},g") 2> /dev/null`
+    sudoers=`(echo "$sudoers" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,\($interesting_binaries\)\s\+,${_sed_yellow},g") 2> /dev/null`
     render_text "warning" "We can read /etc/sudoers" "$sudoers"
     
     if [ "$export" ]; then cp /etc/sudoers "$format/etc-export/sudoers" 2> /dev/null; fi
@@ -404,7 +404,7 @@ if [ "$sudobin" ]; then
   # check if we can sudo without password
   sudoperms=`(echo '' | sudo -S -l -k) 2> /dev/null`
   if [ "$sudoperms" ]; then
-    sudoperms=`(echo "$sudoperms" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,$interesting_binaries,${_sed_yellow},g") 2> /dev/null`
+    sudoperms=`(echo "$sudoperms" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,\($interesting_binaries\)\s\+,${_sed_yellow},g") 2> /dev/null`
     render_text "danger" "We can 'sudo -l' without supplying a password" "$sudoperms"
   else
     if [ "$sudopass" ]; then
@@ -412,7 +412,7 @@ if [ "$sudobin" ]; then
       sudoauth=`(echo "$userpassword" | sudo -S -l -k) 2> /dev/null`
       
       if [ "$sudoauth" ]; then
-        sudoauth=`(echo "$sudoauth" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,$interesting_binaries,${_sed_yellow},g") 2> /dev/null`
+        sudoauth=`(echo "$sudoauth" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,\($interesting_binaries\)\s\+,${_sed_yellow},g") 2> /dev/null`
         render_text "danger" "We can sudo when supplying a password" "$sudoauth"
       fi
     fi
