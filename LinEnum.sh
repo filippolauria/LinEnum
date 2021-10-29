@@ -1436,7 +1436,7 @@ fi
 #any bakup file that may be of interest
 bakfiles="`find / \( -name "*.bak" -o -name "*.tmp" -o -name "*.temp" -o -name "*.old" -o -name "*.001" -o -name "*~" \) -type f -exec ls -lah {} + 2> /dev/null`"
 if [ "$bakfiles" ]; then
-  render_text "info" "Location and Permissions (if accessible) of backup file(s)" "$bakfiles"
+  render_text "info" "Location and Permissions (if accessible) of backup file(s)" "`echo "$bakfiles" | sed "s,^.*\($interesting_varnames\).*,${_sed_yellow},Ig"`"
 fi
 
 #is there any mail accessible
