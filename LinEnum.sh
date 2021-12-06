@@ -660,7 +660,7 @@ if [ "$effective_automated_jobs" ]; then
 
     # update jobs with PATH
     path="`(grep '^PATH=' "$f" | sed 's,^PATH=,,' | tr ':' '\n') 2> /dev/null`"
-    if [ "path" ]; then
+    if [ "$path" ]; then
       wr_folder_in_path="";
       
       for d in $path; do
