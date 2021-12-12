@@ -1173,7 +1173,7 @@ if [ "$fileswithcaps" ]; then
   fi
 fi
 
-#searches /etc/security/capability.conf for users associated capapilies
+#searches /etc/security/capability.conf for users associated capabilities
 userswithcaps=`grep -v '^#\|none\|^$' /etc/security/capability.conf 2> /dev/null`
 if [ "$userswithcaps" ]; then
   render_text "info" "Users with specific POSIX capabilities" "$userswithcaps"
@@ -1183,12 +1183,12 @@ if [ "$userswithcaps" ]; then
   if [ "$matchedcaps" ]; then
     render_text "info" "Capabilities associated with the current user" "$matchedcaps"
 
-    #matches the files with capapbilities with capabilities associated with the current user
+    #matches the files with capabilities associated with the current user
     matchedfiles=`(echo -e "$matchedcaps" | while read -r cap; do echo -e "$fileswithcaps" | grep "$cap"; done) 2> /dev/null`
     if [ "$matchedfiles" ]; then
       render_text "warning" "Files with the same capabilities associated with the current user (You may want to try abusing those capabilties)" "$matchedfiles"
       
-      #lists the permissions of the files having the same capabilies associated with the current user
+      #lists the permissions of the files having the same capabilities associated with the current user
       matchedfilesperms=`(echo -e "$matchedfiles" | awk '{print $1}') 2> /dev/null`
       render_text "info" "Permissions of files with the same capabilities associated with the current user" "`print_ls_lh "$matchedfilesperms"`"
       
