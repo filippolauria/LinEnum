@@ -558,6 +558,13 @@ fi
 aslr_enabled=`cat /proc/sys/kernel/randomize_va_space 2> /dev/null`
 render_text "warning" "ASLR status" "`if [ "$aslr_enabled" -eq "0" ]; then echo "disabled"; else echo "enabled"; fi`"
 
+# Virtual environment check
+hypervisorflag=`grep flags /proc/cpuinfo 2> /dev/null | grep hypervisor`
+if [ "$hypervisorflag" ]; then
+  systemdetectvirt=`command -v systemd-detect-virt 2> /dev/null`
+  render_text "info" "This is a `if [ "$systemdetectvirt" ]; then echo "$(systemd-detect-virt)"; fi` virtual machine"
+fi
+
 #current path configuration
 if [ "$OLD_PATH" ]; then
   render_text "info" "PATH" "$OLD_PATH"
