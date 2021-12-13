@@ -1462,6 +1462,12 @@ if [ "$readmailroot" ]; then
     cp "$readmailroot" "$format/mail-from-root/" 2> /dev/null
   fi
 fi
+
+#IPs inside log files
+ipslogs=`(find /var/log/ /private/var/log -type f -exec grep -R -a -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" "{}" \;) 2>/dev/null | grep -v "\.0\.\|:0\|\.0$" | sort | uniq -c | sort -r -n | head -n 70`
+if [ "$ipslogs" ]; then
+  render_text "info" "IPs found in log files" "$ipslogs"
+fi
 }
 
 docker_checks()
