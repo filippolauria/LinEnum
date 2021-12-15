@@ -521,6 +521,23 @@ if [ "$thorough" = "1" ]; then
     fi
   fi
 fi
+
+# PGP keys
+checkgpg=`command -v gpg 2> /dev/null`
+if [ "$checkgpg" ]; then
+  gpgkeys=`gpg --list-keys 2> /dev/null`
+  if [ "$gpgkeys" ]; then
+    render_text "warning" "PGP keys (gpg)" "$gpgkeys"
+  fi
+fi
+
+checknetpgpkeys=`command -v netpgpkeys 2> /dev/null`
+if [ "$checknetpgpkeys" ]; then
+  netpgpkeys=`netpgpkeys --list-keys 2> /dev/null`
+  if [ "$netpgpkeys" ]; then
+    render_text "warning" "PGP keys (netpgpkeys)" "$netpgpkeys"
+  fi
+fi
 }
 
 environmental_info()
