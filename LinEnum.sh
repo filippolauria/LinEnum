@@ -562,7 +562,13 @@ render_text "warning" "ASLR status" "`if [ "$aslr_enabled" -eq "0" ]; then echo 
 hypervisorflag=`grep flags /proc/cpuinfo 2> /dev/null | grep hypervisor`
 if [ "$hypervisorflag" ]; then
   systemdetectvirt=`command -v systemd-detect-virt 2> /dev/null`
-  render_text "info" "This is a `if [ "$systemdetectvirt" ]; then echo "$(systemd-detect-virt)"; fi` virtual machine"
+  render_text "warning" "This is a `if [ "$systemdetectvirt" ]; then echo "$(systemd-detect-virt)"; fi` virtual machine"
+fi
+
+# Devices - sd in /dev
+sdindev=`ls /dev 2>/dev/null | grep -Ei "^sd|^disk" | head -n 20`
+if [ "$sdindev" ]; then
+  render_text "info" "sd*/disk* disk in /dev (limit 20)" "$sdindev"
 fi
 
 #current path configuration
