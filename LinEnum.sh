@@ -523,7 +523,7 @@ if [ "$thorough" = "1" ]; then
 fi
 
 # PGP keys
-checkgpg=`command -v gpg 2> /dev/null`
+checkgpg=`(which gpg || command -v gpg) 2> /dev/null`
 if [ "$checkgpg" ]; then
   gpgkeys=`gpg --list-keys 2> /dev/null`
   if [ "$gpgkeys" ]; then
@@ -531,7 +531,7 @@ if [ "$checkgpg" ]; then
   fi
 fi
 
-checknetpgpkeys=`command -v netpgpkeys 2> /dev/null`
+checknetpgpkeys=`(which netpgpkeys || command -v netpgpkeys) 2> /dev/null`
 if [ "$checknetpgpkeys" ]; then
   netpgpkeys=`netpgpkeys --list-keys 2> /dev/null`
   if [ "$netpgpkeys" ]; then
@@ -578,7 +578,7 @@ render_text "warning" "ASLR status" "`if [ "$aslr_enabled" -eq "0" ]; then echo 
 # Virtual environment check
 hypervisorflag=`grep flags /proc/cpuinfo 2> /dev/null | grep hypervisor`
 if [ "$hypervisorflag" ]; then
-  systemdetectvirt=`command -v systemd-detect-virt 2> /dev/null`
+  systemdetectvirt=`(which systemd-detect-virt || command -v systemd-detect-virt) 2> /dev/null`
   render_text "warning" "This is a `if [ "$systemdetectvirt" ]; then echo "$(systemd-detect-virt)"; fi` virtual machine"
 fi
 
