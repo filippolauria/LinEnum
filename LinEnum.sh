@@ -387,7 +387,7 @@ if [ "$superman" ]; then
 fi
 
 # we proceed with sudo checks, only if we can get the sudo binary path
-sudobin=`command -v sudo 2> /dev/null`
+sudobin=`(which sudo || command -v sudo) 2> /dev/null`
 if [ "$sudobin" ]; then
 
   # we get /etc/sudoers content,
@@ -1453,7 +1453,7 @@ if [ "$checkbashhist" ]; then
 fi
 
 #hijack tmux session
-tmux_installed=`command -v tmux 2> /dev/null`
+tmux_installed=`(which tmux || command -v tmux) 2> /dev/null`
 if [ "$tmux_installed" ]; then
   # look for readable access to the tmux socket
   tmux_sessions=`find /var/tmp/tmux-*/default /tmp/tmux-*/default -type f -readable -exec ls ${_color_flag} -lah {} + 2> /dev/null`

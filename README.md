@@ -69,10 +69,13 @@ Note: **Export functionality is currently in the experimental stage.**
     * Look for hidden files
     * Look for world-readable files within /home directory
     * Look for ssh related files (e.g. id_rsa, id_dsa, etc.) and/or their backup files
+  * Look for PGP keys
 * Environment
   * List environment variables (highlight *probable* interesting variables)
   * Look for AppArmor and SeLinux presence
   * Look for ASRL status
+  * Check if running in virtual environment
+  * Look for sd devices in /dev
   * Look for writable directories in the PATH variable
   * List available shells
   * Get password and storage information (from */etc/login.defs*)
@@ -125,6 +128,8 @@ Note: **Export functionality is currently in the experimental stage.**
   * Check for tmux sessions 
   * bakup (*.bak, *.old, *.tmp, *.temp, *.001, *~) files search
   * Locate mail
+  * Find/list IPs inside log files
+  * Find/list emails inside log files
 * Platform/software specific tests:
   * Checks to determine if we're in a Docker container
   * Checks to see if the host has Docker installed
