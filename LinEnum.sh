@@ -521,6 +521,23 @@ if [ "$thorough" = "1" ]; then
     fi
   fi
 fi
+
+# PGP keys
+checkgpg=`(which gpg || command -v gpg) 2> /dev/null`
+if [ "$checkgpg" ]; then
+  gpgkeys=`gpg --list-keys 2> /dev/null`
+  if [ "$gpgkeys" ]; then
+    render_text "warning" "PGP keys (gpg)" "$gpgkeys"
+  fi
+fi
+
+checknetpgpkeys=`(which netpgpkeys || command -v netpgpkeys) 2> /dev/null`
+if [ "$checknetpgpkeys" ]; then
+  netpgpkeys=`netpgpkeys --list-keys 2> /dev/null`
+  if [ "$netpgpkeys" ]; then
+    render_text "warning" "PGP keys (netpgpkeys)" "$netpgpkeys"
+  fi
+fi
 }
 
 environmental_info()
@@ -557,6 +574,19 @@ fi
 # ASLR check
 aslr_enabled=`cat /proc/sys/kernel/randomize_va_space 2> /dev/null`
 render_text "warning" "ASLR status" "`if [ "$aslr_enabled" -eq "0" ]; then echo "disabled"; else echo "enabled"; fi`"
+
+# Virtual environment check
+hypervisorflag=`grep flags /proc/cpuinfo 2> /dev/null | grep hypervisor`
+if [ "$hypervisorflag" ]; then
+  systemdetectvirt=`(which systemd-detect-virt || command -v systemd-detect-virt) 2> /dev/null`
+  render_text "warning" "This is a `if [ "$systemdetectvirt" ]; then echo "$(systemd-detect-virt)"; fi` virtual machine"
+fi
+
+# Devices - sd in /dev
+sdindev=`ls /dev 2>/dev/null | grep -Ei "^sd|^disk" | head -n 20`
+if [ "$sdindev" ]; then
+  render_text "info" "sd*/disk* disk in /dev (limit 20)" "$sdindev"
+fi
 
 #current path configuration
 if [ "$OLD_PATH" ]; then
@@ -1173,7 +1203,7 @@ if [ "$fileswithcaps" ]; then
   fi
 fi
 
-#searches /etc/security/capability.conf for users associated capapilies
+#searches /etc/security/capability.conf for users associated capabilities
 userswithcaps=`grep -v '^#\|none\|^$' /etc/security/capability.conf 2> /dev/null`
 if [ "$userswithcaps" ]; then
   render_text "info" "Users with specific POSIX capabilities" "$userswithcaps"
@@ -1183,12 +1213,12 @@ if [ "$userswithcaps" ]; then
   if [ "$matchedcaps" ]; then
     render_text "info" "Capabilities associated with the current user" "$matchedcaps"
 
-    #matches the files with capapbilities with capabilities associated with the current user
+    #matches the files with capabilities associated with the current user
     matchedfiles=`(echo -e "$matchedcaps" | while read -r cap; do echo -e "$fileswithcaps" | grep "$cap"; done) 2> /dev/null`
     if [ "$matchedfiles" ]; then
       render_text "warning" "Files with the same capabilities associated with the current user (You may want to try abusing those capabilties)" "$matchedfiles"
       
-      #lists the permissions of the files having the same capabilies associated with the current user
+      #lists the permissions of the files having the same capabilities associated with the current user
       matchedfilesperms=`(echo -e "$matchedfiles" | awk '{print $1}') 2> /dev/null`
       render_text "info" "Permissions of files with the same capabilities associated with the current user" "`print_ls_lh "$matchedfilesperms"`"
       
@@ -1454,6 +1484,18 @@ if [ "$readmailroot" ]; then
     mkdir "$format/mail-from-root/" 2> /dev/null
     cp "$readmailroot" "$format/mail-from-root/" 2> /dev/null
   fi
+fi
+
+#IPs inside log files
+ipslogs=`(find /var/log/ /private/var/log -type f -exec grep -R -a -E -o "(((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])\.){3}((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])" "{}" \;) 2>/dev/null | grep -v "\.0\.\|:0\|\.0$" | sort | uniq -c | sort -r -n | head -n 50`
+if [ "$ipslogs" ]; then
+  render_text "info" "IPs found in log files (limit 50)" "$ipslogs"
+fi
+
+#Emails inside log files
+emaillogs=`(find /var/log/ /private/var/log -type f -exec grep -I -R -E -o "\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b" "{}" \;) 2>/dev/null | sort | uniq -c | sort -r -n | head -n 50`
+if [ "emaillogs" ]; then
+  render_text "info" "Emails found in log files (limit 50)" "$emaillogs"
 fi
 }
 
