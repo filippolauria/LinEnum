@@ -538,6 +538,32 @@ if [ "$checknetpgpkeys" ]; then
     render_text "warning" "PGP keys (netpgpkeys)" "$netpgpkeys"
   fi
 fi
+
+# Clipboard and highlighted text
+pwd_inside_history="enable_autologin|7z|unzip|useradd|linenum|linpeas|mkpasswd|htpasswd|openssl|PASSW|passw|shadow|root|sudo|^su|pkexec|^ftp|mongo|psql|mysql|rdesktop|xfreerdp|^ssh|steghide|@|KEY=|TOKEN=|BEARER=|Authorization:"
+checkxclip=`(which xclip || command -v xclip) 2> /dev/null`
+if [ "$checkxclip" ]; then
+  clipboardxclip=`(xclip -o -selection clipboard | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+  if [ "$clipboardxclip" ]; then
+    render_text "info" "Clipboard text (xclip)" "$clipboardxclip"
+  fi
+  highlightedxclip=`(xclip -o | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+  if [ "$highlightedxclip" ]; then
+    render_text "info" "Highlighted text (xclip)" "$highlightedxclip"
+  fi
+else
+  checkxsel=`(which xsel || command -v xsel) 2> /dev/null`
+  if [ "$checkxsel" ]; then
+    clipboardxsel=`(xsel -ob | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+    if [ "$clipboardxsel" ]; then
+      render_text "info" "Clipboard text (xsel)" "$clipboardxsel"
+    fi
+    highlightedxsel=`(xsel -o | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+    if [ "$highlightedxsel" ]; then
+      render_text "info" "Highlighted text (xsel)" "$highlightedxsel"
+    fi
+  fi
+fi
 }
 
 environmental_info()

@@ -70,6 +70,7 @@ Note: **Export functionality is currently in the experimental stage.**
     * Look for world-readable files within /home directory
     * Look for ssh related files (e.g. id_rsa, id_dsa, etc.) and/or their backup files
   * Look for PGP keys
+  * Look for clipboard and highlighted text
 * Environment
   * List environment variables (highlight *probable* interesting variables)
   * Look for AppArmor and SeLinux presence
