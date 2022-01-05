@@ -111,6 +111,7 @@ Note: **Export functionality is currently in the experimental stage.**
     * Shows enabled modules
     * Checks for htpasswd files
     * View www directories
+  * Runc
 * Interesting files:
   * Locate all SUID/GUID files
   * Locate all world-writable SUID/GUID files

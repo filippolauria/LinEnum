@@ -1114,7 +1114,15 @@ if [ "$apachever" ]; then
     fi
   fi
 fi
-}
+
+# runc details - if installed
+runcver=`(runc -v | head -n1) 2> /dev/null`
+if [ "$runcver" ]; then
+  runc=`which runc || command -v runc`
+  render_text "warning" "Runc" "$runcver
+runc was found in $runc, you may be able to escalate privileges with it"
+fi
+}  
 
 interesting_files()
 {
