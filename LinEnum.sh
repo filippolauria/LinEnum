@@ -591,6 +591,13 @@ if [ "$apparmor" ]; then
   fi
 fi
 
+# dmesg
+dmesg=`dmesg 2> /dev/null`
+if [ "$dmesg" ]; then
+  dmesgsig=$(grep "signature" <<< "$dmesg" | sed -E "s,"signature",${_sed_red},")
+  render_text "info" "Dmesg - Searching signature verification failed" "$dmesgsig"
+fi
+
 # check if selinux is present
 sestatus=`sestatus 2> /dev/null`
 if [ "$sestatus" ]; then

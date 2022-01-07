@@ -74,6 +74,7 @@ Note: **Export functionality is currently in the experimental stage.**
 * Environment
   * List environment variables (highlight *probable* interesting variables)
   * Look for AppArmor and SeLinux presence
+  * Search signature verification failed in dmesg 
   * Look for ASRL status
   * Check if running in virtual environment
   * Look for sd devices in /dev
