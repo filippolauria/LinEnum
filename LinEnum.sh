@@ -604,6 +604,12 @@ if [ "$sestatus" ]; then
   render_text "info" "SELinux seems to be present" "$sestatus"
 fi
 
+# grsecurity
+grsecurity=`(uname -r | grep "\-grsec" || grep "grsecurity" /etc/sysctl.conf) 2> /dev/null`
+if [ "$grsecurity" ]; then
+  render_text "info" "grsecurity seems to be present"
+fi
+
 # ASLR check
 aslr_enabled=`cat /proc/sys/kernel/randomize_va_space 2> /dev/null`
 render_text "warning" "ASLR status" "`if [ "$aslr_enabled" -eq "0" ]; then echo "disabled"; else echo "enabled"; fi`"
