@@ -610,6 +610,12 @@ if [ "$grsecurity" ]; then
   render_text "info" "grsecurity seems to be present"
 fi
 
+# PaX
+pax=`(which paxctl-ng paxctl || command -v paxctl-ng paxctl) 2> /dev/null`
+if [ "$pax" ]; then
+  render_text "info" "PaX seems to be present"
+fi
+
 # ASLR check
 aslr_enabled=`cat /proc/sys/kernel/randomize_va_space 2> /dev/null`
 render_text "warning" "ASLR status" "`if [ "$aslr_enabled" -eq "0" ]; then echo "disabled"; else echo "enabled"; fi`"
