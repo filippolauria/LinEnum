@@ -616,6 +616,12 @@ if [ "$pax" ]; then
   render_text "info" "PaX seems to be present"
 fi
 
+# Execshield
+execshield=`grep "exec-shield" /etc/sysctl.conf 2> /dev/null | sed -E "s,"exec-shield",${_sed_red},"`
+if [ "$execshield" ]; then
+  render_text "info" "Execshield seems to be enabled in /etc/sysctl.conf" "$execshield"
+fi
+
 # ASLR check
 aslr_enabled=`cat /proc/sys/kernel/randomize_va_space 2> /dev/null`
 render_text "warning" "ASLR status" "`if [ "$aslr_enabled" -eq "0" ]; then echo "disabled"; else echo "enabled"; fi`"

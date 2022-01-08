@@ -76,6 +76,7 @@ Note: **Export functionality is currently in the experimental stage.**
   * Look for AppArmor and SeLinux presence
   * Search signature verification failed in dmesg
   * Look for grsecurity and PaX presence
+  * Look for exec-shield status
   * Look for ASRL status
   * Check if running in virtual environment
   * Look for sd devices in /dev
