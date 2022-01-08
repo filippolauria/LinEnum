@@ -1545,6 +1545,13 @@ if [ "$readmailroot" ]; then
   fi
 fi
 
+#Searching wifi connections files
+systemconnections=`find /etc/NetworkManager/system-connections/ -type f 2> /dev/null`
+if [ "$systemconnections" ]; then
+  wificonnections=`while read f; do echo "$f"; cat "$f" /dev/null | grep "psk.*=" | sed -E "s,"psk.*",${_sed_red},"; done <<< "$systemconnections"`
+  render_text "info" "WiFi connections files" "$wificonnections"
+fi
+
 #IPs inside log files
 ipslogs=`(find /var/log/ /private/var/log -type f -exec grep -R -a -E -o "(((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])\.){3}((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])" "{}" \;) 2>/dev/null | grep -v "\.0\.\|:0\|\.0$" | sort | uniq -c | sort -r -n | head -n 50`
 if [ "$ipslogs" ]; then

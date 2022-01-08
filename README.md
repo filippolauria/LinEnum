@@ -133,6 +133,7 @@ Note: **Export functionality is currently in the experimental stage.**
   * Check for tmux sessions 
   * bakup (*.bak, *.old, *.tmp, *.temp, *.001, *~) files search
   * Locate mail
+  * Check wifi passwords in connections files
   * Find/list IPs inside log files
   * Find/list emails inside log files
 * Platform/software specific tests:
