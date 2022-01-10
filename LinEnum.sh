@@ -1558,6 +1558,12 @@ if [ "$systemconnections" ]; then
   render_text "info" "WiFi connections files" "$wificonnections"
 fi
 
+#Modified interesting files in the last 5 mins (limit 100)
+lastmodifiedfiles=`find / -type f -mmin -5 ! -path "/proc/*" ! -path "/sys/*" ! -path "/run/*" ! -path "/dev/*" ! -path "/var/lib/*" ! -path "/private/var/*" 2> /dev/null | head -n 100`
+if [ "$lastmodifiedfiles" ]; then
+  render_text "info" "Modified interesting files in the last 5 minutes (limit 100)" "$lastmodifiedfiles"
+fi
+
 #IPs inside log files
 ipslogs=`(find /var/log/ /private/var/log -type f -exec grep -R -a -E -o "(((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])\.){3}((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])" "{}" \;) 2>/dev/null | grep -v "\.0\.\|:0\|\.0$" | sort | uniq -c | sort -r -n | head -n 50`
 if [ "$ipslogs" ]; then
