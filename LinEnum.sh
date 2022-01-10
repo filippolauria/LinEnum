@@ -318,16 +318,22 @@ print_title "yellow" "USER/GROUP"
 render_text "info" "Current user/group info" \
                    "`(echo "$my_id" | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_cyan},g") 2> /dev/null`"
 
-#last logged on user information
-lastlogedonusrs=`(lastlog | awk "NR>1" | grep -v "Never") 2> /dev/null`
-if [ "$lastlogedonusrs" ]; then
-  render_text "info" "Users that have previously logged onto the system" "$lastlogedonusrs"
+#last logged on user information (login via gdm is not logged in lastlog)
+lastloggedonusrs=`(lastlog | awk "NR>1" | grep -v "Never") 2> /dev/null`
+if [ "$lastloggedonusrs" ]; then
+  render_text "info" "Users that have previously logged onto the system (not gdm)" "$lastloggedonusrs"
 fi
 
 #who else is logged on
 loggedonusrs=`w 2> /dev/null`
 if [ "`echo "$loggedonusrs" | wc -l`" -gt "1" ]; then
   render_text "info" "Who else is logged on" "$loggedonusrs"
+fi
+
+#last logons
+lastlogons=`(last -Faiw || last) 2> /dev/null | head`
+if [ "$lastlogons" ]; then
+  render_text "info" "Last logons" "$lastlogons"
 fi
 
 #lists all id's and respective group(s)
@@ -1147,7 +1153,7 @@ if [ "$runcver" ]; then
   render_text "warning" "Runc" "$runcver
 runc was found in $runc, you may be able to escalate privileges with it"
 fi
-}  
+}
 
 interesting_files()
 {
