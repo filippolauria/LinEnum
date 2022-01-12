@@ -318,16 +318,22 @@ print_title "yellow" "USER/GROUP"
 render_text "info" "Current user/group info" \
                    "`(echo "$my_id" | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_cyan},g") 2> /dev/null`"
 
-#last logged on user information
-lastlogedonusrs=`(lastlog | awk "NR>1" | grep -v "Never") 2> /dev/null`
-if [ "$lastlogedonusrs" ]; then
-  render_text "info" "Users that have previously logged onto the system" "$lastlogedonusrs"
+#last logged on user information (login via gdm is not logged in lastlog)
+lastloggedonusrs=`(lastlog | awk "NR>1" | grep -v "Never") 2> /dev/null`
+if [ "$lastloggedonusrs" ]; then
+  render_text "info" "Users that have previously logged onto the system (not gdm)" "$lastloggedonusrs"
 fi
 
 #who else is logged on
 loggedonusrs=`w 2> /dev/null`
 if [ "`echo "$loggedonusrs" | wc -l`" -gt "1" ]; then
   render_text "info" "Who else is logged on" "$loggedonusrs"
+fi
+
+#last logons
+lastlogons=`(last -Faiw || last) 2> /dev/null | head`
+if [ "$lastlogons" ]; then
+  render_text "info" "Last logons" "$lastlogons"
 fi
 
 #lists all id's and respective group(s)
@@ -387,7 +393,7 @@ if [ "$superman" ]; then
 fi
 
 # we proceed with sudo checks, only if we can get the sudo binary path
-sudobin=`command -v sudo 2> /dev/null`
+sudobin=`(which sudo || command -v sudo) 2> /dev/null`
 if [ "$sudobin" ]; then
 
   # we get /etc/sudoers content,
@@ -538,6 +544,32 @@ if [ "$checknetpgpkeys" ]; then
     render_text "warning" "PGP keys (netpgpkeys)" "$netpgpkeys"
   fi
 fi
+
+# Clipboard and highlighted text
+pwd_inside_history="enable_autologin|7z|unzip|useradd|linenum|linpeas|mkpasswd|htpasswd|openssl|PASSW|passw|shadow|root|sudo|^su|pkexec|^ftp|mongo|psql|mysql|rdesktop|xfreerdp|^ssh|steghide|@|KEY=|TOKEN=|BEARER=|Authorization:"
+checkxclip=`(which xclip || command -v xclip) 2> /dev/null`
+if [ "$checkxclip" ]; then
+  clipboardxclip=`(xclip -o -selection clipboard | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+  if [ "$clipboardxclip" ]; then
+    render_text "info" "Clipboard text (xclip)" "$clipboardxclip"
+  fi
+  highlightedxclip=`(xclip -o | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+  if [ "$highlightedxclip" ]; then
+    render_text "info" "Highlighted text (xclip)" "$highlightedxclip"
+  fi
+else
+  checkxsel=`(which xsel || command -v xsel) 2> /dev/null`
+  if [ "$checkxsel" ]; then
+    clipboardxsel=`(xsel -ob | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+    if [ "$clipboardxsel" ]; then
+      render_text "info" "Clipboard text (xsel)" "$clipboardxsel"
+    fi
+    highlightedxsel=`(xsel -o | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+    if [ "$highlightedxsel" ]; then
+      render_text "info" "Highlighted text (xsel)" "$highlightedxsel"
+    fi
+  fi
+fi
 }
 
 environmental_info()
@@ -565,10 +597,35 @@ if [ "$apparmor" ]; then
   fi
 fi
 
+# dmesg
+dmesg=`dmesg 2> /dev/null`
+if [ "$dmesg" ]; then
+  dmesgsig=$(grep "signature" <<< "$dmesg" | sed -E "s,"signature",${_sed_red},")
+  render_text "info" "Dmesg - Searching signature verification failed" "$dmesgsig"
+fi
+
 # check if selinux is present
 sestatus=`sestatus 2> /dev/null`
 if [ "$sestatus" ]; then
   render_text "info" "SELinux seems to be present" "$sestatus"
+fi
+
+# grsecurity
+grsecurity=`(uname -r | grep "\-grsec" || grep "grsecurity" /etc/sysctl.conf) 2> /dev/null`
+if [ "$grsecurity" ]; then
+  render_text "info" "grsecurity seems to be present"
+fi
+
+# PaX
+pax=`(which paxctl-ng paxctl || command -v paxctl-ng paxctl) 2> /dev/null`
+if [ "$pax" ]; then
+  render_text "info" "PaX seems to be present"
+fi
+
+# Execshield
+execshield=`grep "exec-shield" /etc/sysctl.conf 2> /dev/null | sed -E "s,"exec-shield",${_sed_red},"`
+if [ "$execshield" ]; then
+  render_text "info" "Execshield seems to be enabled in /etc/sysctl.conf" "$execshield"
 fi
 
 # ASLR check
@@ -1088,6 +1145,14 @@ if [ "$apachever" ]; then
     fi
   fi
 fi
+
+# runc details - if installed
+runcver=`(runc -v | head -n1) 2> /dev/null`
+if [ "$runcver" ]; then
+  runc=`which runc || command -v runc`
+  render_text "warning" "Runc" "$runcver
+runc was found in $runc, you may be able to escalate privileges with it"
+fi
 }
 
 interesting_files()
@@ -1453,7 +1518,7 @@ if [ "$checkbashhist" ]; then
 fi
 
 #hijack tmux session
-tmux_installed=`command -v tmux 2> /dev/null`
+tmux_installed=`(which tmux || command -v tmux) 2> /dev/null`
 if [ "$tmux_installed" ]; then
   # look for readable access to the tmux socket
   tmux_sessions=`find /var/tmp/tmux-*/default /tmp/tmux-*/default -type f -readable -exec ls ${_color_flag} -lah {} + 2> /dev/null`
@@ -1484,6 +1549,19 @@ if [ "$readmailroot" ]; then
     mkdir "$format/mail-from-root/" 2> /dev/null
     cp "$readmailroot" "$format/mail-from-root/" 2> /dev/null
   fi
+fi
+
+#Searching wifi connections files
+systemconnections=`find /etc/NetworkManager/system-connections/ -type f 2> /dev/null`
+if [ "$systemconnections" ]; then
+  wificonnections=`while read f; do echo "$f"; cat "$f" /dev/null | grep "psk.*=" | sed -E "s,"psk.*",${_sed_red},"; done <<< "$systemconnections"`
+  render_text "info" "WiFi connections files" "$wificonnections"
+fi
+
+#Modified interesting files in the last 5 mins (limit 100)
+lastmodifiedfiles=`find / -type f -mmin -5 ! -path "/proc/*" ! -path "/sys/*" ! -path "/run/*" ! -path "/dev/*" ! -path "/var/lib/*" ! -path "/private/var/*" 2> /dev/null | head -n 100`
+if [ "$lastmodifiedfiles" ]; then
+  render_text "info" "Modified interesting files in the last 5 minutes (limit 100)" "$lastmodifiedfiles"
 fi
 
 #IPs inside log files
