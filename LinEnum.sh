@@ -640,7 +640,7 @@ if [ "$hypervisorflag" ]; then
 fi
 
 # Devices - sd in /dev
-sdindev=`ls /dev 2>/dev/null | grep -Ei "^sd|^disk" | head -n 20`
+sdindev=`ls /dev 2>/dev/null | grep -i "^sd\|^disk" | head -n 20`
 if [ "$sdindev" ]; then
   render_text "info" "sd*/disk* disk in /dev (limit 20)" "$sdindev"
 fi
@@ -1565,13 +1565,17 @@ if [ "$lastmodifiedfiles" ]; then
 fi
 
 #IPs inside log files
-ipslogs=`(find /var/log/ /private/var/log -type f -exec grep -R -a -E -o "(((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])\.){3}((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])" "{}" \;) 2>/dev/null | grep -v "\.0\.\|:0\|\.0$" | sort | uniq -c | sort -r -n | head -n 50`
+ipsregex="\(\(\(2\(5[0-5]\|[0-4][0-9]\)\)\|1[0-9]\{2\}\|[1-9]\?[0-9]\)\.\)\{3\}\(\(2\(5[0-5]\|[0-4][0-9]\)\)\|1[0-9]\{2\}\|[1-9]\?[0-9]\)"
+# ipsregex="(((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])\.){3}((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])"
+ipslogs=`(find /var/log/ /private/var/log -type f -exec grep -R -a -o "$ipsregex" "{}" \;) 2>/dev/null | grep -v "\.0\.\|:0\|\.0$" | sort | uniq -c | sort -r -n | head -n 50`
 if [ "$ipslogs" ]; then
   render_text "info" "IPs found in log files (limit 50)" "$ipslogs"
 fi
 
 #Emails inside log files
-emaillogs=`(find /var/log/ /private/var/log -type f -exec grep -I -R -E -o "\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b" "{}" \;) 2>/dev/null | sort | uniq -c | sort -r -n | head -n 50`
+emailregex="\b[A-Za-z0-9._%\+-]\+@[A-Za-z0-9.-]\+\.[A-Za-z]\{2,6\}\b"
+# emailregex="\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b"
+emaillogs=`(find /var/log/ /private/var/log -type f -exec grep -I -R -o "$emailregex" "{}" \;) 2>/dev/null | sort | uniq -c | sort -r -n | head -n 50`
 if [ "emaillogs" ]; then
   render_text "info" "Emails found in log files (limit 50)" "$emaillogs"
 fi
