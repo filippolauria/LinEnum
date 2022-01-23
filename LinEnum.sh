@@ -586,25 +586,25 @@ if [ "$checknetpgpkeys" ]; then
 fi
 
 # Clipboard and highlighted text
-pwd_inside_history="enable_autologin|7z|unzip|useradd|linenum|linpeas|mkpasswd|htpasswd|openssl|PASSW|passw|shadow|root|sudo|^su|pkexec|^ftp|mongo|psql|mysql|rdesktop|xfreerdp|^ssh|steghide|@|KEY=|TOKEN=|BEARER=|Authorization:"
+pwd_inside_history="enable_autologin\|7z\|unzip\|useradd\|linenum\|linpeas\|mkpasswd\|htpasswd\|openssl\|PASSW\|passw\|shadow\|root\|sudo\|^su\|pkexec\|^ftp\|mongo\|psql\|mysql\|rdesktop\|xfreerdp\|^ssh\|steghide\|@\|KEY=\|TOKEN=\|BEARER=\|Authorization:"
 checkxclip=`(which xclip || command -v xclip) 2> /dev/null`
 if [ "$checkxclip" ]; then
-  clipboardxclip=`(xclip -o -selection clipboard | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+  clipboardxclip=`(xclip -o -selection clipboard | sed "s,$pwd_inside_history,${_sed_red},g") 2> /dev/null`
   if [ "$clipboardxclip" ]; then
     render_text "info" "Clipboard text (xclip)" "$clipboardxclip"
   fi
-  highlightedxclip=`(xclip -o | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+  highlightedxclip=`(xclip -o | sed "s,$pwd_inside_history,${_sed_red},g") 2> /dev/null`
   if [ "$highlightedxclip" ]; then
     render_text "info" "Highlighted text (xclip)" "$highlightedxclip"
   fi
 else
   checkxsel=`(which xsel || command -v xsel) 2> /dev/null`
   if [ "$checkxsel" ]; then
-    clipboardxsel=`(xsel -ob | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+    clipboardxsel=`(xsel -ob | sed "s,$pwd_inside_history,${_sed_red},g") 2> /dev/null`
     if [ "$clipboardxsel" ]; then
       render_text "info" "Clipboard text (xsel)" "$clipboardxsel"
     fi
-    highlightedxsel=`(xsel -o | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+    highlightedxsel=`(xsel -o | sed "s,$pwd_inside_history,${_sed_red},g") 2> /dev/null`
     if [ "$highlightedxsel" ]; then
       render_text "info" "Highlighted text (xsel)" "$highlightedxsel"
     fi
@@ -640,7 +640,7 @@ fi
 # dmesg
 dmesg=`dmesg 2> /dev/null`
 if [ "$dmesg" ]; then
-  dmesgsig=$(grep "signature" <<< "$dmesg" | sed -E "s,"signature",${_sed_red},")
+  dmesgsig=$(grep "signature" <<< "$dmesg" | sed "s,"signature",${_sed_red},")
   render_text "info" "Dmesg - Searching signature verification failed" "$dmesgsig"
 fi
 
@@ -663,7 +663,7 @@ if [ "$pax" ]; then
 fi
 
 # Execshield
-execshield=`grep "exec-shield" /etc/sysctl.conf 2> /dev/null | sed -E "s,"exec-shield",${_sed_red},"`
+execshield=`grep "exec-shield" /etc/sysctl.conf 2> /dev/null | sed "s,"exec-shield",${_sed_red},"`
 if [ "$execshield" ]; then
   render_text "info" "Execshield seems to be enabled in /etc/sysctl.conf" "$execshield"
 fi
@@ -1594,7 +1594,7 @@ fi
 #Searching wifi connections files
 systemconnections=`find /etc/NetworkManager/system-connections/ -type f 2> /dev/null`
 if [ "$systemconnections" ]; then
-  wificonnections=`while read f; do echo "$f"; cat "$f" /dev/null | grep "psk.*=" | sed -E "s,"psk.*",${_sed_red},"; done <<< "$systemconnections"`
+  wificonnections=`while read f; do echo "$f"; cat "$f" /dev/null | grep "psk.*=" | sed "s,"psk.*",${_sed_red},"; done <<< "$systemconnections"`
   render_text "info" "WiFi connections files" "$wificonnections"
 fi
 
