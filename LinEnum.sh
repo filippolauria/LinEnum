@@ -23,6 +23,19 @@ _purple="\033[1;35m"
 _cyan="\033[1;36m"
 _gray="\033[1;37m"
 _color_flag="--color=always"
+_color_never="--color=never"
+
+# colored bold output vars
+_bold_blue="\033[1;34m"
+_bold_green="\033[1;32m"
+_bold_purple="\033[1;35m"
+_bold_red="\033[1;31m"
+_bold_yellow="\033[1;33m"
+_bold_white="\033[1;37m"
+
+# background color output vars
+_bg_blue="\033[44m"
+_bg_red="\033[41m"
 
 # we use sed to colorize some output
 _sed_red="\o033[1;31m&\o033[0m"
@@ -98,7 +111,34 @@ print_ls_lh()
       echo "${_yellow}... (only $max_listable_files entries shown)${_reset}"
     fi
     OLD_IFS=$IFS; IFS=$'\n'
-    find $args -exec ls -lh ${_color_flag} {} + 2> /dev/null
+    output=`find $args -exec ls -lh ${_color_never} {} + 2> /dev/null`
+    for line in $output
+    do
+      IFS=/ read permissions filepath <<< $line
+      filepath=/${filepath}
+      if [ -u "$filepath" ]; then
+      	echo "$permissions${_bg_red}${_bold_white}$filepath${_reset}"
+      elif [ -g "$filepath" ]; then
+      	echo "$permissions${_bg_blue}${_bold_white}$filepath${_reset}"
+      else
+      	isExecutable=`[ -x "$filepath" ] && echo true`
+      	isWritable=`[ -w "$filepath" ] && echo true`
+      	isReadable=`[ -r "$filepath" ] && echo true`
+      	if [ "$isExecutable" ] && [ "$isWritable" ] && [ "$isReadable" ]; then
+      	  echo "$permissions${_bold_red}$filepath${_reset}"
+      	elif [ "$isExecutable" ]; then
+      	  echo "$permissions${_bold_yellow}$filepath${_reset}"
+      	elif [ "$isWritable" ] && [ "$isReadable" ]; then
+      	  echo "$permissions${_bold_purple}$filepath${_reset}"
+      	elif [ "$isWritable" ]; then
+      	  echo "$permissions${_bold_blue}$filepath${_reset}"
+      	elif [ "$isReadable" ]; then
+      	  echo "$permissions${_bold_green}$filepath${_reset}"
+      	else
+      	  echo $line
+      	fi
+      fi
+    done
     IFS=$OLD_IFS
   fi
 }
