@@ -1595,13 +1595,13 @@ fi
 systemconnections=`find /etc/NetworkManager/system-connections/ -type f 2> /dev/null`
 if [ "$systemconnections" ]; then
   wificonnections=`while read f; do echo "$f"; cat "$f" /dev/null | grep "psk.*=" | sed "s,"psk.*",${_sed_red},"; done <<< "$systemconnections"`
-  render_text "info" "WiFi connections files" "$wificonnections"
+  render_text "info" "WiFi connections files" "`print_ls_lh "$wificonnections"`"
 fi
 
 #Modified interesting files in the last 5 mins (limit 100)
 lastmodifiedfiles=`find / -type f -mmin -5 ! -path "/proc/*" ! -path "/sys/*" ! -path "/run/*" ! -path "/dev/*" ! -path "/var/lib/*" ! -path "/private/var/*" 2> /dev/null | head -n 100`
 if [ "$lastmodifiedfiles" ]; then
-  render_text "info" "Modified interesting files in the last 5 minutes (limit 100)" "$lastmodifiedfiles"
+  render_text "info" "Modified interesting files in the last 5 minutes (limit 100)" "`print_ls_lh "$lastmodifiedfiles"`"
 fi
 
 #IPs inside log files
