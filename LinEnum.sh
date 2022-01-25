@@ -23,6 +23,19 @@ _purple="\033[1;35m"
 _cyan="\033[1;36m"
 _gray="\033[1;37m"
 _color_flag="--color=always"
+_color_never="--color=never"
+
+# colored bold output vars
+_bold_blue="\033[1;34m"
+_bold_green="\033[1;32m"
+_bold_purple="\033[1;35m"
+_bold_red="\033[1;31m"
+_bold_yellow="\033[1;33m"
+_bold_white="\033[1;37m"
+
+# background color output vars
+_bg_blue="\033[44m"
+_bg_red="\033[41m"
 
 # we use sed to colorize some output
 _sed_red="\o033[1;31m&\o033[0m"
@@ -98,7 +111,34 @@ print_ls_lh()
       echo "${_yellow}... (only $max_listable_files entries shown)${_reset}"
     fi
     OLD_IFS=$IFS; IFS=$'\n'
-    find $args -exec ls -lh ${_color_flag} {} + 2> /dev/null
+    output=`find $args -exec ls -lh ${_color_never} {} + 2> /dev/null`
+    for line in $output
+    do
+      IFS=/ read permissions filepath <<< $line
+      filepath=/${filepath}
+      if [ -u "$filepath" ]; then
+      	echo "$permissions${_bg_red}${_bold_white}$filepath${_reset}"
+      elif [ -g "$filepath" ]; then
+      	echo "$permissions${_bg_blue}${_bold_white}$filepath${_reset}"
+      else
+      	isExecutable=`[ -x "$filepath" ] && echo true`
+      	isWritable=`[ -w "$filepath" ] && echo true`
+      	isReadable=`[ -r "$filepath" ] && echo true`
+      	if [ "$isExecutable" ] && [ "$isWritable" ] && [ "$isReadable" ]; then
+      	  echo "$permissions${_bold_red}$filepath${_reset}"
+      	elif [ "$isExecutable" ]; then
+      	  echo "$permissions${_bold_yellow}$filepath${_reset}"
+      	elif [ "$isWritable" ] && [ "$isReadable" ]; then
+      	  echo "$permissions${_bold_purple}$filepath${_reset}"
+      	elif [ "$isWritable" ]; then
+      	  echo "$permissions${_bold_blue}$filepath${_reset}"
+      	elif [ "$isReadable" ]; then
+      	  echo "$permissions${_bold_green}$filepath${_reset}"
+      	else
+      	  echo $line
+      	fi
+      fi
+    done
     IFS=$OLD_IFS
   fi
 }
@@ -546,25 +586,25 @@ if [ "$checknetpgpkeys" ]; then
 fi
 
 # Clipboard and highlighted text
-pwd_inside_history="enable_autologin|7z|unzip|useradd|linenum|linpeas|mkpasswd|htpasswd|openssl|PASSW|passw|shadow|root|sudo|^su|pkexec|^ftp|mongo|psql|mysql|rdesktop|xfreerdp|^ssh|steghide|@|KEY=|TOKEN=|BEARER=|Authorization:"
+pwd_inside_history="enable_autologin\|7z\|unzip\|useradd\|linenum\|linpeas\|mkpasswd\|htpasswd\|openssl\|PASSW\|passw\|shadow\|root\|sudo\|^su\|pkexec\|^ftp\|mongo\|psql\|mysql\|rdesktop\|xfreerdp\|^ssh\|steghide\|@\|KEY=\|TOKEN=\|BEARER=\|Authorization:"
 checkxclip=`(which xclip || command -v xclip) 2> /dev/null`
 if [ "$checkxclip" ]; then
-  clipboardxclip=`(xclip -o -selection clipboard | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+  clipboardxclip=`(xclip -o -selection clipboard | sed "s,$pwd_inside_history,${_sed_red},g") 2> /dev/null`
   if [ "$clipboardxclip" ]; then
     render_text "info" "Clipboard text (xclip)" "$clipboardxclip"
   fi
-  highlightedxclip=`(xclip -o | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+  highlightedxclip=`(xclip -o | sed "s,$pwd_inside_history,${_sed_red},g") 2> /dev/null`
   if [ "$highlightedxclip" ]; then
     render_text "info" "Highlighted text (xclip)" "$highlightedxclip"
   fi
 else
   checkxsel=`(which xsel || command -v xsel) 2> /dev/null`
   if [ "$checkxsel" ]; then
-    clipboardxsel=`(xsel -ob | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+    clipboardxsel=`(xsel -ob | sed "s,$pwd_inside_history,${_sed_red},g") 2> /dev/null`
     if [ "$clipboardxsel" ]; then
       render_text "info" "Clipboard text (xsel)" "$clipboardxsel"
     fi
-    highlightedxsel=`(xsel -o | sed -E "s,$pwd_inside_history,${_sed_red},") 2> /dev/null`
+    highlightedxsel=`(xsel -o | sed "s,$pwd_inside_history,${_sed_red},g") 2> /dev/null`
     if [ "$highlightedxsel" ]; then
       render_text "info" "Highlighted text (xsel)" "$highlightedxsel"
     fi
@@ -600,7 +640,7 @@ fi
 # dmesg
 dmesg=`dmesg 2> /dev/null`
 if [ "$dmesg" ]; then
-  dmesgsig=$(grep "signature" <<< "$dmesg" | sed -E "s,"signature",${_sed_red},")
+  dmesgsig=$(grep "signature" <<< "$dmesg" | sed "s,"signature",${_sed_red},")
   render_text "info" "Dmesg - Searching signature verification failed" "$dmesgsig"
 fi
 
@@ -623,7 +663,7 @@ if [ "$pax" ]; then
 fi
 
 # Execshield
-execshield=`grep "exec-shield" /etc/sysctl.conf 2> /dev/null | sed -E "s,"exec-shield",${_sed_red},"`
+execshield=`grep "exec-shield" /etc/sysctl.conf 2> /dev/null | sed "s,"exec-shield",${_sed_red},"`
 if [ "$execshield" ]; then
   render_text "info" "Execshield seems to be enabled in /etc/sysctl.conf" "$execshield"
 fi
@@ -640,7 +680,7 @@ if [ "$hypervisorflag" ]; then
 fi
 
 # Devices - sd in /dev
-sdindev=`ls /dev 2>/dev/null | grep -Ei "^sd|^disk" | head -n 20`
+sdindev=`ls /dev 2>/dev/null | grep -i "^sd\|^disk" | head -n 20`
 if [ "$sdindev" ]; then
   render_text "info" "sd*/disk* disk in /dev (limit 20)" "$sdindev"
 fi
@@ -1554,24 +1594,28 @@ fi
 #Searching wifi connections files
 systemconnections=`find /etc/NetworkManager/system-connections/ -type f 2> /dev/null`
 if [ "$systemconnections" ]; then
-  wificonnections=`while read f; do echo "$f"; cat "$f" /dev/null | grep "psk.*=" | sed -E "s,"psk.*",${_sed_red},"; done <<< "$systemconnections"`
-  render_text "info" "WiFi connections files" "$wificonnections"
+  wificonnections=`while read f; do echo "$f"; cat "$f" /dev/null | grep "psk.*=" | sed "s,"psk.*",${_sed_red},"; done <<< "$systemconnections"`
+  render_text "info" "WiFi connections files" "`print_ls_lh "$wificonnections"`"
 fi
 
 #Modified interesting files in the last 5 mins (limit 100)
 lastmodifiedfiles=`find / -type f -mmin -5 ! -path "/proc/*" ! -path "/sys/*" ! -path "/run/*" ! -path "/dev/*" ! -path "/var/lib/*" ! -path "/private/var/*" 2> /dev/null | head -n 100`
 if [ "$lastmodifiedfiles" ]; then
-  render_text "info" "Modified interesting files in the last 5 minutes (limit 100)" "$lastmodifiedfiles"
+  render_text "info" "Modified interesting files in the last 5 minutes (limit 100)" "`print_ls_lh "$lastmodifiedfiles"`"
 fi
 
 #IPs inside log files
-ipslogs=`(find /var/log/ /private/var/log -type f -exec grep -R -a -E -o "(((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])\.){3}((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])" "{}" \;) 2>/dev/null | grep -v "\.0\.\|:0\|\.0$" | sort | uniq -c | sort -r -n | head -n 50`
+ipsregex="\(\(\(2\(5[0-5]\|[0-4][0-9]\)\)\|1[0-9]\{2\}\|[1-9]\?[0-9]\)\.\)\{3\}\(\(2\(5[0-5]\|[0-4][0-9]\)\)\|1[0-9]\{2\}\|[1-9]\?[0-9]\)"
+# ipsregex="(((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])\.){3}((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])"
+ipslogs=`(find /var/log/ /private/var/log -type f -exec grep -R -a -o "$ipsregex" "{}" \;) 2>/dev/null | grep -v "\.0\.\|:0\|\.0$" | sort | uniq -c | sort -r -n | head -n 50`
 if [ "$ipslogs" ]; then
   render_text "info" "IPs found in log files (limit 50)" "$ipslogs"
 fi
 
 #Emails inside log files
-emaillogs=`(find /var/log/ /private/var/log -type f -exec grep -I -R -E -o "\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b" "{}" \;) 2>/dev/null | sort | uniq -c | sort -r -n | head -n 50`
+emailregex="\b[A-Za-z0-9._%\+-]\+@[A-Za-z0-9.-]\+\.[A-Za-z]\{2,6\}\b"
+# emailregex="\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b"
+emaillogs=`(find /var/log/ /private/var/log -type f -exec grep -I -R -o "$emailregex" "{}" \;) 2>/dev/null | sort | uniq -c | sort -r -n | head -n 50`
 if [ "emaillogs" ]; then
   render_text "info" "Emails found in log files (limit 50)" "$emaillogs"
 fi
