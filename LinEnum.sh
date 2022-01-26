@@ -1452,6 +1452,12 @@ if [ "$rhostssys" ]; then
   fi
 fi
 
+#connected NFS mounts
+nfsmounts=`cat /proc/mounts | grep nfs 2> /dev/null`
+if [ "$nfsmounts" ]; then
+  render_text "info" "Connected NFS Mounts" "$nfsmounts"
+fi
+
 #list nfs shares/permisisons etc.
 nfsexports=`ls ${_color_flag} -lah /etc/exports 2> /dev/null; cat /etc/exports 2> /dev/null`
 if [ "$nfsexports" ]; then
