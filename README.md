@@ -104,6 +104,8 @@ Note: **Export functionality is currently in the experimental stage.**
   * Sudo
     * Highlight vulnerable sudo versions
   * Exim4
+  * Redis-server
+    * Check if redis is protected by password
   * MYSQL
     * Check for default/weak MYSQL accounts
     * Attempt to retrieve information from *mysql* database
