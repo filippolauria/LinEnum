@@ -1073,7 +1073,7 @@ if [ "$exim4ver" ]; then
 fi
 
 #redis details - if installed
-redisver=`(redis-server --version ) 2> /dev/null`
+redisver=`redis-server --version 2> /dev/null`
 if [ "$redisver" ]; then
   render_text "info" "Redis version" "$redisver"
 fi
