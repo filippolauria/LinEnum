@@ -104,6 +104,8 @@ Note: **Export functionality is currently in the experimental stage.**
   * Sudo
     * Highlight vulnerable sudo versions
   * Exim4
+  * Redis-server
+    * Check if redis is protected by password
   * MYSQL
     * Check for default/weak MYSQL accounts
     * Attempt to retrieve information from *mysql* database
@@ -125,6 +127,7 @@ Note: **Export functionality is currently in the experimental stage.**
   * Find/list all accessible *.plan files and display contents
   * Find/list all accessible *.rhosts files and display contents
   * Look for private keys or password files
+  * Look for connected NFS mounts
   * Show NFS server details (check for no_root_squash)
   * Locate *.php*, *.py*, *.conf*, *.cnf* and *.log* files containing keyword supplied at script runtime
   * List all *.conf files located in /etc

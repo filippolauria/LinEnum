@@ -1072,6 +1072,21 @@ if [ "$exim4ver" ]; then
   render_text "info" "Exim4 version" "$exim4ver"
 fi
 
+#redis details - if installed
+redisver=`redis-server --version 2> /dev/null`
+if [ "$redisver" ]; then
+  render_text "info" "Redis version" "$redisver"
+fi
+
+#redis password check
+redisinfo=`redis-cli "INFO" 2> /dev/null`
+if [ "$redisinfo" ]; then
+  redisanon=`echo $redisinfo | grep "NOAUTH"`
+  if ! [ "$redisanon" ]; then
+    render_text "warning" "Redis is not protected by password!"
+  fi
+fi
+
 #mysql details - if installed
 mysqlver=`mysql --version 2> /dev/null`
 if [ "$mysqlver" ]; then
@@ -1435,6 +1450,12 @@ if [ "$rhostssys" ]; then
     for f in $rhostssys; do cp --parents "$f" "$format/rhosts/"; done 2> /dev/null
     IFS=$OLD_IFS
   fi
+fi
+
+#connected NFS mounts
+nfsmounts=`cat /proc/mounts | grep nfs 2> /dev/null`
+if [ "$nfsmounts" ]; then
+  render_text "info" "Connected NFS Mounts" "$nfsmounts"
 fi
 
 #list nfs shares/permisisons etc.
