@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 #  LinEnum.sh - Local Linux Enumeration & Privilege Escalation Script:
 #  a script to enumerate local information from a Linux host
@@ -10,7 +10,9 @@
 ###############
 # variables
 ###############
-
+ECHO=`which echo`
+N='
+'
 # version number
 version="1.0"
 
@@ -23,19 +25,6 @@ _purple="\033[1;35m"
 _cyan="\033[1;36m"
 _gray="\033[1;37m"
 _color_flag="--color=always"
-_color_never="--color=never"
-
-# colored bold output vars
-_bold_blue="\033[1;34m"
-_bold_green="\033[1;32m"
-_bold_purple="\033[1;35m"
-_bold_red="\033[1;31m"
-_bold_yellow="\033[1;33m"
-_bold_white="\033[1;37m"
-
-# background color output vars
-_bg_blue="\033[44m"
-_bg_red="\033[41m"
 
 # we use sed to colorize some output
 _sed_red="\o033[1;31m&\o033[0m"
@@ -44,7 +33,7 @@ _sed_yellow="\o033[1;33m&\o033[0m"
 _sed_cyan="\o033[1;36m&\o033[0m"
 
 # set the number of columns
-_cols="`tput cols 2> /dev/null || echo -n "120"`"
+_cols="`tput cols 2> /dev/null || $ECHO -n "120"`"
 if [ "$_cols" -lt "120" ]; then _cols="120"; fi
 
 ###############
@@ -54,17 +43,19 @@ if [ "$_cols" -lt "120" ]; then _cols="120"; fi
 # usage: print_title "color" "title"
 print_title()
 {
-  color_var="_$1"
-  if [ "${!color_var}" ]; then _color="${!color_var}"; else _color="${_yellow}"; fi
-  
+  eval color_var='$'_"$1"
+
+
+  if [ "$color_var" ]; then _color="$color_var"; else _color="${_yellow}"; fi
+
   if [ "$2" ]; then title="### $2 "; else title="#####"; fi
-  title_len=`echo -n "$title" | wc -c`
+  title_len=`$ECHO -n "$title" | wc -c`
   
   half_cols=`expr "$_cols" / 2`
   q=`expr "$half_cols" - "$title_len"`
-  echo -n -e "${_color}$title"
+  $ECHO -n -e "${_color}$title"
   printf '#%.0s' `seq 1 "$q"`
-  echo -e "${_reset}\n"
+  $ECHO -e "${_reset}\n"
 }
 
 # usage: render_text "category" "keyword" "value"
@@ -79,14 +70,14 @@ render_text()
     *) bullet="[.]"; keyword_color=""; value_color="";;
   esac
   
-  echo -e -n "${_gray}$bullet${_reset} ${keyword_color}$2${_reset}"
+  $ECHO -e -n "${_gray}$bullet${_reset} ${keyword_color}$2${_reset}"
   if [ "$3" ]; then
-    lines=`echo "$3" | wc -l`
+    lines=`$ECHO "$3" | wc -l`
     
-    echo -e -n "${_gray}:${_reset}"
+    $ECHO -e -n "${_gray}:${_reset}"
     if [ "$lines" -le "1" ]; then
-      output="`echo "$3" | sed 's,\n,,'`"
-      total_chars=`echo "[.] $2: $output" | wc -c`
+      output="`$ECHO "$3" | sed 's,\n,,'`"
+      total_chars=`$ECHO "[.] $2: $output" | wc -c`
       if [ "$total_chars" -le "$_cols" ]; then
         first_char=" "
       else
@@ -95,66 +86,36 @@ render_text()
     else
       first_char="\n"
     fi
-    echo -e "$first_char${value_color}$3${_reset}\n"
+    $ECHO -e "$first_char${value_color}$3${_reset}\n"
 
-  else echo -e "\n"; fi
+  else $ECHO -e "\n"; fi
 }
 
 print_ls_lh()
 {
   if [ "$1" ]; then
     
-    if [ "`(echo "$1" | wc -l) 2> /dev/null`" -le "$max_listable_files" ]; then
+    if [ "`($ECHO "$1" | wc -l) 2> /dev/null`" -le "$max_listable_files" ]; then
       args="$1"
     else
-      args="`(echo "$1" | head -n${max_listable_files}) 2> /dev/null`"
-      echo "${_yellow}... (only $max_listable_files entries shown)${_reset}"
+      args="`($ECHO "$1" | head -n${max_listable_files}) 2> /dev/null`"
+      $ECHO "${_yellow}... (only $max_listable_files entries shown)${_reset}"
     fi
-    OLD_IFS=$IFS; IFS=$'\n'
-    output=`find $args -exec ls -lh ${_color_never} {} + 2> /dev/null`
-    if [ "_color_flag" ]; then
-      for line in $output
-      do
-        IFS=/ read permissions filepath <<< $line
-        filepath=/${filepath}
-        if [ -u "$filepath" ]; then
-      	  echo "$permissions${_bg_red}${_bold_white}$filepath${_reset}"
-        elif [ -g "$filepath" ]; then
-      	  echo "$permissions${_bg_blue}${_bold_white}$filepath${_reset}"
-        else
-      	  isExecutable=`[ -x "$filepath" ] && echo true`
-      	  isWritable=`[ -w "$filepath" ] && echo true`
-      	  isReadable=`[ -r "$filepath" ] && echo true`
-      	  if [ "$isExecutable" ] && [ "$isWritable" ] && [ "$isReadable" ]; then
-      	    echo "$permissions${_bold_red}$filepath${_reset}"
-      	  elif [ "$isExecutable" ]; then
-      	    echo "$permissions${_bold_yellow}$filepath${_reset}"
-      	  elif [ "$isWritable" ] && [ "$isReadable" ]; then
-      	    echo "$permissions${_bold_purple}$filepath${_reset}"
-      	  elif [ "$isWritable" ]; then
-      	    echo "$permissions${_bold_blue}$filepath${_reset}"
-      	  elif [ "$isReadable" ]; then
-      	    echo "$permissions${_bold_green}$filepath${_reset}"
-      	  else
-      	    echo $line
-      	  fi
-        fi
-      done
-    else
-      echo "$output"
-    fi
-    IFS=$OLD_IFS
+    
+    output=`find $args -exec ls -lh ${_color_flag} {} + 2> /dev/null`
+    $ECHO "$output"
+
   fi
 }
 
 banner()
 {
 if [ "$quiet" ]; then
-  echo
+  $ECHO
 else
   print_title "red"
   
-  echo -e "${_yellow}      _              ______                       
+  $ECHO -e "${_yellow}      _              ______                       
      | |    (o)     |  ____|                      
      | |     _ _ __ | |__   _ __  _   _ _ __ ___  
      | |    | | \`_ \\|  __| | \`_ \\| | | | '_ \` _ \\ 
@@ -171,7 +132,7 @@ fi
 usage ()
 { 
 banner
-echo -e "USAGE:
+$ECHO -e "USAGE:
     ./LinEnum.sh -qCst -k <keyword> -r <report name> -e <export location> -h
 
 OPTIONS:
@@ -225,12 +186,12 @@ common()
   etc_passwd_cache=`grep -v '^#\|^$' /etc/passwd`
   
   # save all users in the users variable
-  users=`(echo "$etc_passwd_cache" | cut -d":" -f1) 2> /dev/null`
+  users=`($ECHO "$etc_passwd_cache" | cut -d":" -f1) 2> /dev/null`
 
   # my (current user) information
   my_id=`(id || (groups | cut -d":" -f2)) 2> /dev/null`
   my_username=`whoami 2> /dev/null`
-  my_homedir=`(echo "$etc_passwd_cache" | grep "^$my_username" | cut -d":" -f6) 2> /dev/null`
+  my_homedir=`($ECHO "$etc_passwd_cache" | grep "^$my_username" | cut -d":" -f6) 2> /dev/null`
 
   # writable folders
   writable_folders="`find / -type d -writable \! \( -path "/proc/*" -o -path "/sys/*" \) 2> /dev/null`"
@@ -241,13 +202,14 @@ common()
   known_good_path_dirs="/usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin /usr/games /usr/local/games /snap/bin"
   path_manipulated=0
   
-  OLD_IFS=$IFS
-  IFS=$'\n'
+  OLD_IFS=$IFS; IFS=$N
   for d in $known_good_path_dirs; do
   
-    if [[ -d "$d" ]] && [[ ! "$PATH" =~ $d ]]; then
-      PATH="$PATH:$d"
-      path_manipulated=1
+    if [ -d "$d" ]; then
+      if ! printf "%s" "$PATH" | grep -q "$d"; then
+        PATH="$PATH:$d"
+        path_manipulated=1
+      fi
     fi
   done
   IFS=$OLD_IFS
@@ -273,7 +235,7 @@ if [ "$report" ]; then render_text "info" "Report name" "$report"; fi
 
 if [ "$export" ]; then render_text "info" "Export location" "$export"; fi
 
-render_text "info" "Thorough tests" "`if [ "$thorough" ]; then echo -n "Enabled"; else echo -n "Disabled"; fi`"
+render_text "info" "Thorough tests" "`if [ "$thorough" ]; then $ECHO -n "Enabled"; else $ECHO -n "Disabled"; fi`"
 
 # prepare to export findings
 if [ "$export" ]; then
@@ -285,8 +247,8 @@ fi
 # prepare password
 if [ "$sudopass" ]; then 
   render_text "warning" "Please enter password - INSECURE - really only for CTF use!"
-  read -s -r userpassword
-  echo 
+  read -r userpassword
+  $ECHO 
 fi
 
 }
@@ -360,7 +322,7 @@ print_title "yellow" "USER/GROUP"
 
 #current user details
 render_text "info" "Current user/group info" \
-                   "`(echo "$my_id" | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_cyan},g") 2> /dev/null`"
+                   "`($ECHO "$my_id" | sed "s,\((\|\s\)\($interesting_groups\)\()\|\s\),${_sed_cyan},g") 2> /dev/null`"
 
 #last logged on user information (login via gdm is not logged in lastlog)
 lastloggedonusrs=`(lastlog | awk "NR>1" | grep -v "Never") 2> /dev/null`
@@ -370,7 +332,7 @@ fi
 
 #who else is logged on
 loggedonusrs=`w 2> /dev/null`
-if [ "`echo "$loggedonusrs" | wc -l`" -gt "1" ]; then
+if [ "`$ECHO "$loggedonusrs" | wc -l`" -gt "1" ]; then
   render_text "info" "Who else is logged on" "$loggedonusrs"
 fi
 
@@ -387,7 +349,7 @@ for u in $users; do
   entry="${_cyan}$u${_reset} : $idoutput"
   
   # we concatenate or init the list of processes
-  if [ "$grpinfo" ]; then grpinfo="$grpinfo"$'\n'"$entry"; else grpinfo="$entry"; fi
+  if [ "$grpinfo" ]; then grpinfo="$grpinfo$N$entry"; else grpinfo="$entry"; fi
 done
 
 if [ "$grpinfo" ]; then
@@ -395,19 +357,19 @@ if [ "$grpinfo" ]; then
 fi
 
 #checks to see if any hashes are stored in /etc/passwd (deprecated *nix storage method)
-hashesinpasswd=`(echo "$etc_passwd_cache" | grep -v '^[^:]\+:[^:]\?:') 2> /dev/null`
+hashesinpasswd=`($ECHO "$etc_passwd_cache" | grep -v '^[^:]\+:[^:]\?:') 2> /dev/null`
 if [ "$hashesinpasswd" ]; then
   render_text "danger" "It looks like we have password hashes in /etc/passwd" "$hashesinpasswd"
 fi
 
 #checks to see if there are empty password fields in /etc/passwd
-emptypassfield=`(echo "$etc_passwd_cache" | grep '^[^:]\+::') 2> /dev/null`
+emptypassfield=`($ECHO "$etc_passwd_cache" | grep '^[^:]\+::') 2> /dev/null`
 if [ "$emptypassfield" ]; then
   render_text "danger" "It looks like we have a user with an empty password field in /etc/passwd" "$emptypassfield"
 fi
 
 #contents of /etc/passwd
-readpasswd=`(echo "$etc_passwd_cache" | sed "s/.*sh$/${_sed_yellow}/") 2> /dev/null`
+readpasswd=`($ECHO "$etc_passwd_cache" | sed "s/.*sh$/${_sed_yellow}/") 2> /dev/null`
 if [ "$readpasswd" ]; then
   render_text "info" "Contents of /etc/passwd" "$readpasswd"
 
@@ -431,7 +393,7 @@ if [ "$readmasterpasswd" ]; then
 fi
 
 #all root accounts (uid 0)
-superman=`(echo "$etc_passwd_cache" | awk -F':' '$3 == 0 {print $1}') 2> /dev/null`
+superman=`($ECHO "$etc_passwd_cache" | awk -F':' '$3 == 0 {print $1}') 2> /dev/null`
 if [ "$superman" ]; then
   render_text "warning" "Super user account(s)" "$superman"
 fi
@@ -445,24 +407,24 @@ if [ "$sudobin" ]; then
   # and highlight interesting keywords
   sudoers=`grep -v '^#\|^$' /etc/sudoers 2> /dev/null`
   if [ "$sudoers" ]; then
-    sudoers=`(echo "$sudoers" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,\($interesting_binaries\)\s\+,${_sed_yellow},g") 2> /dev/null`
+    sudoers=`($ECHO "$sudoers" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,\($interesting_binaries\)\s\+,${_sed_yellow},g") 2> /dev/null`
     render_text "warning" "We can read /etc/sudoers" "$sudoers"
     
     if [ "$export" ]; then cp /etc/sudoers "$format/etc-export/sudoers" 2> /dev/null; fi
   fi
   
   # check if we can sudo without password
-  sudoperms=`(echo '' | sudo -S -l -k) 2> /dev/null`
+  sudoperms=`($ECHO '' | sudo -S -l -k) 2> /dev/null`
   if [ "$sudoperms" ]; then
-    sudoperms=`(echo "$sudoperms" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,\($interesting_binaries\)\s\+,${_sed_yellow},g") 2> /dev/null`
+    sudoperms=`($ECHO "$sudoperms" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,\($interesting_binaries\)\s\+,${_sed_yellow},g") 2> /dev/null`
     render_text "danger" "We can 'sudo -l' without supplying a password" "$sudoperms"
   else
     if [ "$sudopass" ]; then
       # check if we can sudo with password
-      sudoauth=`(echo "$userpassword" | sudo -S -l -k) 2> /dev/null`
+      sudoauth=`($ECHO "$userpassword" | sudo -S -l -k) 2> /dev/null`
       
       if [ "$sudoauth" ]; then
-        sudoauth=`(echo "$sudoauth" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,\($interesting_binaries\)\s\+,${_sed_yellow},g") 2> /dev/null`
+        sudoauth=`($ECHO "$sudoauth" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,\($interesting_binaries\)\s\+,${_sed_yellow},g") 2> /dev/null`
         render_text "danger" "We can sudo when supplying a password" "$sudoauth"
       fi
     fi
@@ -483,10 +445,13 @@ if [ "$sudobin" ]; then
   sudoerhomelist="`(find /home -name .sudo_as_admin_successful -type f -exec dirname {} + | sort -u) 2> /dev/null`"
   if [ "$sudoerhomelist" ]; then
     sudoerslist=""
+    
+    OLD_IFS=$IFS; IFS=$N
     for h in $sudoerhomelist; do
-      entry=`(ls -dl "$h" | awk 'NR==1 {print $3}') 2> /dev/null`
-      if [ "$sudoerslist" ]; then sudoerslist="$sudoerslist"$'\n'"$entry"; else sudoerslist="$entry"; fi
+      entry=`(ls -dl "$h" | cut -d' ' -f3) 2> /dev/null`
+      if [ "$sudoerslist" ]; then sudoerslist="$sudoerslist$N$entry"; else sudoerslist="$entry"; fi
     done
+    IFS=$OLD_IFS
     
     if [ "$sudoerslist" ]; then
         render_text "info" "Users that have recently used sudo" "$sudoerslist"
@@ -546,7 +511,7 @@ if [ "$thorough" = "1" ]; then
 
     if [ "$export" ]; then
       mkdir "$format/wr-files/" 2> /dev/null
-      OLD_IFS=$IFS; IFS=$'\n'
+      OLD_IFS=$IFS; IFS=$N
       for f in $wrfilesinhome; do cp --parents "$f" "$format/wr-files/"; done 2> /dev/null
       IFS=$OLD_IFS
     fi
@@ -565,7 +530,7 @@ if [ "$thorough" = "1" ]; then
 
     if [ "$export" ]; then
       mkdir "$format/ssh-files/" 2> /dev/null
-      OLD_IFS=$IFS; IFS=$'\n'
+      OLD_IFS=$IFS; IFS=$N
       for f in $sshfiles; do cp --parents "$f" "$format/ssh-files/"; done 2> /dev/null
       IFS=$OLD_IFS
     fi
@@ -644,7 +609,7 @@ fi
 # dmesg
 dmesg=`dmesg 2> /dev/null`
 if [ "$dmesg" ]; then
-  dmesgsig=$(grep "signature" <<< "$dmesg" | sed "s,"signature",${_sed_red},")
+  dmesgsig=`$ECHO "$dmesg" | grep "signature" | sed "s,signature,${_sed_red},"`
   render_text "info" "Dmesg - Searching signature verification failed" "$dmesgsig"
 fi
 
@@ -667,24 +632,28 @@ if [ "$pax" ]; then
 fi
 
 # Execshield
-execshield=`grep "exec-shield" /etc/sysctl.conf 2> /dev/null | sed "s,"exec-shield",${_sed_red},"`
+execshield=`grep "exec-shield" /etc/sysctl.conf 2> /dev/null | sed "s,exec\-shield,${_sed_red},"`
 if [ "$execshield" ]; then
   render_text "info" "Execshield seems to be enabled in /etc/sysctl.conf" "$execshield"
 fi
 
 # ASLR check
 aslr_enabled=`cat /proc/sys/kernel/randomize_va_space 2> /dev/null`
-render_text "warning" "ASLR status" "`if [ "$aslr_enabled" -eq "0" ]; then echo "disabled"; else echo "enabled"; fi`"
+render_text "warning" "ASLR status" "`if [ "$aslr_enabled" -eq "0" ]; then $ECHO "disabled"; else $ECHO "enabled"; fi`"
 
 # Virtual environment check
 hypervisorflag=`grep flags /proc/cpuinfo 2> /dev/null | grep hypervisor`
 if [ "$hypervisorflag" ]; then
   systemdetectvirt=`(which systemd-detect-virt || command -v systemd-detect-virt) 2> /dev/null`
-  render_text "warning" "This is a `if [ "$systemdetectvirt" ]; then echo "$(systemd-detect-virt)"; fi` virtual machine"
+  systemdetectvirt_output=""
+  if [ "$systemdetectvirt" ]; then
+    systemdetectvirt_output=": `systemd-detect-virt`"
+  fi
+  render_text "warning" "This is a virtual machine$systemdetectvirt_output"
 fi
 
 # Devices - sd in /dev
-sdindev=`ls /dev 2>/dev/null | grep -i "^sd\|^disk" | head -n 20`
+sdindev=`find /dev 2> /dev/null | grep -i "sd\|disk" | head -n 20`
 if [ "$sdindev" ]; then
   render_text "info" "sd*/disk* disk in /dev (limit 20)" "$sdindev"
 fi
@@ -697,15 +666,20 @@ if [ "$OLD_PATH" ]; then
   wr_folder_in_path="";
   
   OLD_IFS=$IFS
-  IFS=$'\n'
+  IFS=$N
   for d in $writable_folders; do  
-    if [[ -d "$d" ]] && [[ ! -L "$d" ]] && [[ "$OLD_PATH" =~ $d ]]; then
-      if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
+    if [ -d "$d" ]; then
+      if [ ! -L "$d" ]; then
+        BOOL=`printf "%s" "$OLD_PATH" | grep -q "$d"`
+        if [ -d "$BOOL" ]; then
+          if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
+        fi  
+      fi
     fi
   done
   IFS=$OLD_IFS
   
-  PATH_W_SPACES=`echo "$OLD_PATH" | tr ':' ' '`
+  PATH_W_SPACES=`$ECHO "$OLD_PATH" | tr ':' ' '`
   pathswriteable=`(ls -dlah $PATH_W_SPACES | sed "s,$wr_folder_in_path,${_sed_green},g") 2> /dev/null`
   if [ "$pathswriteable" ]; then
     render_text "warning" "Check if some folder of the PATH is ${_green}writable" "$pathswriteable"
@@ -725,7 +699,7 @@ if [ "$umaskvalue" ]; then
   render_text "info" "Current umask value" "$umaskvalue"
 fi
 
-if [[ -f "/etc/login.defs" ]]; then
+if [ -f "/etc/login.defs" ]; then
   #umask value as in /etc/login.defs
   umaskdef=`(grep -i "^UMASK" /etc/login.defs | sed -E 's/\s+/ /') 2> /dev/null`
   if [ "$umaskdef" ]; then
@@ -765,17 +739,16 @@ fi
 if [ "$thorough" ] && [ -z "$automated_jobs" ]; then
   effective_automated_jobs=$automated_jobs
 else
-  effective_automated_jobs="/etc/crontab"$'\n'"/etc/anacrontab"$'\n'
+  effective_automated_jobs="/etc/crontab$N/etc/anacrontab$N"
 fi
 
 if [ "$effective_automated_jobs" ]; then
 
-  automated_jobs_output=""
   writable_jobs=""
   jobs_with_path=""
 
   OLD_IFS=$IFS
-  IFS=$'\n'
+  IFS=$N
   # showing jobs content
   for f in $effective_automated_jobs; do
     automated_job_output=`grep -v '^#\|^$' "$f" 2> /dev/null`
@@ -787,7 +760,7 @@ if [ "$effective_automated_jobs" ]; then
   for f in $automated_jobs; do
     # update writable jobs
     writable_job="`find "$f" -writable 2> /dev/null`"
-    if [ "$writable_jobs" ]; then writable_jobs="$writable_jobs"$'\n'"$writable_job"; else writable_jobs="$writable_job"; fi
+    if [ "$writable_jobs" ]; then writable_jobs="$writable_jobs$N$writable_job"; else writable_jobs="$writable_job"; fi
 
     # update jobs with PATH
     path="`(grep '^PATH=' "$f" | sed 's,^PATH=,,' | tr ':' '\n') 2> /dev/null`"
@@ -795,14 +768,19 @@ if [ "$effective_automated_jobs" ]; then
       wr_folder_in_path="";
       
       for d in $path; do
-        if [[ -d "$d" ]] && [[ ! -L "$d" ]] && [[ "$writable_folders" =~ $d ]]; then
-          if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
+        if [ -d "$d" ]; then
+          if [ ! -L "$d" ]; then
+            BOOL=`printf "%s" "$writable_folders"|grep -q "$d"`
+            if [ -d "$BOOL" ]; then
+              if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
+           fi
+          fi
         fi
       done
       
       if [ "$wr_folder_in_path" ]; then
-        job_with_path="`( (ls ${_color_flag} -lah "$f"; echo; sed "s,\([=:]\($wr_folder_in_path\)\)\+,${_sed_green},g" "$f"; echo) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
-        if [ "$jobs_with_path" ]; then jobs_with_path="$jobs_with_path"$'\n'"$job_with_path"; else jobs_with_path="$job_with_path"; fi
+        job_with_path="`( (ls ${_color_flag} -lah "$f"; $ECHO; sed "s,\([=:]\($wr_folder_in_path\)\)\+,${_sed_green},g" "$f"; $ECHO) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
+        if [ "$jobs_with_path" ]; then jobs_with_path="$jobs_with_path$N$job_with_path"; else jobs_with_path="$job_with_path"; fi
       fi
     fi
   done
@@ -895,10 +873,10 @@ if [ "$defroute" ]; then
 fi
 
 #listening TCP
-tcpserv=`(netstat -lntp | sed "s,127.0.0.1:[0-9]\+,${_sed_yellow},") 2> /dev/null`
+tcpserv=`(netstat -lntp | sed "s,127\.0\.0\.1:[0-9]\+,${_sed_yellow},") 2> /dev/null`
 if [ -z "$tcpserv" ]; then
   #listening TCP (using ss)
-  tcpserv=`(ss -lntp | sed "s,127.0.0.1:[0-9]\+,${_sed_yellow},") 2> /dev/null`
+  tcpserv=`(ss -lntp | sed "s,127\.0\.0\.1:[0-9]\+,${_sed_yellow},") 2> /dev/null`
 fi
 
 if [ "$tcpserv" ]; then
@@ -931,10 +909,10 @@ fi
 psoutput=`(ps -eo command | grep -v "^\(\[\|COMMAND\|(\)" | awk '{print $1}' | awk '!x[$0]++') 2> /dev/null`
 if [ "$psoutput" ]; then
   proclist=""
-  OLD_IFS=$IFS; IFS=$'\n'
+  OLD_IFS=$IFS; IFS=$N
   for proc in $psoutput; do
     procpath="`command -v -- $proc 2> /dev/null`"
-    if [ "$proclist" ]; then proclist="$proclist"$'\n'"$procpath"; else proclist="$procpath"; fi
+    if [ "$proclist" ]; then proclist="$proclist$N$procpath"; else proclist="$procpath"; fi
   done
   IFS=$OLD_IFS
   
@@ -943,7 +921,7 @@ if [ "$psoutput" ]; then
   
     if [ "$export" ]; then
       mkdir "$format/ps-export/" 2> /dev/null
-      OLD_IFS=$IFS; IFS=$'\n'
+      OLD_IFS=$IFS; IFS=$N
       for binary in $proclist; do cp --parents "$binary" "$format/ps-export/"; done 2> /dev/null
       IFS=$OLD_IFS
     fi
@@ -1061,9 +1039,9 @@ print_title "yellow" "SOFTWARE"
 #sudo version - check to see if there are any known vulnerabilities with this
 sudover=`(sudo -V | head -n1 | cut -d' ' -f3) 2> /dev/null`
 if [ "$sudover" ]; then
-  render_text "info" "Sudo version" "`echo "$sudover" | sed "s,$vulnerable_sudo,${_sed_red},"`"
+  render_text "info" "Sudo version" "`$ECHO "$sudover" | sed "s,$vulnerable_sudo,${_sed_red},"`"
   
-  if echo "$sudover" | grep -q "$vulnerable_sudo" 2> /dev/null; then
+  if $ECHO "$sudover" | grep -q "$vulnerable_sudo" 2> /dev/null; then
     render_text "hint" "It looks like we have a vulnearble sudo version" "Use '${_red}searchsploit sudo $sudover${_reset}' to look for available exploits"
   fi
   
@@ -1085,7 +1063,7 @@ fi
 #redis password check
 redisinfo=`redis-cli "INFO" 2> /dev/null`
 if [ "$redisinfo" ]; then
-  redisanon=`echo $redisinfo | grep "NOAUTH"`
+  redisanon=`$ECHO "$redisinfo" | grep "NOAUTH"`
   if ! [ "$redisanon" ]; then
     render_text "warning" "Redis is not protected by password!"
   fi
@@ -1098,17 +1076,19 @@ if [ "$mysqlver" ]; then
   
   #checks to see if we can get very low MYSQL hanging fruits
   mysql_usernames="root"
-  if [[ ! "$mysql_usernames" =~ $my_username ]]; then mysql_usernames="$mysql_usernames"$'\n'"$my_username"; fi
+  BOOL=`printf "%s" "$mysql_usernames" | grep -q "$my_username"`
+  if [ ! "$BOOL" ]; then mysql_usernames="$mysql_usernames$N$my_username"; fi
+
   
-  mysql_passwords=" "$'\n'"root"$'\n'"toor"
-  if [[ ! "$mysql_passwords" =~ $my_username ]]; then mysql_passwords="$mysql_passwords"$'\n'"$my_username"; fi
-  
-  OLD_IFS=$IFS; IFS=$'\n'
+  mysql_passwords=" ${N}root${N}toor"
+  BOOL=`printf "%s" "$mysql_passwords" | grep -q "$my_username"`
+    if [ ! "$BOOL" ]; then mysql_usernames="$mysql_passwords$N$my_username"; fi 
+  OLD_IFS=$IFS; IFS=$N
   for u in $mysql_usernames; do
     for p in $mysql_passwords; do
       if [ "$p" != " " ]; then param="-p$p"; else param=""; fi
       
-      mysqlcon=`mysqladmin -u$u ${param} version 2> /dev/null`
+      mysqlcon=`mysqladmin -u"$u" ${param} version 2> /dev/null`
 
       if [ "$mysqlcon" ]; then
         title="We can connect to MYSQL service as $u"
@@ -1117,18 +1097,18 @@ if [ "$mysqlver" ]; then
         
         render_text "danger" "$title" "$mysqlcon"
         
-        resultset=`mysql -u$u ${param} -s -e "select User,Host,Password from mysql.user;" 2> /dev/null`
+        resultset=`mysql -u"$u" ${param} -s -e "select User,Host,Password from mysql.user;" 2> /dev/null`
         
         mysqluserout=""
         
         for row in $resultset; do
-          user=`(echo "$row" | cut -f1) 2> /dev/null`
-          host=`(echo "$row" | cut -f2) 2> /dev/null`
-          pass=`(echo "$row" | cut -f3) 2> /dev/null`
+          user=`($ECHO "$row" | cut -f1) 2> /dev/null`
+          host=`($ECHO "$row" | cut -f2) 2> /dev/null`
+          pass=`($ECHO "$row" | cut -f3) 2> /dev/null`
           if [ -z "$pass" ]; then pass="(no password)"; fi
           
-          entry="`echo "username: $user@$host, password (hashed): $pass" | sed "s,$user\|$host\|$pass,${_sed_red},g"`"
-          if [ "$mysqluserout" ]; then mysqluserout="$mysqluserout"$'\n'"$entry"; else mysqluserout="$entry"; fi
+          entry="`$ECHO "username: $user@$host, password (hashed): $pass" | sed "s,$user\|$host\|$pass,${_sed_red},g"`"
+          if [ "$mysqluserout" ]; then mysqluserout="$mysqluserout$N$entry"; else mysqluserout="$entry"; fi
           
         done
         
@@ -1151,9 +1131,9 @@ if [ "$postgver" ]; then
   #checks to see if any postgres password exists and connects to DB 'template'
   psql_default_users="postgres pgsql"
   for u in $psql_default_users; do
-    for i in {0..9}; do
+    for i in 0 1 2 3 4 5 6 7 8 9; do
       w="template$i"
-      postcon=`psql -U$u -w$w -c 'select version()' 2> /dev/null | grep ${_color_flag} version`
+      postcon=`psql -U"$u" -w"$w" -c 'select version()' 2> /dev/null | grep ${_color_flag} version`
 
       if [ "$postcon" ]; then
         render_text "danger" "We can connect to Postgres DB $w as user $u with no password" "$postcon"
@@ -1169,7 +1149,7 @@ if [ "$apachever" ]; then
   render_text "info" "Apache version" "$apachever"
 
   #what user:group is running apache daemon?
-  if [[ -f "/etc/apache2/envvars" ]]; then
+  if [ -f "/etc/apache2/envvars" ]; then
     apacheusr=`(grep -i 'user' /etc/apache2/envvars | cut -d'=' -f2) 2> /dev/null`
     apachegrp=`(grep -i 'group' /etc/apache2/envvars | cut -d'=' -f2) 2> /dev/null`
     
@@ -1254,7 +1234,7 @@ if [ "$allsuid" ]; then
     render_text "info" "SUID files" "$allsuiddetails"
 
     #list of 'interesting' suid files - feel free to make additions
-    interestingsuid=`(echo "$allsuiddetails" | grep -w $interesting_binaries) 2> /dev/null`
+    interestingsuid=`($ECHO "$allsuiddetails" | grep -w $interesting_binaries) 2> /dev/null`
     if [ "$interestingsuid" ]; then
       render_text "warning" "Possibly interesting SUID files" "$interestingsuid"
     fi
@@ -1274,7 +1254,7 @@ if [ "$allsuid" ]; then
 
   if [ "$export" ]; then
     mkdir "$format/suid-files/" 2> /dev/null
-    OLD_IFS=$IFS; IFS=$'\n'
+    OLD_IFS=$IFS; IFS=$N
     for f in $allsuid; do cp "$f" "$format/suid-files/"; done 2> /dev/null
     IFS=$OLD_IFS
   fi
@@ -1288,7 +1268,7 @@ if [ "$allsgid" ]; then
     render_text "info" "SGID files" "$allsgiddetails"
 
     #list of 'interesting' sgid files
-    interestingsgid=`echo "$allsgiddetails" | grep -w $interesting_binaries 2> /dev/null`
+    interestingsgid=`$ECHO "$allsgiddetails" | grep -w $interesting_binaries 2> /dev/null`
     if [ "$interestingsgid" ]; then
       render_text "warning" "Possibly interesting SGID files" "$interestingsgid"
     fi
@@ -1308,7 +1288,7 @@ if [ "$allsgid" ]; then
   
   if [ "$export" ]; then
     mkdir "$format/sgid-files/" 2> /dev/null
-    OLD_IFS=$IFS; IFS=$'\n'
+    OLD_IFS=$IFS; IFS=$N
     for f in $allsgid; do cp "$f" "$format/sgid-files/"; done 2> /dev/null
     IFS=$OLD_IFS
   fi
@@ -1321,7 +1301,7 @@ if [ "$fileswithcaps" ]; then
   
   if [ "$export" ]; then
     mkdir "$format/files_with_capabilities/" 2> /dev/null
-    OLD_IFS=$IFS; IFS=$'\n'
+    OLD_IFS=$IFS; IFS=$N
     for f in $fileswithcaps; do cp "$f" "$format/files_with_capabilities/"; done 2> /dev/null
     IFS=$OLD_IFS
   fi
@@ -1333,22 +1313,22 @@ if [ "$userswithcaps" ]; then
   render_text "info" "Users with specific POSIX capabilities" "$userswithcaps"
 
   #matches the capabilities found associated with users with the current user
-  matchedcaps=`(echo -e "$userswithcaps" | grep "$my_username" | awk '{print $1}') 2> /dev/null`
+  matchedcaps=`($ECHO -e "$userswithcaps" | grep "$my_username" | awk '{print $1}') 2> /dev/null`
   if [ "$matchedcaps" ]; then
     render_text "info" "Capabilities associated with the current user" "$matchedcaps"
 
     #matches the files with capabilities associated with the current user
-    matchedfiles=`(echo -e "$matchedcaps" | while read -r cap; do echo -e "$fileswithcaps" | grep "$cap"; done) 2> /dev/null`
+    matchedfiles=`($ECHO -e "$matchedcaps" | while read -r cap; do $ECHO -e "$fileswithcaps" | grep "$cap"; done) 2> /dev/null`
     if [ "$matchedfiles" ]; then
       render_text "warning" "Files with the same capabilities associated with the current user (You may want to try abusing those capabilties)" "$matchedfiles"
       
       #lists the permissions of the files having the same capabilities associated with the current user
-      matchedfilesperms=`(echo -e "$matchedfiles" | awk '{print $1}') 2> /dev/null`
+      matchedfilesperms=`($ECHO -e "$matchedfiles" | awk '{print $1}') 2> /dev/null`
       render_text "info" "Permissions of files with the same capabilities associated with the current user" "`print_ls_lh "$matchedfilesperms"`"
       
       if [ "$matchedfilesperms" ]; then
         #checks if any of the files with same capabilities associated with the current user is writable
-        writablematchedfiles=`(echo -e "$matchedfiles" | awk '{print $1}' | while read -r f; do find "$f" -writable; done) 2> /dev/null`
+        writablematchedfiles=`($ECHO -e "$matchedfiles" | awk '{print $1}' | while read -r f; do find "$f" -writable; done) 2> /dev/null`
         if [ "$writablematchedfiles" ]; then
           render_text "info" "User/Group writable files with the same capabilities associated with the current user" "`print_ls_lh "$writablematchedfiles"`"
         fi
@@ -1384,7 +1364,7 @@ if [ "$thorough" = "1" ]; then
 
     if [ "$export" ]; then
       mkdir "$format/ww-files/" 2> /dev/null
-      OLD_IFS=$IFS; IFS=$'\n'
+      OLD_IFS=$IFS; IFS=$N
       for f in $wwfiles; do cp --parents "$f" "$format/ww-files/"; done 2> /dev/null
       IFS=$OLD_IFS
 	  fi
@@ -1396,14 +1376,14 @@ usrplans_or_usrrhosts="`find /home /usr/home -name "*.plan" -o -name "*.rhosts" 
 if [ "$usrplans_or_usrrhosts" ]; then
 
   #are any .plan files accessible in /home (could contain useful information)
-  usrplans="`(echo "$usrplans_or_usrrhosts" | grep -i '.plan') 2> /dev/null`"
+  usrplans="`($ECHO "$usrplans_or_usrrhosts" | grep -i '.plan') 2> /dev/null`"
   if [ "$usrplans" ]; then
 
     usrplan_output=""
-    OLD_IFS=$IFS; IFS=$'\n'
+    OLD_IFS=$IFS; IFS=$N
     for f in $usrplans; do
-      usrplan="`( (ls ${_color_flag} -lah "$f"; echo; cat "$f"; echo) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
-      if [ "$usrplan_output" ]; then usrplan_output="$usrplan_output"$'\n'"$usrplan"; else usrplan_output="$usrplan"; fi
+      usrplan="`( (ls ${_color_flag} -lah "$f"; $ECHO; cat "$f"; $ECHO) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
+      if [ "$usrplan_output" ]; then usrplan_output="$usrplan_output$N$usrplan"; else usrplan_output="$usrplan"; fi
     done
 
     if [ "$usrplan_output" ]; then
@@ -1419,14 +1399,14 @@ if [ "$usrplans_or_usrrhosts" ]; then
   fi
 
   #are there any .rhosts files accessible - these may allow us to login as another user etc.
-  usrrhosts="`(echo "$usrplans_or_usrrhosts" | grep -i '.rhosts') 2> /dev/null`"
+  usrrhosts="`($ECHO "$usrplans_or_usrrhosts" | grep -i '.rhosts') 2> /dev/null`"
   if [ "$usrrhosts" ]; then
 
     usrrhost_output=""
-    OLD_IFS=$IFS; IFS=$'\n'
+    OLD_IFS=$IFS; IFS=$N
     for f in $usrrhosts; do
-      usrrhost="`( (ls ${_color_flag} -lah "$f"; echo; cat "$f"; echo) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
-      if [ "$usrrhost_output" ]; then usrrhost_output="$usrrhost_output"$'\n'"$usrrhost"; else usrrhost_output="$usrrhost"; fi
+      usrrhost="`( (ls ${_color_flag} -lah "$f"; $ECHO; cat "$f"; $ECHO) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
+      if [ "$usrrhost_output" ]; then usrrhost_output="$usrrhost_output$N$usrrhost"; else usrrhost_output="$usrrhost"; fi
     done
     
     if [ "$usrrhost_output" ]; then
@@ -1435,7 +1415,7 @@ if [ "$usrplans_or_usrrhosts" ]; then
     
     if [ "$export" ]; then
       mkdir "$format/rhosts/" 2> /dev/null
-      for f in $rhostsusr; do cp --parents "$f" "$format/rhosts/"; done 2> /dev/null
+      for f in $usrrhosts; do cp --parents "$f" "$format/rhosts/"; done 2> /dev/null
     fi
     
     IFS=$OLD_IFS
@@ -1450,14 +1430,14 @@ if [ "$rhostssys" ]; then
 
   if [ "$export" ]; then
     mkdir "$format/rhosts/" 2> /dev/null
-    OLD_IFS=$IFS; IFS=$'\n'
+    OLD_IFS=$IFS; IFS=$N
     for f in $rhostssys; do cp --parents "$f" "$format/rhosts/"; done 2> /dev/null
     IFS=$OLD_IFS
   fi
 fi
 
 #connected NFS mounts
-nfsmounts=`cat /proc/mounts | grep nfs 2> /dev/null`
+nfsmounts=`grep nfs /proc/mounts 2> /dev/null`
 if [ "$nfsmounts" ]; then
   render_text "info" "Connected NFS Mounts" "$nfsmounts"
 fi
@@ -1468,7 +1448,7 @@ if [ "$nfsexports" ]; then
   render_text "warning" "NFS config details" "$nfsexports"
 
   # check for no_root_squash in /etc/exports
-  no_root_squash=`echo "$nfsexports" | grep ${_color_flag} no_root_squash`
+  no_root_squash=`$ECHO "$nfsexports" | grep ${_color_flag} no_root_squash`
   if [ "$no_root_squash" ]; then
     render_text "danger" "no_root_squash found in /etc/exports" "$no_root_squash"
   fi
@@ -1482,9 +1462,9 @@ fi
 #looking for credentials in /etc/fstab and /etc/mtab
 tabfiles="/etc/fstab /etc/mtab"
 OLD_IFS=$IFS
-IFS=$'\n'
+IFS=$N
 for f in $tabfiles; do
-  [[ -e "$f" ]] || continue
+  [ -e "$f" ] || continue
   
   tabcreds=`grep "\(credentials\|login\|user\(name\)\?\|pass\(word\)\?\|pwd\?\)[=]" "$f" 2> /dev/null`
   if [ "$tabcreds" ]; then
@@ -1515,16 +1495,16 @@ if [ "$keyword" ]; then
   phpkeyfiles="`find / -maxdepth 10 \( -name "*.php*" -o -name "*.py*" \) -type f 2> /dev/null`"
   
   if [ "$phpkeyfiles" ]; then
-    keyfiles="$keyfiles\n$phpkeyfiles"
+    keyfiles="$keyfiles$N$phpkeyfiles"
   fi
   
   if [ "$keyfiles" ]; then
     OLD_IFS=$IFS
-    IFS=$'\n'
+    IFS=$N
     keyfilesoutput=""
     for f in $keyfiles; do
       entry="`grep -Hn "$keyword" "$f" 2> /dev/null`"
-      if [ "$keyfilesoutput" ]; then keyfilesoutput="$keyfilesoutput"$'\n'"$entry"; else keyfilesoutput="$entry"; fi
+      if [ "$keyfilesoutput" ]; then keyfilesoutput="$keyfilesoutput$N$entry"; else keyfilesoutput="$entry"; fi
     done
     IFS=$OLD_IFS
     
@@ -1534,7 +1514,7 @@ if [ "$keyword" ]; then
       if [ "$export" ]; then
         mkdir --parents "$format/keyword_file_matches/" 2> /dev/null
         OLD_IFS=$IFS
-        IFS=$'\n'
+        IFS=$N
         for f in $keyfiles; do cp --parents "$f" "$format/keyword_file_matches/"; done 2> /dev/null
         IFS=$OLD_IFS
       fi
@@ -1549,7 +1529,7 @@ if [ "$allconf" ]; then
 
   if [ "$export" ]; then
     mkdir "$format/conf-files/" 2> /dev/null
-    OLD_IFS=$IFS; IFS=$'\n'
+    OLD_IFS=$IFS; IFS=$N
     for f in $allconf; do cp --parents "$f" "$format/conf-files/"; done 2> /dev/null
     IFS=$OLD_IFS
   fi
@@ -1557,9 +1537,9 @@ fi
 
 # retrieves accessible history file paths (e.g. ~/.bash_history, ~/.wget-hsts, ~/.lesshst, ecc.)
 # from users with valid home directories and shells
-for entry in `(echo "$etc_passwd_cache" | grep "^.*sh$") 2> /dev/null`; do
-  user=`echo "$entry" | cut -d":" -f1`
-  home=`echo "$entry" | cut -d":" -f6`
+for entry in `($ECHO "$etc_passwd_cache" | grep "^.*sh$") 2> /dev/null`; do
+  user=`$ECHO "$entry" | cut -d":" -f1`
+  home=`$ECHO "$entry" | cut -d":" -f6`
   usrhist=`ls ${_color_flag} -lah "$home/.*_history" "$home/.*-hsts" "$home/.*hst" 2> /dev/null`
 
   if [ "$usrhist" ]; then
@@ -1569,7 +1549,7 @@ for entry in `(echo "$etc_passwd_cache" | grep "^.*sh$") 2> /dev/null`; do
     if [ "$export" ]; then
       # create dir only if it does not exist
         mkdir -p "$format/history_files/" 2> /dev/null
-        OLD_IFS=$IFS; IFS=$'\n'
+        OLD_IFS=$IFS; IFS=$N
         for f in $usrhist; do cp --parents "$f" "$format/history_files/"; done 2> /dev/null
         IFS=$OLD_IFS
     fi
@@ -1596,7 +1576,7 @@ fi
 #any bakup file that may be of interest
 bakfiles="`find / \( -name "*.bak" -o -name "*.tmp" -o -name "*.temp" -o -name "*.old" -o -name "*.001" -o -name "*~" \) -type f -exec ls -lah {} + 2> /dev/null`"
 if [ "$bakfiles" ]; then
-  render_text "info" "Location and Permissions (if accessible) of backup file(s)" "`echo "$bakfiles" | sed "s,^.*\($interesting_varnames\).*,${_sed_yellow},Ig"`"
+  render_text "info" "Location and Permissions (if accessible) of backup file(s)" "`$ECHO "$bakfiles" | sed "s,^.*\($interesting_varnames\).*,${_sed_yellow},Ig"`"
 fi
 
 #is there any mail accessible
@@ -1617,10 +1597,24 @@ if [ "$readmailroot" ]; then
 fi
 
 #Searching wifi connections files
-systemconnections=`find /etc/NetworkManager/system-connections/ -type f 2> /dev/null`
-if [ "$systemconnections" ]; then
-  wificonnections=`while read f; do echo "$f"; cat "$f" /dev/null | grep "psk.*=" | sed "s,"psk.*",${_sed_red},"; done <<< "$systemconnections"`
-  render_text "info" "WiFi connections files" "`print_ls_lh "$wificonnections"`"
+wificonnections=`find /etc/NetworkManager/system-connections/ -type f -readable 2> /dev/null`
+if [ "$wificonnections" ]; then
+  wificonnectionsoutput=""
+  
+  OLD_IFS=$IFS; IFS=$N
+  for f in $wificonnections; do
+    entry=`(grep -i "\(identity\|password\|psk\).*=" "$f" | sed "s,\(identity\|password\|psk\).*,${_sed_red},") 2> /dev/null`
+    if [ "$entry" ]; then
+      entry="Found something interesting in ${_red}$f${_reset}:$N$entry"
+      if [ "$wificonnectionsoutput" ]; then wificonnectionsoutput="$wificonnectionsoutput$N$entry"; else wificonnectionsoutput="$entry"; fi
+    fi
+  done
+  IFS=$OLD_IFS
+
+  if [ "$wificonnectionsoutput" ]; then
+    render_text "info" "WiFi connections files" "$wificonnectionsoutput"
+  fi
+
 fi
 
 #Modified interesting files in the last 5 mins (limit 100)
@@ -1631,7 +1625,6 @@ fi
 
 #IPs inside log files
 ipsregex="\(\(\(2\(5[0-5]\|[0-4][0-9]\)\)\|1[0-9]\{2\}\|[1-9]\?[0-9]\)\.\)\{3\}\(\(2\(5[0-5]\|[0-4][0-9]\)\)\|1[0-9]\{2\}\|[1-9]\?[0-9]\)"
-# ipsregex="(((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])\.){3}((2(5[0-5]|[0-4][0-9]))|1[0-9]{2}|[1-9]?[0-9])"
 ipslogs=`(find /var/log/ /private/var/log -type f -exec grep -R -a -o "$ipsregex" "{}" \;) 2>/dev/null | grep -v "\.0\.\|:0\|\.0$" | sort | uniq -c | sort -r -n | head -n 50`
 if [ "$ipslogs" ]; then
   render_text "info" "IPs found in log files (limit 50)" "$ipslogs"
@@ -1639,9 +1632,8 @@ fi
 
 #Emails inside log files
 emailregex="\b[A-Za-z0-9._%\+-]\+@[A-Za-z0-9.-]\+\.[A-Za-z]\{2,6\}\b"
-# emailregex="\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b"
 emaillogs=`(find /var/log/ /private/var/log -type f -exec grep -I -R -o "$emailregex" "{}" \;) 2>/dev/null | sort | uniq -c | sort -r -n | head -n 50`
-if [ "emaillogs" ]; then
+if [ "$emaillogs" ]; then
   render_text "info" "Emails found in log files (limit 50)" "$emaillogs"
 fi
 }
@@ -1663,9 +1655,9 @@ if [ "$dockerhost" ]; then
 fi
 
 #specific checks - are we a member of the docker group
-if (echo "$my_id" | grep -q "\((\|\s\)\(docker\)\()\|\s\)") 2> /dev/null; then
+if ($ECHO "$my_id" | grep -q "\((\|\s\)\(docker\)\()\|\s\)") 2> /dev/null; then
   render_text "warning" "We're a member of the (docker) group" \
-                        "`(echo "$my_id" | sed "s,\((\|\s\)\(docker\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
+                        "`($ECHO "$my_id" | sed "s,\((\|\s\)\(docker\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
 fi
 
 #specific checks - are there any docker files present
@@ -1691,9 +1683,9 @@ if [ "$lxccontainer" ]; then
 fi
 
 #specific checks - are we a member of the lxd group
-if (echo "$my_id" | grep -q '\((\|\s\)\(lxd\|lxc\)\()\|\s\)') 2> /dev/null; then
+if ($ECHO "$my_id" | grep -q '\((\|\s\)\(lxd\|lxc\)\()\|\s\)') 2> /dev/null; then
   render_text "warning" "We're a member of the (lxc/lxd) group" \
-                        "`(echo "$my_id" | sed "s,\((\|\s\)\(lxd\|lxc\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
+                        "`($ECHO "$my_id" | sed "s,\((\|\s\)\(lxd\|lxc\)\()\|\s\),${_sed_yellow},g") 2> /dev/null`"
 fi
 }
 
@@ -1730,9 +1722,7 @@ call_each()
 while getopts "qCstk:r:e:h" option; do
   case "${option}" in
     q) quiet=1;;
-    C) _reset=""; _red=""; _green=""; _yellow=""; _cyan=""; _purple=""; _gray=""; _color_flag=""
-       _bold_blue=""; _bold_green=""; _bold_purple=""; _bold_red=""; _bold_yellow=""; _bold_white=""
-       _bg_blue=""; _bg_red=""
+    C) _reset=""; _red=""; _green=""; _yellow=""; _cyan=""; _purple=""; _gray=""; _color_flag="--color=never"
        _sed_red="\o033[4m&\o033[0m"; _sed_green="\o033[4m&\o033[0m"
        _sed_yellow="\o033[4m&\o033[0m"; _sed_cyan="\o033[4m&\o033[0m"
     ;;

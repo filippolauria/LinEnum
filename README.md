@@ -9,8 +9,8 @@
 
 LinEnum is a shell script that when executed on a Linux host allows to enumerate local information.
 
+![Maintainer](https://img.shields.io/badge/maintainer-filippolauria-blue)
 [![Linux](https://svgshare.com/i/Zhy.svg)](https://svgshare.com/i/Zhy.svg)
-[![made-with-bash](https://img.shields.io/badge/Made%20with-Bash-1f425f.svg)](https://www.gnu.org/software/bash/)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 
 ## Usage
@@ -146,4 +146,8 @@ Note: **Export functionality is currently in the experimental stage.**
   * Checks to determine if we're in an LXC container
 
 ## Credits
-For more information visit www.rebootuser.com
+Special thanks to:
+ * @rebootuser, who has maintained LinEnum up to version 0.982;
+ * @federicomunari (Federico M.), who has added to LinEnum a lot of new features and security checks;
+ * @CyberPingU (Matteo F.), who has started making LinEnum compatible with POSIX shells (not only Bash);
+ * all people mentioned in the [CONTRIBUTORS file](CONTRIBUTORS.md).
