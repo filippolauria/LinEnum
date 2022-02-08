@@ -112,33 +112,37 @@ print_ls_lh()
     fi
     OLD_IFS=$IFS; IFS=$'\n'
     output=`find $args -exec ls -lh ${_color_never} {} + 2> /dev/null`
-    for line in $output
-    do
-      IFS=/ read permissions filepath <<< $line
-      filepath=/${filepath}
-      if [ -u "$filepath" ]; then
-      	echo "$permissions${_bg_red}${_bold_white}$filepath${_reset}"
-      elif [ -g "$filepath" ]; then
-      	echo "$permissions${_bg_blue}${_bold_white}$filepath${_reset}"
-      else
-      	isExecutable=`[ -x "$filepath" ] && echo true`
-      	isWritable=`[ -w "$filepath" ] && echo true`
-      	isReadable=`[ -r "$filepath" ] && echo true`
-      	if [ "$isExecutable" ] && [ "$isWritable" ] && [ "$isReadable" ]; then
-      	  echo "$permissions${_bold_red}$filepath${_reset}"
-      	elif [ "$isExecutable" ]; then
-      	  echo "$permissions${_bold_yellow}$filepath${_reset}"
-      	elif [ "$isWritable" ] && [ "$isReadable" ]; then
-      	  echo "$permissions${_bold_purple}$filepath${_reset}"
-      	elif [ "$isWritable" ]; then
-      	  echo "$permissions${_bold_blue}$filepath${_reset}"
-      	elif [ "$isReadable" ]; then
-      	  echo "$permissions${_bold_green}$filepath${_reset}"
-      	else
-      	  echo $line
-      	fi
-      fi
-    done
+    if [ "_color_flag" ]; then
+      for line in $output
+      do
+        IFS=/ read permissions filepath <<< $line
+        filepath=/${filepath}
+        if [ -u "$filepath" ]; then
+      	  echo "$permissions${_bg_red}${_bold_white}$filepath${_reset}"
+        elif [ -g "$filepath" ]; then
+      	  echo "$permissions${_bg_blue}${_bold_white}$filepath${_reset}"
+        else
+      	  isExecutable=`[ -x "$filepath" ] && echo true`
+      	  isWritable=`[ -w "$filepath" ] && echo true`
+      	  isReadable=`[ -r "$filepath" ] && echo true`
+      	  if [ "$isExecutable" ] && [ "$isWritable" ] && [ "$isReadable" ]; then
+      	    echo "$permissions${_bold_red}$filepath${_reset}"
+      	  elif [ "$isExecutable" ]; then
+      	    echo "$permissions${_bold_yellow}$filepath${_reset}"
+      	  elif [ "$isWritable" ] && [ "$isReadable" ]; then
+      	    echo "$permissions${_bold_purple}$filepath${_reset}"
+      	  elif [ "$isWritable" ]; then
+      	    echo "$permissions${_bold_blue}$filepath${_reset}"
+      	  elif [ "$isReadable" ]; then
+      	    echo "$permissions${_bold_green}$filepath${_reset}"
+      	  else
+      	    echo $line
+      	  fi
+        fi
+      done
+    else
+      echo "$output"
+    fi
     IFS=$OLD_IFS
   fi
 }
@@ -1727,6 +1731,8 @@ while getopts "qCstk:r:e:h" option; do
   case "${option}" in
     q) quiet=1;;
     C) _reset=""; _red=""; _green=""; _yellow=""; _cyan=""; _purple=""; _gray=""; _color_flag=""
+       _bold_blue=""; _bold_green=""; _bold_purple=""; _bold_red=""; _bold_yellow=""; _bold_white=""
+       _bg_blue=""; _bg_red=""
        _sed_red="\o033[4m&\o033[0m"; _sed_green="\o033[4m&\o033[0m"
        _sed_yellow="\o033[4m&\o033[0m"; _sed_cyan="\o033[4m&\o033[0m"
     ;;
