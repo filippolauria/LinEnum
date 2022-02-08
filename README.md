@@ -150,4 +150,4 @@ Special thanks to:
  * @rebootuser, who has maintained LinEnum up to version 0.982;
  * @federicomunari (Federico M.), who has added to LinEnum a lot of new features and security checks;
  * @CyberPingU (Matteo F.), who has started making LinEnum compatible with POSIX shells (not only Bash);
- * all people mentioned in the [CONTRIBUTORS section](graphs/contributors) and in the [CONTRIBUTORS file](CONTRIBUTORS.md).
+ * all people mentioned in the *CONTRIBUTORS section* and in the [CONTRIBUTORS file](CONTRIBUTORS.md).
