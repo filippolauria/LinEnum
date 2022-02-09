@@ -163,7 +163,7 @@ common()
   # useful binaries (thanks to https://gtfobins.github.io/)
   # update this list with:
   # wget -q -O- https://gtfobins.github.io/ | grep -o 'bin-name">.*</a>' | sed 's,^.*">\(.*\)</a>,\1,g' | sed ':a;N;$!ba;s,\n,\\|,g'
-  interesting_binaries='ansible-playbook\|apt-get\|apt\|ar\|aria2c\|arj\|arp\|as\|ash\|at\|atobm\|awk\|base32\|base64\|basenc\|bash\|bpftrace\|bridge\|bundler\|busctl\|busybox\|byebug\|bzip2\|c89\|c99\|cancel\|capsh\|cat\|certbot\|check_by_ssh\|check_cups\|check_log\|check_memory\|check_raid\|check_ssl_cert\|check_statusfile\|chmod\|chown\|chroot\|cmp\|cobc\|column\|comm\|composer\|cowsay\|cowthink\|cp\|cpan\|cpio\|cpulimit\|crash\|crontab\|csh\|csplit\|csvtool\|cupsfilter\|curl\|cut\|dash\|date\|dd\|dialog\|diff\|dig\|dmesg\|dmidecode\|dmsetup\|dnf\|docker\|dosbox\|dpkg\|dvips\|easy_install\|eb\|ed\|emacs\|env\|eqn\|ex\|exiftool\|expand\|expect\|facter\|file\|find\|finger\|flock\|fmt\|fold\|ftp\|gawk\|gcc\|gcore\|gdb\|gem\|genisoimage\|ghc\|ghci\|gimp\|git\|grep\|gtester\|gzip\|hd\|head\|hexdump\|highlight\|hping3\|iconv\|iftop\|install\|ionice\|ip\|irb\|jjs\|join\|journalctl\|jq\|jrunscript\|knife\|ksh\|ksshell\|latex\|ld.so\|ldconfig\|less\|ln\|loginctl\|logsave\|look\|ltrace\|lua\|lualatex\|luatex\|lwp-download\|lwp-request\|mail\|make\|man\|mawk\|more\|mount\|msgattrib\|msgcat\|msgconv\|msgfilter\|msgmerge\|msguniq\|mtr\|mv\|mysql\|nano\|nasm\|nawk\|nc\|neofetch\|nice\|nl\|nmap\|node\|nohup\|npm\|nroff\|nsenter\|octave\|od\|openssl\|openvpn\|openvt\|paste\|pdb\|pdflatex\|pdftex\|perf\|perl\|pg\|php\|pic\|pico\|pip\|pkexec\|pkg\|pr\|pry\|psql\|puppet\|python\|rake\|readelf\|red\|redcarpet\|restic\|rev\|rlogin\|rlwrap\|rpm\|rpmquery\|rsync\|ruby\|run-mailcap\|run-parts\|rview\|rvim\|scp\|screen\|script\|sed\|service\|setarch\|sftp\|sg\|shuf\|slsh\|smbclient\|snap\|socat\|soelim\|sort\|split\|sqlite3\|ss\|ssh-keygen\|ssh-keyscan\|ssh\|start-stop-daemon\|stdbuf\|strace\|strings\|su\|sysctl\|systemctl\|systemd-resolve\|tac\|tail\|tar\|taskset\|tbl\|tclsh\|tcpdump\|tee\|telnet\|tex\|tftp\|tic\|time\|timedatectl\|timeout\|tmux\|top\|troff\|tshark\|ul\|unexpand\|uniq\|unshare\|update-alternatives\|uudecode\|uuencode\|valgrind\|vi\|view\|vigr\|vim\|vimdiff\|vipw\|virsh\|watch\|wc\|wget\|whiptail\|whois\|wish\|xargs\|xelatex\|xetex\|xmodmap\|xmore\|xxd\|xz\|yarn\|yelp\|yum\|zip\|zsh\|zsoelim\|zypper'
+  interesting_binaries='ab\|agetty\|ansible-playbook\|apt-get\|apt\|ar\|aria2c\|arj\|arp\|as\|ascii-xfr\|ascii85\|ash\|aspell\|at\|atobm\|awk\|base32\|base64\|basenc\|bash\|bpftrace\|bridge\|bundler\|busctl\|busybox\|byebug\|bzip2\|c89\|c99\|cancel\|capsh\|cat\|certbot\|check_by_ssh\|check_cups\|check_log\|check_memory\|check_raid\|check_ssl_cert\|check_statusfile\|chmod\|chown\|chroot\|cmp\|cobc\|column\|comm\|composer\|cowsay\|cowthink\|cp\|cpan\|cpio\|cpulimit\|crash\|crontab\|csh\|csplit\|csvtool\|cupsfilter\|curl\|cut\|dash\|date\|dd\|dialog\|diff\|dig\|dmesg\|dmidecode\|dmsetup\|dnf\|docker\|dosbox\|dpkg\|dvips\|easy_install\|eb\|ed\|efax\|emacs\|env\|eqn\|ex\|exiftool\|expand\|expect\|facter\|file\|find\|finger\|flock\|fmt\|fold\|ftp\|gawk\|gcc\|gcore\|gdb\|gem\|genisoimage\|ghc\|ghci\|gimp\|git\|grc\|grep\|gtester\|gzip\|hd\|head\|hexdump\|highlight\|hping3\|iconv\|iftop\|install\|ionice\|ip\|irb\|ispell\|jjs\|join\|journalctl\|jq\|jrunscript\|knife\|ksh\|ksshell\|latex\|ld.so\|ldconfig\|less\|lftp\|ln\|loginctl\|logsave\|look\|ltrace\|lua\|lualatex\|luatex\|lwp-download\|lwp-request\|mail\|make\|man\|mawk\|more\|mount\|msgattrib\|msgcat\|msgconv\|msgfilter\|msgmerge\|msguniq\|mtr\|mv\|mysql\|nano\|nasm\|nawk\|nc\|neofetch\|nice\|nl\|nm\|nmap\|node\|nohup\|npm\|nroff\|nsenter\|octave\|od\|openssl\|openvpn\|openvt\|paste\|pax\|pdb\|pdflatex\|pdftex\|perf\|perl\|pg\|php\|pic\|pico\|pip\|pkexec\|pkg\|pr\|pry\|psql\|ptx\|puppet\|python\|rake\|readelf\|red\|redcarpet\|restic\|rev\|rlogin\|rlwrap\|rpm\|rpmquery\|rsync\|ruby\|run-mailcap\|run-parts\|rview\|rvim\|sash\|scp\|screen\|script\|sed\|service\|setarch\|sftp\|sg\|shuf\|slsh\|smbclient\|snap\|socat\|soelim\|sort\|split\|sqlite3\|ss\|ssh-keygen\|ssh-keyscan\|ssh\|sshpass\|start-stop-daemon\|stdbuf\|strace\|strings\|su\|sysctl\|systemctl\|systemd-resolve\|tac\|tail\|tar\|taskset\|tbl\|tclsh\|tcpdump\|tee\|telnet\|tex\|tftp\|tic\|time\|timedatectl\|timeout\|tmux\|top\|troff\|tshark\|ul\|unexpand\|uniq\|unshare\|update-alternatives\|uudecode\|uuencode\|valgrind\|vi\|view\|vigr\|vim\|vimdiff\|vipw\|virsh\|wall\|watch\|wc\|wget\|whiptail\|whois\|wireshark\|wish\|xargs\|xelatex\|xetex\|xmodmap\|xmore\|xxd\|xz\|yarn\|yelp\|yum\|zip\|zsh\|zsoelim\|zypper'
 
   # exploitable kernel versions
   # update this list with:
@@ -270,7 +270,7 @@ if [ "$procver" ]; then
 fi
 
 if (uname -a || cat /proc/version) | grep -q "\s\+\($vulnerable_kernels\)" 2> /dev/null; then
-  render_text "hint" "It looks like we have an unpatched kernel" "Use '${_red}searchsploit `uname -s` Kernel `uname -r | cut -d'.' -f1-2`${_reset}' to look for kernel exploits"
+  render_text "hint" "It looks like we have an unpatched kernel" "Use '${_red}searchsploit `uname -s` Kernel `uname -r | cut -d"." -f1-2`${_reset}' to look for kernel exploits"
 fi
 
 # search all *-release files for version info
@@ -448,7 +448,7 @@ if [ "$sudobin" ]; then
     
     OLD_IFS=$IFS; IFS=$N
     for h in $sudoerhomelist; do
-      entry=`(ls -dl "$h" | cut -d' ' -f3) 2> /dev/null`
+      entry=`(ls -dl "$h" | cut -d" " -f3) 2> /dev/null`
       if [ "$sudoerslist" ]; then sudoerslist="$sudoerslist$N$entry"; else sudoerslist="$entry"; fi
     done
     IFS=$OLD_IFS
@@ -701,7 +701,7 @@ fi
 
 if [ -f "/etc/login.defs" ]; then
   #umask value as in /etc/login.defs
-  umaskdef=`(grep -i "^UMASK" /etc/login.defs | sed -E 's/\s+/ /') 2> /dev/null`
+  umaskdef=`(grep ${_color_flag} -i "^UMASK" /etc/login.defs | sed 's/\s\+/ /') 2> /dev/null`
   if [ "$umaskdef" ]; then
     render_text "info" "umask value as specified in /etc/login.defs" "$umaskdef"
   fi
@@ -1037,7 +1037,7 @@ software_configs()
 print_title "yellow" "SOFTWARE"
 
 #sudo version - check to see if there are any known vulnerabilities with this
-sudover=`(sudo -V | head -n1 | cut -d' ' -f3) 2> /dev/null`
+sudover=`(sudo -V | head -n1 | cut -d" " -f3) 2> /dev/null`
 if [ "$sudover" ]; then
   render_text "info" "Sudo version" "`$ECHO "$sudover" | sed "s,$vulnerable_sudo,${_sed_red},"`"
   
@@ -1049,7 +1049,7 @@ if [ "$sudover" ]; then
 fi
 
 #exim4 details - if installed
-exim4ver=`(exim4 --version | head -n1 | cut -d' ' -f3) 2> /dev/null`
+exim4ver=`(exim4 --version | head -n1 | cut -d" " -f3) 2> /dev/null`
 if [ "$exim4ver" ]; then
   render_text "info" "Exim4 version" "$exim4ver"
 fi
@@ -1150,8 +1150,8 @@ if [ "$apachever" ]; then
 
   #what user:group is running apache daemon?
   if [ -f "/etc/apache2/envvars" ]; then
-    apacheusr=`(grep -i 'user' /etc/apache2/envvars | cut -d'=' -f2) 2> /dev/null`
-    apachegrp=`(grep -i 'group' /etc/apache2/envvars | cut -d'=' -f2) 2> /dev/null`
+    apacheusr=`(grep -i 'user' /etc/apache2/envvars | cut -d"=" -f2) 2> /dev/null`
+    apachegrp=`(grep -i 'group' /etc/apache2/envvars | cut -d"=" -f2) 2> /dev/null`
     
     if [ "$apacheusr" ] && [ "$apachegrp" ]; then
       render_text "info" "Apache is running as (user:group)" "$apacheusr:$apachegrp"
