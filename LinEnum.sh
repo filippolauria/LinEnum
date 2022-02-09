@@ -202,17 +202,12 @@ common()
   known_good_path_dirs="/usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin /usr/games /usr/local/games /snap/bin"
   path_manipulated=0
   
-  OLD_IFS=$IFS; IFS=$N
   for d in $known_good_path_dirs; do
-  
-    if [ -d "$d" ]; then
-      if ! printf "%s" "$PATH" | grep -q "$d"; then
-        PATH="$PATH:$d"
-        path_manipulated=1
-      fi
+    if [ -d "$d" ] && ! printf "%s" "$PATH" | grep -q "$d"; then
+      PATH="$PATH:$d"
+      path_manipulated=1
     fi
   done
-  IFS=$OLD_IFS
 
   if [ "$path_manipulated" = "1" ]; then
     render_text "warning" "Path changed to: $PATH"
@@ -665,16 +660,11 @@ if [ "$OLD_PATH" ]; then
   # check if some writable folder is in the PATH
   wr_folder_in_path="";
   
-  OLD_IFS=$IFS
-  IFS=$N
-  for d in $writable_folders; do  
-    if [ -d "$d" ]; then
-      if [ ! -L "$d" ]; then
-        BOOL=`printf "%s" "$OLD_PATH" | grep -q "$d"`
-        if [ -d "$BOOL" ]; then
-          if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
-        fi  
-      fi
+  OLD_IFS=$IFS; IFS=":"
+  for d in $OLD_PATH; do
+    BOOL=`printf "%s" "$writable_folders" | grep -Fx "$d"`
+    if [ "$BOOL" ]; then
+      if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
     fi
   done
   IFS=$OLD_IFS
@@ -701,15 +691,15 @@ fi
 
 if [ -f "/etc/login.defs" ]; then
   #umask value as in /etc/login.defs
-  umaskdef=`(grep ${_color_flag} -i "^UMASK" /etc/login.defs | sed 's/\s\+/ /') 2> /dev/null`
+  umaskdef=`(grep ${_color_flag} -i "^UMASK" /etc/login.defs | sed 's/\s\+/\t/') 2> /dev/null`
   if [ "$umaskdef" ]; then
-    render_text "info" "umask value as specified in /etc/login.defs" "$umaskdef"
+    render_text "info" "umask value (as specified in /etc/login.defs)" "$umaskdef"
   fi
 
   #password policy information as stored in /etc/login.defs
-  logindefs=`grep ${_color_flag} "^PASS_MAX_DAYS\|^PASS_MIN_DAYS\|^PASS_WARN_AGE\|^ENCRYPT_METHOD" /etc/login.defs 2> /dev/null`
+  logindefs=`(grep ${_color_flag} -i "^PASS_MAX_DAYS\|^PASS_MIN_DAYS\|^PASS_WARN_AGE\|^ENCRYPT_METHOD" /etc/login.defs | sed 's/\s\+/\t/') 2> /dev/null`
   if [ "$logindefs" ]; then
-    render_text "info" "Password and storage information" "$logindefs"
+    render_text "info" "Password and storage information (as specified in /etc/login.defs)" "$logindefs"
 
     if [ "$export" ]; then
       mkdir "$format/etc-export/" 2> /dev/null
@@ -759,21 +749,20 @@ if [ "$effective_automated_jobs" ]; then
 
   for f in $automated_jobs; do
     # update writable jobs
-    writable_job="`find "$f" -writable 2> /dev/null`"
-    if [ "$writable_jobs" ]; then writable_jobs="$writable_jobs$N$writable_job"; else writable_jobs="$writable_job"; fi
+    if [ -w "$f" ]; then
+      if [ "$writable_jobs" ]; then writable_jobs="$writable_jobs$N$f"; else writable_jobs="$f"; fi
+    fi
 
     # update jobs with PATH
     path="`(grep '^PATH=' "$f" | sed 's,^PATH=,,' | tr ':' '\n') 2> /dev/null`"
     if [ "$path" ]; then
-      wr_folder_in_path="";
+      wr_folder_in_path=""
       
       for d in $path; do
-        if [ -d "$d" ]; then
-          if [ ! -L "$d" ]; then
-            BOOL=`printf "%s" "$writable_folders"|grep -q "$d"`
-            if [ -d "$BOOL" ]; then
-              if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
-           fi
+        if [ -d "$d" ] && [ ! -L "$d" ]; then
+          BOOL=`printf "%s" "$writable_folders" | grep -Fx "$d"`
+          if [ "$BOOL" ]; then
+            if [ "$wr_folder_in_path" ]; then wr_folder_in_path="$wr_folder_in_path\|$d"; else wr_folder_in_path="$d"; fi
           fi
         fi
       done
