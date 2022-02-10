@@ -18,7 +18,7 @@ LinEnum is a shell script that when executed on a Linux host allows to enumerate
     $ ./LinEnum.sh -h
     
       USAGE:
-            ./LinEnum.sh -qCst -k <keyword> -r <report name> -e <export location> -h
+            ./LinEnum.sh -qCst -k <keyword> -r <report name> -h
       
       OPTIONS:
       -q    Quiet mode
@@ -27,11 +27,10 @@ LinEnum is a shell script that when executed on a Linux host allows to enumerate
       -t    Include thorough (lengthy) tests
       -k    Enter keyword
       -r    Enter report name
-      -e    Enter export location
       -h    Displays this help text
       
       EXAMPLE:
-            ./LinEnum.sh -t -k password -r report -e /tmp/
+            ./LinEnum.sh -t -k password -r report
 
 Option details:
 * -q Does not print script banner.
@@ -40,9 +39,6 @@ Option details:
 * -t Performs thorough (slow) tests. Without this switch default 'quick' scans are performed.
 * -k An optional switch for which the user can search for a single keyword within many files (documented below).
 * -r Requires the user to enter a report name. The report (.txt file) will be saved to the current working directory.
-* -e Requires the user to enter an output location i.e. /tmp/export. If this location does not exist, it will be created.
-
-Note: **Export functionality is currently in the experimental stage.**
 
 ## Checks/tasks performed by LinEnum
 * System

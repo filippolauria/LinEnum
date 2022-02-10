@@ -133,7 +133,7 @@ usage ()
 { 
 banner
 $ECHO -e "USAGE:
-    ./LinEnum.sh -qCst -k <keyword> -r <report name> -e <export location> -h
+    ./LinEnum.sh -qCst -k <keyword> -r <report name> -h
 
 OPTIONS:
   -q  Quiet mode
@@ -142,7 +142,6 @@ OPTIONS:
   -t  Include thorough (lengthy) tests
   -k  Enter keyword
   -r  Enter report name
-  -e  Enter export location
   -h  Displays this help text
 
 ${_yellow}Running with no options = limited scans/no output file${_reset}
@@ -228,16 +227,7 @@ fi
 
 if [ "$report" ]; then render_text "info" "Report name" "$report"; fi
 
-if [ "$export" ]; then render_text "info" "Export location" "$export"; fi
-
 render_text "info" "Thorough tests" "`if [ "$thorough" ]; then $ECHO -n "Enabled"; else $ECHO -n "Disabled"; fi`"
-
-# prepare to export findings
-if [ "$export" ]; then
-  mkdir "$export" 2> /dev/null
-  format=$export/LinEnum-export-`date +"%d-%m-%y"`
-  mkdir "$format" 2> /dev/null
-fi
 
 # prepare password
 if [ "$sudopass" ]; then 
@@ -308,11 +298,6 @@ fi
 user_info()
 {
   
-# if we have to export something, we prepare the destination directory
-if [ "$export" ]; then
-  mkdir "$format/etc-export/" 2> /dev/null
-fi
-  
 print_title "yellow" "USER/GROUP" 
 
 #current user details
@@ -367,24 +352,18 @@ fi
 readpasswd=`($ECHO "$etc_passwd_cache" | sed "s/.*sh$/${_sed_yellow}/") 2> /dev/null`
 if [ "$readpasswd" ]; then
   render_text "info" "Contents of /etc/passwd" "$readpasswd"
-
-  if [ "$export" ]; then cp /etc/passwd "$format/etc-export/passwd" 2> /dev/null; fi
 fi
 
 #checks to see if the shadow file can be read
 readshadow=`cat /etc/shadow 2> /dev/null`
 if [ "$readshadow" ]; then
   render_text "danger" "We can read the shadow file" "$readshadow"
-  
-  if [ "$export" ]; then cp /etc/shadow "$format/etc-export/shadow" 2> /dev/null; fi
 fi
 
 #checks to see if /etc/master.passwd can be read - BSD 'shadow' variant
 readmasterpasswd=`cat /etc/master.passwd 2> /dev/null`
 if [ "$readmasterpasswd" ]; then
   render_text "danger" "We can read the master.passwd file" "$readmasterpasswd"
-
-  if [ "$export" ]; then cp /etc/master.passwd "$format/etc-export/master.passwd" 2> /dev/null; fi
 fi
 
 #all root accounts (uid 0)
@@ -404,8 +383,6 @@ if [ "$sudobin" ]; then
   if [ "$sudoers" ]; then
     sudoers=`($ECHO "$sudoers" | sed "s,$interesting_sudo,${_sed_red},g" | sed "s,\($interesting_binaries\)\s\+,${_sed_yellow},g") 2> /dev/null`
     render_text "warning" "We can read /etc/sudoers" "$sudoers"
-    
-    if [ "$export" ]; then cp /etc/sudoers "$format/etc-export/sudoers" 2> /dev/null; fi
   fi
   
   # check if we can sudo without password
@@ -429,11 +406,6 @@ if [ "$sudobin" ]; then
   sudoersd=`find /etc/sudoers.d \! -name README -type f -exec ls ${_color_flag} -lah {} + 2> /dev/null`
   if [ "$sudoersd" ]; then
     render_text "danger" "Check if we can read/write files in /etc/sudoers.d" "$sudoersd"
-    
-    if [ "$export" ]; then
-      mkdir -p "$format/etc-export/sudoers.d/" 2> /dev/null
-      cp /etc/sudoers.d/* "$format/etc-export/sudoers.d/" 2> /dev/null
-    fi
   fi
 
   # who has sudoed in the past
@@ -474,9 +446,6 @@ if [ -r "/etc/ssh/sshd_config" ]; then
   if [ "$sshdchecks" ]; then
     render_text "info" "Check SSH daemon configuration (condensed)" "$sshdchecks"
   fi
-  
-  if [ "$export" ]; then cp /etc/ssh/sshd_config "$format/etc-export/" 2> /dev/null; fi
-
 fi
 
 #thorough checks
@@ -503,13 +472,6 @@ if [ "$thorough" = "1" ]; then
   wrfilesinhome=`find /home/ -readable -type f 2> /dev/null`
   if [ "$wrfilesinhome" ]; then
     render_text "warning" "World-readable files within /home" "`print_ls_lh "$wrfilesinhome"`"
-
-    if [ "$export" ]; then
-      mkdir "$format/wr-files/" 2> /dev/null
-      OLD_IFS=$IFS; IFS=$N
-      for f in $wrfilesinhome; do cp --parents "$f" "$format/wr-files/"; done 2> /dev/null
-      IFS=$OLD_IFS
-    fi
   fi
 
   # lists current user's home directory contents
@@ -522,13 +484,6 @@ if [ "$thorough" = "1" ]; then
   sshfiles=`find / \( -name "id_dsa*" -o -name "id_rsa*" -o -name "known_hosts*" -o -name "authorized_hosts*" -o -name "authorized_keys*" \) -type f 2> /dev/null`
   if [ "$sshfiles" ]; then
     render_text "warning" "SSH keys/host information found in the following locations" "`print_ls_lh "$sshfiles"`"
-
-    if [ "$export" ]; then
-      mkdir "$format/ssh-files/" 2> /dev/null
-      OLD_IFS=$IFS; IFS=$N
-      for f in $sshfiles; do cp --parents "$f" "$format/ssh-files/"; done 2> /dev/null
-      IFS=$OLD_IFS
-    fi
   fi
 fi
 
@@ -700,11 +655,6 @@ if [ -f "/etc/login.defs" ]; then
   logindefs=`(grep ${_color_flag} -i "^PASS_MAX_DAYS\|^PASS_MIN_DAYS\|^PASS_WARN_AGE\|^ENCRYPT_METHOD" /etc/login.defs | sed 's/\s\+/\t/') 2> /dev/null`
   if [ "$logindefs" ]; then
     render_text "info" "Password and storage information (as specified in /etc/login.defs)" "$logindefs"
-
-    if [ "$export" ]; then
-      mkdir "$format/etc-export/" 2> /dev/null
-      cp /etc/login.defs "$format/etc-export/login.defs" 2> /dev/null
-    fi
   fi
 fi
 
@@ -907,13 +857,6 @@ if [ "$psoutput" ]; then
   
   if [ "$proclist" ]; then
     render_text "info" "Process binaries and associated permissions (from the above list)" "`ls ${_color_flag} -lah $proclist 2> /dev/null`"
-  
-    if [ "$export" ]; then
-      mkdir "$format/ps-export/" 2> /dev/null
-      OLD_IFS=$IFS; IFS=$N
-      for binary in $proclist; do cp --parents "$binary" "$format/ps-export/"; done 2> /dev/null
-      IFS=$OLD_IFS
-    fi
   fi
 fi
 
@@ -921,11 +864,6 @@ fi
 inetdread=`grep -v '^#\|^$' /etc/inetd.conf 2> /dev/null`
 if [ "$inetdread" ]; then
   render_text "info" "Contents of /etc/inetd.conf (condensed)" "$inetdread"
-
-  if [ "$export" ]; then
-    mkdir "$format/etc-export/" 2> /dev/null
-    cp /etc/inetd.conf "$format/etc-export/inetd.conf" 2> /dev/null
-  fi
 fi
 
 #very 'rough' command to extract associated binaries from inetd.conf & show permisisons of each
@@ -938,11 +876,6 @@ fi
 xinetdread=`grep -v '^#\|^$' /etc/xinetd.conf 2> /dev/null`
 if [ "$xinetdread" ]; then
   render_text "info" "Contents of /etc/xinetd.conf" "$xinetdread"
-  
-  if [ "$export" ]; then
-    mkdir "$format/etc-export/" 2> /dev/null
-    cp /etc/xinetd.conf "$format/etc-export/xinetd.conf" 2> /dev/null
-  fi
 fi
 
 #check /etc/xinetd.d directory content
@@ -1144,11 +1077,6 @@ if [ "$apachever" ]; then
     
     if [ "$apacheusr" ] && [ "$apachegrp" ]; then
       render_text "info" "Apache is running as (user:group)" "$apacheusr:$apachegrp"
-
-      if [ "$export" ]; then
-        mkdir --parents "$format/etc-export/apache2/" 2> /dev/null
-        cp /etc/apache2/envvars "$format/etc-export/apache2/envvars" 2> /dev/null
-      fi
     fi
   fi
 
@@ -1240,13 +1168,6 @@ if [ "$allsuid" ]; then
   if [ "$wwrootsuid" ]; then
     render_text "warning" "World-writable SUID files owned by root" "`print_ls_lh "$wwrootsuid"`"
   fi
-
-  if [ "$export" ]; then
-    mkdir "$format/suid-files/" 2> /dev/null
-    OLD_IFS=$IFS; IFS=$N
-    for f in $allsuid; do cp "$f" "$format/suid-files/"; done 2> /dev/null
-    IFS=$OLD_IFS
-  fi
 fi
 
 #search for sgid files
@@ -1274,26 +1195,12 @@ if [ "$allsgid" ]; then
   if [ "$wwrootsgid" ]; then
     render_text "warning" "World-writable SGID files owned by root" "`print_ls_lh "$wwrootsgid"`"
   fi
-  
-  if [ "$export" ]; then
-    mkdir "$format/sgid-files/" 2> /dev/null
-    OLD_IFS=$IFS; IFS=$N
-    for f in $allsgid; do cp "$f" "$format/sgid-files/"; done 2> /dev/null
-    IFS=$OLD_IFS
-  fi
 fi
 
 #list all files with POSIX capabilities set along with there capabilities
 fileswithcaps=`(getcap -r / || /sbin/getcap -r /) 2> /dev/null`
 if [ "$fileswithcaps" ]; then
   render_text "info" "Files with POSIX capabilities set" "$fileswithcaps"
-  
-  if [ "$export" ]; then
-    mkdir "$format/files_with_capabilities/" 2> /dev/null
-    OLD_IFS=$IFS; IFS=$N
-    for f in $fileswithcaps; do cp "$f" "$format/files_with_capabilities/"; done 2> /dev/null
-    IFS=$OLD_IFS
-  fi
 fi
 
 #searches /etc/security/capability.conf for users associated capabilities
@@ -1350,13 +1257,6 @@ if [ "$thorough" = "1" ]; then
   wwfiles=`find / \! \( -path "/proc/*" -o -path "/sys/*" \) -writable -type f -exec ls ${_color_flag} -lah {} + 2> /dev/null`
   if [ "$wwfiles" ]; then
     render_text "info" "World-writable files (excluding /proc and /sys)" "$wwfiles"
-
-    if [ "$export" ]; then
-      mkdir "$format/ww-files/" 2> /dev/null
-      OLD_IFS=$IFS; IFS=$N
-      for f in $wwfiles; do cp --parents "$f" "$format/ww-files/"; done 2> /dev/null
-      IFS=$OLD_IFS
-	  fi
   fi
 
 fi
@@ -1374,17 +1274,11 @@ if [ "$usrplans_or_usrrhosts" ]; then
       usrplan="`( (ls ${_color_flag} -lah "$f"; $ECHO; cat "$f"; $ECHO) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
       if [ "$usrplan_output" ]; then usrplan_output="$usrplan_output$N$usrplan"; else usrplan_output="$usrplan"; fi
     done
+    IFS=$OLD_IFS
 
     if [ "$usrplan_output" ]; then
       render_text "warning" "Plan file permissions and contents" "$usrplan_output"
     fi
-    
-    if [ "$export" ]; then
-      mkdir "$format/plan_files/" 2> /dev/null
-      for f in $usrplan; do cp --parents "$f" "$format/plan_files/"; done 2> /dev/null
-    fi
-    
-    IFS=$OLD_IFS
   fi
 
   #are there any .rhosts files accessible - these may allow us to login as another user etc.
@@ -1397,18 +1291,11 @@ if [ "$usrplans_or_usrrhosts" ]; then
       usrrhost="`( (ls ${_color_flag} -lah "$f"; $ECHO; cat "$f"; $ECHO) | sed "s,$f,${_sed_cyan},g" ) 2> /dev/null`"
       if [ "$usrrhost_output" ]; then usrrhost_output="$usrrhost_output$N$usrrhost"; else usrrhost_output="$usrrhost"; fi
     done
+    IFS=$OLD_IFS
     
     if [ "$usrrhost_output" ]; then
       render_text "warning" "rhost config file(s) and file contents" "$usrrhost_output"
     fi
-    
-    if [ "$export" ]; then
-      mkdir "$format/rhosts/" 2> /dev/null
-      for f in $usrrhosts; do cp --parents "$f" "$format/rhosts/"; done 2> /dev/null
-    fi
-    
-    IFS=$OLD_IFS
-    
   fi
   
 fi
@@ -1416,13 +1303,6 @@ fi
 rhostssys="`find /etc -iname hosts.equiv -exec ls ${_color_flag} -lah {} \; -exec cat {} \; 2> /dev/null`"
 if [ "$rhostssys" ]; then
   render_text "info" "hosts.equiv file and contents" "$rhostssys"
-
-  if [ "$export" ]; then
-    mkdir "$format/rhosts/" 2> /dev/null
-    OLD_IFS=$IFS; IFS=$N
-    for f in $rhostssys; do cp --parents "$f" "$format/rhosts/"; done 2> /dev/null
-    IFS=$OLD_IFS
-  fi
 fi
 
 #connected NFS mounts
@@ -1441,17 +1321,11 @@ if [ "$nfsexports" ]; then
   if [ "$no_root_squash" ]; then
     render_text "danger" "no_root_squash found in /etc/exports" "$no_root_squash"
   fi
-
-  if [ "$export" ]; then
-    mkdir "$format/etc-export/" 2> /dev/null
-    cp /etc/exports "$format/etc-export/exports" 2> /dev/null
-  fi
 fi
 
 #looking for credentials in /etc/fstab and /etc/mtab
 tabfiles="/etc/fstab /etc/mtab"
-OLD_IFS=$IFS
-IFS=$N
+OLD_IFS=$IFS; IFS=$N
 for f in $tabfiles; do
   [ -e "$f" ] || continue
   
@@ -1463,12 +1337,6 @@ for f in $tabfiles; do
       render_text "info" "NFS displaying partitions and filesystems - you need to look for exotic filesystems" "$f"
     fi
   fi
-  
-  if [ "$export" ]; then
-    mkdir "$format/etc-exports/" 2> /dev/null
-    cp "$f" "$format/etc-exports/" 2> /dev/null
-  fi
-  
 done
 IFS=$OLD_IFS
 
@@ -1499,14 +1367,6 @@ if [ "$keyword" ]; then
     
     if [ "$keyfilesoutput" ]; then
       render_text "warning" "Find keyword ($keyword) in *.php, *.conf, etc. files (output format filepath:identified line number where keyword appears)" "$keyfilesoutput"
-      
-      if [ "$export" ]; then
-        mkdir --parents "$format/keyword_file_matches/" 2> /dev/null
-        OLD_IFS=$IFS
-        IFS=$N
-        for f in $keyfiles; do cp --parents "$f" "$format/keyword_file_matches/"; done 2> /dev/null
-        IFS=$OLD_IFS
-      fi
     fi
   fi
 fi
@@ -1515,13 +1375,6 @@ fi
 allconf=`find /etc/ -maxdepth 1 \( -name "*.conf" -a \! -name "*example" \) -type f -exec ls ${_color_flag} -lah {} + 2> /dev/null`
 if [ "$allconf" ]; then
   render_text "info" "All *.conf files in /etc (recursive 1 level)" "$allconf"
-
-  if [ "$export" ]; then
-    mkdir "$format/conf-files/" 2> /dev/null
-    OLD_IFS=$IFS; IFS=$N
-    for f in $allconf; do cp --parents "$f" "$format/conf-files/"; done 2> /dev/null
-    IFS=$OLD_IFS
-  fi
 fi
 
 # retrieves accessible history file paths (e.g. ~/.bash_history, ~/.wget-hsts, ~/.lesshst, ecc.)
@@ -1533,15 +1386,6 @@ for entry in `($ECHO "$etc_passwd_cache" | grep "^.*sh$") 2> /dev/null`; do
 
   if [ "$usrhist" ]; then
     render_text "warning" "${user}'s history files" "$usrhist"
-
-    # if requested we export history files
-    if [ "$export" ]; then
-      # create dir only if it does not exist
-        mkdir -p "$format/history_files/" 2> /dev/null
-        OLD_IFS=$IFS; IFS=$N
-        for f in $usrhist; do cp --parents "$f" "$format/history_files/"; done 2> /dev/null
-        IFS=$OLD_IFS
-    fi
   fi
 done
 
@@ -1578,11 +1422,6 @@ fi
 readmailroot=`head /var/mail/root 2> /dev/null`
 if [ "$readmailroot" ]; then
   render_text "danger" "We can read /var/mail/root! (snippet below)" "$readmailroot"
-  
-  if [ "$export" ]; then
-    mkdir "$format/mail-from-root/" 2> /dev/null
-    cp "$readmailroot" "$format/mail-from-root/" 2> /dev/null
-  fi
 fi
 
 #Searching wifi connections files
@@ -1708,7 +1547,7 @@ call_each()
   print_title "green" "Scan ended at `date +%R` (completed in $seconds secs)"
 }
 
-while getopts "qCstk:r:e:h" option; do
+while getopts "qCstk:r:h" option; do
   case "${option}" in
     q) quiet=1;;
     C) _reset=""; _red=""; _green=""; _yellow=""; _cyan=""; _purple=""; _gray=""; _color_flag="--color=never"
@@ -1720,7 +1559,6 @@ while getopts "qCstk:r:e:h" option; do
     
     k) keyword=${OPTARG};;
     r) report=${OPTARG}"-"`date +"%d-%m-%y"`;;
-    e) export=${OPTARG};;
     
     h) usage; exit;;
     *) usage; exit;;
