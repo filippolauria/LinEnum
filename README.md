@@ -9,8 +9,8 @@
 
 LinEnum is a shell script that when executed on a Linux host allows to enumerate local information.
 
-![Maintainer](https://img.shields.io/badge/maintainer-filippolauria-blue)
-[![Linux](https://svgshare.com/i/Zhy.svg)](https://svgshare.com/i/Zhy.svg)
+[![Maintainer](https://img.shields.io/badge/maintainer-filippolauria-blue)](https://github.com/filippolauria)
+[![Linux](https://svgshare.com/i/Zhy.svg)](https://www.linux.com/)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 
 ## Usage
@@ -97,22 +97,23 @@ Option details:
   * List inetd.conf/xined.conf contents and associated binary file permissions
   * List init.d binary permissions
 * Installed software:
-  * Sudo
-    * Highlight vulnerable sudo versions
+  * Apache
+    * Check user config
+    * Show enabled modules
+    * Check for htpasswd files
+    * View www directories
   * Exim4
-  * Redis-server
-    * Check if redis is protected by password
-  * MYSQL
-    * Check for default/weak MYSQL accounts
+  * FreeRADIUS
+  * MySQL
+    * Check for default/weak MySQL accounts
     * Attempt to retrieve information from *mysql* database
   * Postgres
     * Check for default/weak Postgres accounts
-  * Apache
-    * Checks user config
-    * Shows enabled modules
-    * Checks for htpasswd files
-    * View www directories
+  * Redis-server
+    * Check if redis is protected by password
   * Runc
+  * Sudo
+    * Highlight vulnerable sudo versions
 * Interesting files:
   * Locate all SUID/GUID files
   * Locate all world-writable SUID/GUID files

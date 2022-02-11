@@ -1109,6 +1109,12 @@ if [ "$runcver" ]; then
   render_text "warning" "Runc" "$runcver
 runc was found in $runc, you may be able to escalate privileges with it"
 fi
+
+# freeradius check
+freeradius=`( (freeradius -v || /sbin/freeradius -v ) | head -n 2 ) 2> /dev/null`
+if [ "$freeradius" ]; then
+  render_text "info" "FreeRADIUS version" "$freeradius"
+fi
 }
 
 interesting_files()
@@ -1149,12 +1155,12 @@ if [ "$allsuid" ]; then
   allsuiddetails="`print_ls_lh "$allsuid"`"
   if [ "$allsuiddetails" ]; then
     render_text "info" "SUID files" "$allsuiddetails"
+  fi
 
-    #list of 'interesting' suid files - feel free to make additions
-    interestingsuid=`($ECHO "$allsuiddetails" | grep -w $interesting_binaries) 2> /dev/null`
-    if [ "$interestingsuid" ]; then
-      render_text "warning" "Possibly interesting SUID files" "$interestingsuid"
-    fi
+  #list of 'interesting' suid files - feel free to make additions
+  interestingsuid=`( $ECHO "$allsuid" | grep "\b\($interesting_binaries\)\$" ) 2> /dev/null`
+  if [ "$interestingsuid" ]; then
+    render_text "warning" "Possibly interesting SUID files" "`print_ls_lh "$interestingsuid"`"
   fi
 
   #lists world-writable suid files
@@ -1176,12 +1182,12 @@ if [ "$allsgid" ]; then
   allsgiddetails="`print_ls_lh "$allsgid"`"
   if [ "$allsgiddetails" ]; then
     render_text "info" "SGID files" "$allsgiddetails"
-
-    #list of 'interesting' sgid files
-    interestingsgid=`$ECHO "$allsgiddetails" | grep -w $interesting_binaries 2> /dev/null`
-    if [ "$interestingsgid" ]; then
-      render_text "warning" "Possibly interesting SGID files" "$interestingsgid"
-    fi
+  fi
+  
+  #list of 'interesting' sgid files
+  interestingsgid=`( $ECHO "$allsgid" | grep "\b\($interesting_binaries\)\$" ) 2> /dev/null`
+  if [ "$interestingsgid" ]; then
+    render_text "warning" "Possibly interesting SGID files" "`print_ls_lh "$interestingsgid"`"
   fi
   
   #lists world-writable sgid files
@@ -1198,7 +1204,7 @@ if [ "$allsgid" ]; then
 fi
 
 #list all files with POSIX capabilities set along with there capabilities
-fileswithcaps=`(getcap -r / || /sbin/getcap -r /) 2> /dev/null`
+fileswithcaps=`( getcap -r / || /sbin/getcap -r / ) 2> /dev/null`
 if [ "$fileswithcaps" ]; then
   render_text "info" "Files with POSIX capabilities set" "$fileswithcaps"
 fi
@@ -1325,7 +1331,6 @@ fi
 
 #looking for credentials in /etc/fstab and /etc/mtab
 tabfiles="/etc/fstab /etc/mtab"
-OLD_IFS=$IFS; IFS=$N
 for f in $tabfiles; do
   [ -e "$f" ] || continue
   
@@ -1338,7 +1343,6 @@ for f in $tabfiles; do
     fi
   fi
 done
-IFS=$OLD_IFS
 
 #can we read some log?
 readablelogs=`find /etc/log /var/log -type f -name "*log*" -readable -exec ls -l {} + 2> /dev/null`
