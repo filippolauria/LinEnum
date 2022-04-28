@@ -43,7 +43,7 @@ Option details:
 ## Checks/tasks performed by LinEnum
 * System
   * Get kernel name, release, version, etc.
-  * Quick lookup for kernel vulnerabilities (thanks to https://github.com/lucyoa/kernel-exploits)
+  * Quick lookup for kernel vulnerabilities (thanks to https://github.com/manasmbellani/kernel-exploits)
   * Get linux distribution
   * Get Hostname
   * Get disks, memory and CPUs information
